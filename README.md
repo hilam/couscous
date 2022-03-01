@@ -1,12 +1,12 @@
-# CousCous - Leitor de Feeds RSS Multiplataforma
-First kivy app
+# CousCous - Leitor de Feeds RSS
+FlastAPI app
 
 Pre-alpha
 
 
 Características pretendidas:
 
-● Pode ser usado no Windows, Linux ou Android
+● Usado no navegador
 
 ● Criar pastas (categorias), em vários níveis, para organizar as inscrições (feeds)
 
@@ -18,7 +18,7 @@ Características pretendidas:
 
 ● Indicar um local na web (Google Drive, Dropbox, AWS, etc) para criar o banco de dados (podendo ser local e depois ser exportado)
 
-● Possíveis tecnologias: kivy, nodejs, sqlite
+● Possíveis tecnologias: flask, fastapi, sqlmodel
 
 ● Inclusão rápida de feed, por widget e-ou recuperação de URL do clipboard
 
@@ -36,5 +36,5 @@ Características pretendidas:
 
 ● Detecção automática da localização para novas notícias
 
-● Ajuste do tamanho do texto conforme suas necessidades
+● Ajuste do tamanho do texto conforme necessidades do usuário
 
