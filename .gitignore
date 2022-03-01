@@ -62,3 +62,4 @@ media/
 *.db
 *.sqlite3
 .env
+.tool-versions
