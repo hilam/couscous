@@ -55,10 +55,10 @@ docs/_build/
 # Project files
 .idea/
 .git/
-migrations/
 static/
 media/
 
 # Database
 *.db
 *.sqlite3
+.env
