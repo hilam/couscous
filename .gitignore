@@ -60,6 +60,7 @@ media/
 
 # Database
 *.db
+*.sqlite
 *.sqlite3
 .env
 .tool-versions
