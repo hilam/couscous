@@ -10,5 +10,5 @@ def test_request_home_sem_servidor_retorna_URLError(web_address):
 
 
 def test_request_home_com_servidor_retorna_200(client):
-    response = client.get('/')
+    response = client.get('/hello')
     assert response.status_code == 200
