@@ -55,7 +55,7 @@ docs/_build/
 # Project files
 .idea/
 .git/
-static/
+instance/
 media/
 
 # Database
@@ -63,3 +63,4 @@ media/
 *.sqlite3
 .env
 .tool-versions
+.pytest_cache/
