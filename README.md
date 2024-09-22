@@ -1,10 +1,8 @@
 # CousCous - Leitor de Feeds RSS
-FlastAPI app
 
-Pre-alpha
+## Rio-FastAPI app
 
-
-Características pretendidas:
+### Características pretendidas
 
 ● Usado no navegador
 
@@ -17,8 +15,6 @@ Características pretendidas:
 ● Limpeza do banco de dados (apagar definitivamente notícias pré determinadas)
 
 ● Indicar um local na web (Google Drive, Dropbox, AWS, etc) para criar o banco de dados (podendo ser local e depois ser exportado)
-
-● Possíveis tecnologias: flask, fastapi, sqlmodel
 
 ● Inclusão rápida de feed, por widget e-ou recuperação de URL do clipboard
 
@@ -37,4 +33,3 @@ Características pretendidas:
 ● Detecção automática da localização para novas notícias
 
 ● Ajuste do tamanho do texto conforme necessidades do usuário
-
