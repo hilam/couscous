@@ -43,6 +43,26 @@ test = ["anyio[trio]", "coverage[toml] (>=4.5)", "hypothesis (>=4.0)", "mock (>=
 trio = ["trio (<0.22)"]
 
 [[package]]
+name = "behave"
+version = "1.2.6"
+description = "behave is behaviour-driven development, Python style"
+optional = false
+python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+files = [
+    {file = "behave-1.2.6-py2.py3-none-any.whl", hash = "sha256:ebda1a6c9e5bfe95c5f9f0a2794e01c7098b3dde86c10a95d8621c5907ff6f1c"},
+    {file = "behave-1.2.6.tar.gz", hash = "sha256:b9662327aa53294c1351b0a9c369093ccec1d21026f050c3bd9b3e5cccf81a86"},
+]
+
+[package.dependencies]
+parse = ">=1.8.2"
+parse-type = ">=0.4.2"
+six = ">=1.11"
+
+[package.extras]
+develop = ["coverage", "invoke (>=0.21.0)", "modernize (>=0.5)", "path.py (>=8.1.2)", "pathlib", "pycmd", "pylint", "pytest (>=3.0)", "pytest-cov", "tox"]
+docs = ["sphinx (>=1.6)", "sphinx-bootstrap-theme (>=0.6)"]
+
+[[package]]
 name = "blessed"
 version = "1.20.0"
 description = "Easy, practical library for making terminal apps, by providing an elegant, well-documented interface to Colors, Keyboard input, and screen Positioning capabilities."
@@ -688,6 +708,17 @@ config = ["introspection (>=1.9.1)", "json5 (>=0.9.22)", "uniserde (>=0.3.14)"]
 docstrings = ["introspection (>=1.9.1)", "uniserde (>=0.3.14)"]
 inject = ["introspection (>=1.9.1)"]
 mongodb-logs = ["pymongo (>=4.8.0)", "uniserde (>=0.3.14)"]
+
+[[package]]
+name = "iniconfig"
+version = "2.0.0"
+description = "brain-dead simple config-ini parsing"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "iniconfig-2.0.0-py3-none-any.whl", hash = "sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374"},
+    {file = "iniconfig-2.0.0.tar.gz", hash = "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3"},
+]
 
 [[package]]
 name = "introspection"
@@ -1412,6 +1443,37 @@ files = [
 ]
 
 [[package]]
+name = "parse"
+version = "1.20.2"
+description = "parse() is the opposite of format()"
+optional = false
+python-versions = "*"
+files = [
+    {file = "parse-1.20.2-py2.py3-none-any.whl", hash = "sha256:967095588cb802add9177d0c0b6133b5ba33b1ea9007ca800e526f42a85af558"},
+    {file = "parse-1.20.2.tar.gz", hash = "sha256:b41d604d16503c79d81af5165155c0b20f6c8d6c559efa66b4b695c3e5a0a0ce"},
+]
+
+[[package]]
+name = "parse-type"
+version = "0.6.3"
+description = "Simplifies to build parse types based on the parse module"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,>=2.7"
+files = [
+    {file = "parse_type-0.6.3-py2.py3-none-any.whl", hash = "sha256:8d94a52e0197fbad63fee8f70df16e6ed689e5e4f105b705c9afa7a30397a5aa"},
+    {file = "parse_type-0.6.3.tar.gz", hash = "sha256:8e99d2f52fab2f0f1f3d68ba9d026060140bf0e53680aada0111fb27b2f0e93a"},
+]
+
+[package.dependencies]
+parse = {version = ">=1.18.0", markers = "python_version >= \"3.0\""}
+six = ">=1.15"
+
+[package.extras]
+develop = ["build (>=0.5.1)", "coverage (>=4.4)", "pylint", "pytest (<5.0)", "pytest (>=5.0)", "pytest-cov", "pytest-html (>=1.19.0)", "ruff", "setuptools", "tox (>=2.8,<4.0)", "twine (>=1.13.0)", "virtualenv (<20.22.0)", "virtualenv (>=20.0.0)"]
+docs = ["Sphinx (>=1.6)", "sphinx-bootstrap-theme (>=0.6.0)"]
+testing = ["pytest (<5.0)", "pytest (>=5.0)", "pytest-html (>=1.19.0)"]
+
+[[package]]
 name = "pillow"
 version = "10.4.0"
 description = "Python Imaging Library (Fork)"
@@ -1526,6 +1588,21 @@ setuptools = ">=72.2.0"
 [package.extras]
 doc = ["Sphinx (>=7.1.2)", "nbsphinx (>=0.9.4)", "restructuredtext-lint (>=1.4.0)", "sphinx-copybutton (>=0.5.2)", "sphinx-lint (>=0.9.1)", "sphinx-tabs (>=3.4.5)", "sphinx-toolbox (>=3.7.0)", "sphinxcontrib-spelling (>=8.0.0)"]
 test = ["deepdiff (>=7.0.1)", "rich (>=13.7.1)"]
+
+[[package]]
+name = "pluggy"
+version = "1.5.0"
+description = "plugin and hook calling mechanisms for python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pluggy-1.5.0-py3-none-any.whl", hash = "sha256:44e1ad92c8ca002de6377e165f3e0f1be63266ab4d554740532335b9d75ea669"},
+    {file = "pluggy-1.5.0.tar.gz", hash = "sha256:2cffa88e94fdc978c4c574f15f9e59b7f4201d439195c3715ca9e2486f1d0cf1"},
+]
+
+[package.extras]
+dev = ["pre-commit", "tox"]
+testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "pycparser"
@@ -1672,6 +1749,26 @@ files = [
 
 [package.extras]
 diagrams = ["jinja2", "railroad-diagrams"]
+
+[[package]]
+name = "pytest"
+version = "8.3.3"
+description = "pytest: simple powerful testing with Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pytest-8.3.3-py3-none-any.whl", hash = "sha256:a6853c7375b2663155079443d2e45de913a911a11d669df02a50814944db57b2"},
+    {file = "pytest-8.3.3.tar.gz", hash = "sha256:70b98107bd648308a7952b06e6ca9a50bc660be218d53c257cc1fc94fda10181"},
+]
+
+[package.dependencies]
+colorama = {version = "*", markers = "sys_platform == \"win32\""}
+iniconfig = "*"
+packaging = "*"
+pluggy = ">=1.5,<2"
+
+[package.extras]
+dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
 name = "python-dateutil"
@@ -2667,4 +2764,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "07ad9d8c7fe6316dbfb778cd915c9cd550c1861bc4ca1d09d25e8f63dec672bf"
+content-hash = "68b623212f1e68345aa0a17b96ec593a39ca7a8e36aca3a7d80e9717abdf8907"
