@@ -33,7 +33,7 @@ async def pong():
 
 @app.get("/", status_code=status.HTTP_200_OK)
 async def home():
-    "Mostra o endereço para a documentação"
+    """Mostra o endereço para a documentação"""
     return {"message": "Use a rota /docs para ver a documentação."}
 
 
@@ -48,10 +48,10 @@ async def add_user(user: User, session: AsyncSession = Depends(get_session)):
 
 @app.get("/feeds", response_model=list[Feed], status_code=status.HTTP_200_OK)
 async def all_feeds(session: AsyncSession = Depends(get_session)):
-    "Retorna a lista com todos os itens da TPU."
+    """Retorna a lista com todos os itens da TPU."""
     result = await session.execute(select(Feed))
-    all_feeds = result.scalars().all()
-    return [Feed(title=feed.title) for feed in all_feeds]
+    feeds = result.scalars().all()
+    return [Feed(title=feed.title) for feed in feeds]
 
 
 @app.post("/feeds")
