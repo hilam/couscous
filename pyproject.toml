@@ -9,6 +9,7 @@ dependencies = [
     "sqlalchemy<3.0.0,>=2.0.35",
     "python-dotenv<2.0.0,>=1.0.1",
     "sqlmodel<1.0.0,>=0.0.22",
+    "pillow>=12.1.1",
 ]
 name = "couscous"
 version = "0.1.0"
