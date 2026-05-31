@@ -1,6 +1,6 @@
 # CousCous - Leitor de Feeds RSS
 
-## Rio-FastAPI app
+## Flet app
 
 ### Características pretendidas
 

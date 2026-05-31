@@ -18,7 +18,7 @@ description = "Leitor de feeds RSS"
 [dependency-groups]
 dev = [
     "behave<2.0.0,>=1.2.6",
-    "pyright>=1.1.409",
+    "mypy>=1.19.0",
     "pytest<9.0.0,>=8.3.3",
     "pytest-asyncio>=0.24.0",
     "ruff>=0.15.15",

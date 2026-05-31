@@ -4,14 +4,14 @@
 
 ```bash
 uv sync                          # install deps (uv is the package manager)
-python main.py                   # run the Flet app (desktop or web via -d)
-python -c "from database.service.database import init_db; init_db()"  # one-time schema init
-pytest                           # run all tests
+uv run python main.py                   # run the Flet app (desktop or web via -d)
+uv run python -c "from database.service.database import init_db; init_db()"  # one-time schema init
+uv run pytest                           # run all tests
 ruff check .                     # lint
-pyright .                        # type-check
+mypy .                        # type-check
 ```
 
-Run Flet in web mode: `flet run -d` or `python -m flet run -d`.
+Run Flet in web mode: `uv run flet run -d`.
 
 ## Project architecture
 
