@@ -5,8 +5,7 @@
 ```bash
 docker compose up -d             # start PostgreSQL 16 (required)
 uv sync                          # install all dependencies (uv is the package manager)
-uv run python -c "from database.service.database import init_async_db; import asyncio; asyncio.run(init_async_db())"  # create tables
-uv run python main.py            # run the Flet app (desktop)
+uv run python main.py            # run the Flet app (desktop) — creates DB tables on startup
 uv run flet run -w               # run in web browser on localhost:8550
 uv run pytest                    # run all tests
 ruff format .                    # format code

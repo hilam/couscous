@@ -7,6 +7,7 @@ from app.views.entry_view import entry_view
 from app.views.feed_list_view import feed_list_view
 from app.views.home_view import home_view
 from app.views.login_view import login_view
+from database.service.database import init_async_db
 
 
 async def app_run(page: ft.Page):
@@ -19,6 +20,8 @@ async def app_run(page: ft.Page):
         ),
     )
     page.padding = 0
+
+    await init_async_db()
 
     state = State()
     page.session.store.set("state", state)
