@@ -8,7 +8,7 @@ uv run python main.py                   # run the Flet app (desktop or web via -
 uv run python -c "from database.service.database import init_db; init_db()"  # one-time schema init
 uv run pytest                           # run all tests
 ruff check .                     # lint
-mypy .                        # type-check
+uv run mypy .                        # type-check
 ```
 
 Run Flet in web mode: `uv run flet run -d`.
