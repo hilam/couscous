@@ -28,7 +28,10 @@ class Feed(SQLModel, table=True):
     stale: int = Field(nullable=False, default=0)
     updates_enabled: int = Field(nullable=False, default=1)
     last_updated: _dt.datetime | None
-    added: _dt.datetime = Field(nullable=False, default=_dt.datetime.now(tz=_dt.UTC))
+    added: _dt.datetime = Field(
+        nullable=False,
+        default_factory=lambda: _dt.datetime.now(_dt.UTC).replace(tzinfo=None),
+    )
     last_exception: str | None
 
     entries: list["Entry"] = Relationship(back_populates="url_feed")

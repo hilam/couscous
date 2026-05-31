@@ -4,6 +4,7 @@ authors = [
 ]
 requires-python = "<3.14,>=3.13"
 dependencies = [
+    "asyncpg>=0.30.0",
     "flet>=0.85.0",
     "sqlalchemy<3.0.0,>=2.0.35",
     "python-dotenv<2.0.0,>=1.0.1",

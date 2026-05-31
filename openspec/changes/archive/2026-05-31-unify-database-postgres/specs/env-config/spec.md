@@ -1,8 +1,4 @@
-## Purpose
-
-Document the set of configuration environment variables the application reads, their defaults, and example values.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Documented environment variables
 
@@ -17,6 +13,7 @@ The project SHALL provide an `.env.sample` file in the repository root that docu
 
 - **WHEN** a developer opens `.env.sample`
 - **THEN** it SHALL list `COUSCOUS_DATABASE_NAME`, `COUSCOUS_DATABASE_HOST`, `COUSCOUS_DATABASE_PORT`, `COUSCOUS_DATABASE_USER`, and `COUSCOUS_DATABASE_PASS`
+- **THEN** it SHALL NOT list `COUSCOUS_DATABASE_TYPE`
 - **THEN** each variable SHALL have a comment describing its purpose
 
 #### Scenario: `.env.sample` documents defaults
@@ -28,3 +25,11 @@ The project SHALL provide an `.env.sample` file in the repository root that docu
 
 - **WHEN** a developer copies `.env.sample` to `.env`
 - **THEN** the `.env` file SHALL NOT be tracked by git (per `.gitignore`)
+
+## REMOVED Requirements
+
+### Requirement: Optional SQLite fallback
+
+**Reason**: PostgreSQL is now the only supported database backend. The `COUSCOUS_DATABASE_TYPE` env var with SQLite fallback is removed.
+
+**Migration**: Remove `COUSCOUS_DATABASE_TYPE` from `.env` files. All five connection variables (`COUSCOUS_DATABASE_NAME`, `COUSCOUS_DATABASE_HOST`, `COUSCOUS_DATABASE_PORT`, `COUSCOUS_DATABASE_USER`, `COUSCOUS_DATABASE_PASS`) are now required. Run `docker compose up -d` to start a local PostgreSQL instance.

@@ -1,14 +1,28 @@
+import os
+
 import pytest
-from dotenv import load_dotenv
-from sqlmodel import SQLModel, create_engine
-from sqlmodel import Session
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlmodel import SQLModel
 
-load_dotenv()
+host = os.getenv("COUSCOUS_DATABASE_HOST", "localhost")
+port = os.getenv("COUSCOUS_DATABASE_PORT", "5432")
+user = os.getenv("COUSCOUS_DATABASE_USER", "couscous")
+password = os.getenv("COUSCOUS_DATABASE_PASS", "couscous")
+
+DB_URL = f"postgresql+asyncpg://{user}:{password}@{host}:{port}/couscous_test"
 
 
-@pytest.fixture
-def db_session():
-    engine = create_engine("sqlite://", echo=False)
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
+@pytest_asyncio.fixture
+async def db_session():
+    engine = create_async_engine(DB_URL, echo=False)
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
+    async_session = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
+    async with async_session() as session:
         yield session
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.drop_all)
+    await engine.dispose()

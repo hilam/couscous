@@ -4,13 +4,13 @@ from database.models.couscous import User
 
 
 async def get_by_name(session, name: str) -> User | None:
-    result = session.execute(select(User).where(User.name == name))
+    result = await session.execute(select(User).where(User.name == name))
     return result.scalar_one_or_none()
 
 
 async def register(session, name: str, password: str) -> User:
-    existing = session.execute(
-        select(User).where(User.name == name)
+    existing = (
+        await session.execute(select(User).where(User.name == name))
     ).scalar_one_or_none()
     if existing:
         msg = "Nome de usuário já existe"
@@ -18,13 +18,13 @@ async def register(session, name: str, password: str) -> User:
 
     user = User(name=name, password=password)
     session.add(user)
-    session.commit()
-    session.refresh(user)
+    await session.commit()
+    await session.refresh(user)
     return user
 
 
 async def login(session, name: str, password: str) -> User | None:
-    result = session.execute(select(User).where(User.name == name))
+    result = await session.execute(select(User).where(User.name == name))
     user = result.scalar_one_or_none()
 
     if not user:

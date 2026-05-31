@@ -9,25 +9,23 @@ from database.models.couscous import Entry, Feed
 
 
 async def refresh_all_feeds(session):
-    from sqlmodel import select
-
-    result = session.execute(select(Feed))
+    result = await session.execute(select(Feed))
     feeds = result.scalars().all()
 
     for feed in feeds:
-        await asyncio.to_thread(refresh_single_feed, session, feed)
+        await refresh_single_feed(session, feed)
 
 
-def refresh_single_feed(session, feed: Feed):
+async def refresh_single_feed(session, feed: Feed):
     try:
-        response = httpx.get(feed.url, timeout=30)
+        response = await asyncio.to_thread(httpx.get, feed.url, timeout=30)
         response.raise_for_status()
 
-        parsed = feedparser.parse(response.text)
+        parsed = await asyncio.to_thread(feedparser.parse, response.text)
 
         feed.title = parsed.feed.get("title", feed.title)
         feed.link = parsed.feed.get("link", feed.link)
-        feed.updated = _dt.datetime.now(tz=_dt.UTC)
+        feed.updated = _dt.datetime.now(_dt.UTC).replace(tzinfo=None)
         feed.last_exception = None
 
         for entry_data in parsed.entries:
@@ -35,9 +33,11 @@ def refresh_single_feed(session, feed: Feed):
             if not entry_id:
                 continue
 
-            existing = session.execute(
-                select(Entry).where(
-                    Entry.feed == feed.url, Entry.link == entry_data.get("link")
+            existing = (
+                await session.execute(
+                    select(Entry).where(
+                        Entry.feed == feed.url, Entry.link == entry_data.get("link")
+                    )
                 )
             ).scalar_one_or_none()
 
@@ -50,7 +50,7 @@ def refresh_single_feed(session, feed: Feed):
 
                 published = _dt.datetime.fromtimestamp(
                     mktime(entry_data.published_parsed), tz=_dt.UTC
-                )
+                ).replace(tzinfo=None)
 
             entry = Entry(
                 feed=feed.url,
@@ -62,16 +62,16 @@ def refresh_single_feed(session, feed: Feed):
                 else None,
                 author=entry_data.get("author"),
                 published=published,
-                last_updated=_dt.datetime.now(tz=_dt.UTC),
-                first_updated=_dt.datetime.now(tz=_dt.UTC),
-                first_updated_epoch=_dt.datetime.now(tz=_dt.UTC),
+                last_updated=_dt.datetime.now(_dt.UTC).replace(tzinfo=None),
+                first_updated=_dt.datetime.now(_dt.UTC).replace(tzinfo=None),
+                first_updated_epoch=_dt.datetime.now(_dt.UTC).replace(tzinfo=None),
                 added_by="system",
                 feed_order=0,
             )
             session.add(entry)
 
-        session.commit()
+        await session.commit()
 
     except Exception as e:
         feed.last_exception = str(e)
-        session.commit()
+        await session.commit()
