@@ -8,7 +8,7 @@ from app.state import State
 async def login_view(page: ft.Page, state: State) -> ft.View:
     name_field = ft.TextField(label="Nome de usuário", autofocus=True)
     password_field = ft.TextField(label="Senha", password=True)
-    error_text = ft.Text("", color=ft.colors.RED, visible=False)
+    error_text = ft.Text("", color=ft.Colors.RED, visible=False)
     is_login = True
 
     async def toggle_mode(e):
@@ -64,7 +64,7 @@ async def login_view(page: ft.Page, state: State) -> ft.View:
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
-                    ft.Icon(ft.Icons.RSS_FEED, size=80, color=ft.colors.CYAN_400),
+                    ft.Icon(ft.Icons.RSS_FEED, size=80, color=ft.Colors.CYAN_400),
                     ft.Text("CousCous", theme_style=ft.TextThemeStyle.HEADLINE_LARGE),
                     ft.Text(
                         "Entre com sua conta",

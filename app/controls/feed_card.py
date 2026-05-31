@@ -20,12 +20,12 @@ class FeedCard(ft.Card):
 
         self.content = ft.Container(
             content=ft.ListTile(
-                leading=ft.Icon(ft.Icons.RSS_FEED, color=ft.colors.CYAN_400),
+                leading=ft.Icon(ft.Icons.RSS_FEED, color=ft.Colors.CYAN_400),
                 title=ft.Text(title, weight=ft.FontWeight.BOLD),
                 subtitle=ft.Text(link, max_lines=1) if link else None,
                 trailing=ft.IconButton(
                     ft.Icons.DELETE_OUTLINE,
-                    icon_color=ft.colors.RED_300,
+                    icon_color=ft.Colors.RED_300,
                     on_click=self._delete,
                 ),
                 on_click=self._click,

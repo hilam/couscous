@@ -43,7 +43,7 @@ async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
         controls=[
             ft.AppBar(
                 title=ft.Text(entry.title or "Artigo"),
-                bgcolor=ft.colors.CYAN_50,
+                bgcolor=ft.Colors.CYAN_50,
                 actions=[
                     ft.Text(state.user.name if state.user else "", size=14),
                     ft.IconButton(

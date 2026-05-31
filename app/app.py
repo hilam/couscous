@@ -14,8 +14,8 @@ async def app_run(page: ft.Page):
     page.theme_mode = ft.ThemeMode.LIGHT
     page.theme = ft.Theme(
         color_scheme=ft.ColorScheme(
-            primary=ft.colors.CYAN_400,
-            secondary=ft.colors.BLUE_400,
+            primary=ft.Colors.CYAN_400,
+            secondary=ft.Colors.BLUE_400,
         ),
     )
     page.padding = 0

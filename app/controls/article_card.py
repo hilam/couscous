@@ -27,7 +27,7 @@ class ArticleCard(ft.Card):
             content=ft.ListTile(
                 leading=ft.Icon(
                     ft.Icons.ARTICLE,
-                    color=ft.colors.BLUE_400 if not entry.read else ft.colors.GREY_400,
+                    color=ft.Colors.BLUE_400 if not entry.read else ft.Colors.GREY_400,
                 ),
                 title=ft.Text(
                     title,
@@ -45,7 +45,7 @@ class ArticleCard(ft.Card):
                                 else summary
                             ),
                             size=12,
-                            color=ft.colors.GREY,
+                            color=ft.Colors.GREY,
                             max_lines=2,
                         ),
                     ],

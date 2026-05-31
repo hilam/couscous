@@ -50,11 +50,11 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
             ft.Container(
                 content=ft.Column(
                     controls=[
-                        ft.Icon(ft.Icons.ARTICLE, size=60, color=ft.colors.GREY_400),
+                        ft.Icon(ft.Icons.ARTICLE, size=60, color=ft.Colors.GREY_400),
                         ft.Text(
                             "Nenhum artigo encontrado",
                             theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
-                            color=ft.colors.GREY,
+                            color=ft.Colors.GREY,
                         ),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
@@ -81,7 +81,7 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
         controls=[
             ft.AppBar(
                 title=ft.Text(feed_title),
-                bgcolor=ft.colors.CYAN_50,
+                bgcolor=ft.Colors.CYAN_50,
                 actions=[
                     ft.Text(state.user.name if state.user else "", size=14),
                     ft.IconButton(ft.Icons.REFRESH, on_click=refresh),

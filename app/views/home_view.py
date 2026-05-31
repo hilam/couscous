@@ -22,7 +22,7 @@ async def home_view(page: ft.Page, state: State) -> ft.View:
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
-                    ft.Icon(ft.Icons.RSS_FEED, size=80, color=ft.colors.CYAN_400),
+                    ft.Icon(ft.Icons.RSS_FEED, size=80, color=ft.Colors.CYAN_400),
                     ft.Text("CousCous", theme_style=ft.TextThemeStyle.HEADLINE_LARGE),
                     ft.Text(
                         "Seu leitor de feeds RSS",
