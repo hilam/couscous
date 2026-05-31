@@ -5,7 +5,7 @@ from sqlmodel import SQLModel
 
 from database.service.config import db_type, DB_URL
 
-engine = create_async_engine(DB_URL) if db_type == 'asyncpg' else create_engine(DB_URL)
+engine = create_async_engine(DB_URL) if db_type == "asyncpg" else create_engine(DB_URL)
 
 
 def init_db():
@@ -21,7 +21,7 @@ async def init_async_db():
 
 
 async def get_session() -> AsyncSession:
-    if db_type == 'asyncpg':
+    if db_type == "asyncpg":
         async_session = sessionmaker(
             engine, class_=AsyncSession, expire_on_commit=False
         )

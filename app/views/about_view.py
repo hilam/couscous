@@ -1,0 +1,41 @@
+import flet as ft
+
+from app.state import State
+
+
+async def about_view(page: ft.Page, state: State) -> ft.View:
+    return ft.View(
+        route="/about",
+        navigation_bar=ft.NavigationBar(
+            destinations=[
+                ft.NavigationDestination(icon=ft.icons.HOME, label="Início"),
+                ft.NavigationDestination(icon=ft.icons.RSS_FEED, label="Feeds"),
+                ft.NavigationDestination(icon=ft.icons.INFO, label="Sobre"),
+            ],
+            selected_index=2,
+            on_change=lambda e: page.go(
+                ["/feeds", "/feeds", "/about"][e.control.selected_index]
+            ),
+        ),
+        controls=[
+            ft.AppBar(title=ft.Text("Sobre"), bgcolor=ft.colors.CYAN_50),
+            ft.Column(
+                controls=[
+                    ft.Icon(ft.icons.RSS_FEED, size=60, color=ft.colors.CYAN_400),
+                    ft.Text("CousCous", style=ft.TextThemeStyle.HEADLINE_MEDIUM),
+                    ft.Text("Versão 0.1.0"),
+                    ft.Divider(),
+                    ft.Text(
+                        "CousCous é um leitor de feeds RSS construído com Python e Flet."
+                    ),
+                    ft.Text(
+                        "Permite adicionar feeds RSS, visualizar artigos, "
+                        "e gerenciar sua leitura de forma simples."
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=10,
+            ),
+        ],
+    )

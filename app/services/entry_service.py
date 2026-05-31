@@ -1,0 +1,33 @@
+from sqlmodel import select
+
+from database.models.couscous import Entry
+
+
+async def list_entries(session, feed_url: str):
+    result = session.execute(
+        select(Entry).where(Entry.feed == feed_url).order_by(Entry.published.desc())
+    )
+    return result.scalars().all()
+
+
+async def get_entry(session, entry_id: int):
+    result = session.execute(select(Entry).where(Entry.id == entry_id))
+    return result.scalar_one_or_none()
+
+
+async def mark_read(session, entry_id: int, read: bool = True):
+    entry = session.execute(
+        select(Entry).where(Entry.id == entry_id)
+    ).scalar_one_or_none()
+    if entry:
+        entry.read = 1 if read else 0
+        session.commit()
+
+
+async def mark_important(session, entry_id: int, important: bool = True):
+    entry = session.execute(
+        select(Entry).where(Entry.id == entry_id)
+    ).scalar_one_or_none()
+    if entry:
+        entry.important = 1 if important else 0
+        session.commit()
