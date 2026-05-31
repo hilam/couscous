@@ -17,6 +17,8 @@ engine = create_async_engine(DB_URL) if db_type == "asyncpg" else create_engine(
 
 
 def init_db():
+    from database.models import couscous  # noqa: F401
+
     if isinstance(engine, AsyncEngine):
         msg = "init_db() requires sync engine, use init_async_db() for async"
         raise TypeError(msg)
