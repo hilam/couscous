@@ -2308,7 +2308,7 @@ Flet equivalents:
 - ft.ListView → for scrollable content
 - ft.Container → for layout boxes
 - ft.AppBar → for top navigation
-- ft.NavigationDestination → for bottom nav tabs
+- ft.NavigationBarDestination → for bottom nav tabs
 - ft.Page → plays the role of RootPage (holds the page)
 
 Flet has its own routing via `page.on_route_change` and `page.go()`.
@@ -2350,7 +2350,7 @@ rio.Theme.from_colors()          ft.ThemeMode + page.theme
 rio.Color.from_hex               ft.colors...
 
 NAVBAR personalizado             ft.NavigationBar (nativo!)
-  (deu 110 linhas pra fazer      ├── ft.NavigationDestination
+  (deu 110 linhas pra fazer      ├── ft.NavigationBarDestination
    algo que Flet tem nativo)     ├── selected_index
                                   └── on_change
 ```
@@ -3877,4 +3877,3 @@ Todos os artefatos criados em `openspec/changes/migrate-rio-to-flet/`:
 Tudo pronto pra implementação. Quer começar com `/opsx-apply` ou prefere revisar algo antes?
 
 ---
-

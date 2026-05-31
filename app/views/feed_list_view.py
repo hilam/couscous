@@ -113,9 +113,9 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
         route="/feeds",
         navigation_bar=ft.NavigationBar(
             destinations=[
-                ft.NavigationDestination(icon=ft.Icons.HOME, label="Início"),
-                ft.NavigationDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
-                ft.NavigationDestination(icon=ft.Icons.INFO, label="Sobre"),
+                ft.NavigationBarDestination(icon=ft.Icons.HOME, label="Início"),
+                ft.NavigationBarDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
+                ft.NavigationBarDestination(icon=ft.Icons.INFO, label="Sobre"),
             ],
             selected_index=1,
             on_change=lambda e: asyncio.create_task(

@@ -11,9 +11,9 @@ async def home_view(page: ft.Page, state: State) -> ft.View:
         scroll=ft.ScrollMode.AUTO,
         navigation_bar=ft.NavigationBar(
             destinations=[
-                ft.NavigationDestination(icon=ft.Icons.HOME, label="Início"),
-                ft.NavigationDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
-                ft.NavigationDestination(icon=ft.Icons.INFO, label="Sobre"),
+                ft.NavigationBarDestination(icon=ft.Icons.HOME, label="Início"),
+                ft.NavigationBarDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
+                ft.NavigationBarDestination(icon=ft.Icons.INFO, label="Sobre"),
             ],
             on_change=lambda e: asyncio.create_task(
                 page.push_route(
