@@ -50,18 +50,18 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
             ft.Container(
                 content=ft.Column(
                     controls=[
-                        ft.Icon(ft.icons.ARTICLE, size=60, color=ft.colors.GREY_400),
+                        ft.Icon(ft.Icons.ARTICLE, size=60, color=ft.colors.GREY_400),
                         ft.Text(
                             "Nenhum artigo encontrado",
-                            style=ft.TextThemeStyle.TITLE_MEDIUM,
+                            theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
                             color=ft.colors.GREY,
                         ),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
-                alignment=ft.alignment.center,
-                padding=ft.padding.all(40),
+                alignment=ft.Alignment.CENTER,
+                padding=ft.Padding.all(40),
             )
         )
 
@@ -69,9 +69,9 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
         route=f"/feed/{feed_url}",
         navigation_bar=ft.NavigationBar(
             destinations=[
-                ft.NavigationDestination(icon=ft.icons.HOME, label="Início"),
-                ft.NavigationDestination(icon=ft.icons.RSS_FEED, label="Feeds"),
-                ft.NavigationDestination(icon=ft.icons.INFO, label="Sobre"),
+                ft.NavigationDestination(icon=ft.Icons.HOME, label="Início"),
+                ft.NavigationDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
+                ft.NavigationDestination(icon=ft.Icons.INFO, label="Sobre"),
             ],
             selected_index=1,
             on_change=lambda e: page.go(
@@ -84,7 +84,7 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
                 bgcolor=ft.colors.CYAN_50,
                 actions=[
                     ft.Text(state.user.name if state.user else "", size=14),
-                    ft.IconButton(ft.icons.REFRESH, on_click=refresh),
+                    ft.IconButton(ft.Icons.REFRESH, on_click=refresh),
                 ],
             ),
             entry_list,

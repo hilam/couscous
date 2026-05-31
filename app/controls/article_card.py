@@ -26,7 +26,7 @@ class ArticleCard(ft.Card):
         self.content = ft.Container(
             content=ft.ListTile(
                 leading=ft.Icon(
-                    ft.icons.ARTICLE,
+                    ft.Icons.ARTICLE,
                     color=ft.colors.BLUE_400 if not entry.read else ft.colors.GREY_400,
                 ),
                 title=ft.Text(
@@ -52,7 +52,7 @@ class ArticleCard(ft.Card):
                 ),
                 on_click=lambda e: self._click(),
             ),
-            padding=ft.padding.all(4),
+            padding=ft.Padding.all(4),
         )
 
     def _click(self):

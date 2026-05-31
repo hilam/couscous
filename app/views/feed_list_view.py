@@ -48,28 +48,31 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
             try:
                 await add_feed(session, url)
             except ValueError:
-                page.show_snack_bar(ft.SnackBar(content=ft.Text("Feed já cadastrado")))
+                snack = ft.SnackBar(content=ft.Text("Feed já cadastrado"))
+                page.overlay.append(snack)
+                snack.open = True
+                page.update()
                 return
 
         await _rebuild_feed_list(feed_list, confirm_delete, page)
         page.update()
 
     def confirm_delete(feed_url: str):
-        dlg = ConfirmDialog(
+        dlg: ft.AlertDialog = ConfirmDialog(
             title="Remover feed",
             message="Tem certeza que deseja remover este feed?",
-            on_confirm=lambda e: delete_feed(feed_url),
+            on_confirm=lambda e: delete_feed(feed_url, dlg),
         )
-        page.dialog = dlg
-        dlg.open = True
+        page.show_dialog(dlg)
         page.update()
 
-    async def delete_feed(feed_url: str):
+    async def delete_feed(feed_url: str, dlg: ft.AlertDialog):
+        dlg.open = False
+        page.update()
         async with get_db_session() as session:
             await remove_feed(session, feed_url)
 
         await _rebuild_feed_list(feed_list, confirm_delete, page)
-        page.dialog.open = False
         page.update()
 
     for feed in feeds:
@@ -80,25 +83,25 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
             ft.Container(
                 content=ft.Column(
                     controls=[
-                        ft.Icon(ft.icons.RSS_FEED, size=60, color=ft.colors.GREY_400),
+                        ft.Icon(ft.Icons.RSS_FEED, size=60, color=ft.colors.GREY_400),
                         ft.Text(
                             "Nenhum feed adicionado",
-                            style=ft.TextThemeStyle.TITLE_MEDIUM,
+                            theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
                             color=ft.colors.GREY,
                         ),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
-                alignment=ft.alignment.center,
-                padding=ft.padding.all(40),
+                alignment=ft.Alignment.CENTER,
+                padding=ft.Padding.all(40),
             )
         )
 
     add_feed_dialog = AddFeedDialog(on_submit=on_feed_added)
 
     def open_add_dialog(e):
-        page.dialog = add_feed_dialog
+        page.overlay.append(add_feed_dialog)
         add_feed_dialog.open = True
         page.update()
 
@@ -106,9 +109,9 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
         route="/feeds",
         navigation_bar=ft.NavigationBar(
             destinations=[
-                ft.NavigationDestination(icon=ft.icons.HOME, label="Início"),
-                ft.NavigationDestination(icon=ft.icons.RSS_FEED, label="Feeds"),
-                ft.NavigationDestination(icon=ft.icons.INFO, label="Sobre"),
+                ft.NavigationDestination(icon=ft.Icons.HOME, label="Início"),
+                ft.NavigationDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
+                ft.NavigationDestination(icon=ft.Icons.INFO, label="Sobre"),
             ],
             selected_index=1,
             on_change=lambda e: page.go(
@@ -121,8 +124,8 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
                 bgcolor=ft.colors.CYAN_50,
                 actions=[
                     ft.Text(state.user.name if state.user else "", size=14),
-                    ft.IconButton(ft.icons.REFRESH, on_click=refresh),
-                    ft.IconButton(ft.icons.ADD, on_click=open_add_dialog),
+                    ft.IconButton(ft.Icons.REFRESH, on_click=refresh),
+                    ft.IconButton(ft.Icons.ADD, on_click=open_add_dialog),
                 ],
             ),
             ft.Stack(
@@ -131,7 +134,7 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
                     ft.Container(
                         content=ft.ProgressRing(),
                         visible=state.loading,
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment.CENTER,
                     ),
                 ],
                 expand=True,

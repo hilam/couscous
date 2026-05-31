@@ -24,16 +24,16 @@ class AddFeedDialog(ft.AlertDialog):
         ]
         self.actions_alignment = ft.MainAxisAlignment.END
 
-    async def _cancel(self, e):
+    def _cancel(self, e):
         self.open = False
         self.url_field.value = ""
-        await self.update_async()
+        self.update()
 
-    async def _submit(self, e):
+    def _submit(self, e):
         url = self.url_field.value.strip()
         if url:
             self.open = False
             self.url_field.value = ""
-            await self.update_async()
+            self.update()
             if self.on_submit:
-                await self.on_submit(url)
+                self.on_submit(url)

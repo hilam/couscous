@@ -21,7 +21,7 @@ async def app_run(page: ft.Page):
     page.padding = 0
 
     state = State()
-    page.session.set("state", state)
+    page.session.store.set("state", state)
 
     async def on_route_change(e: ft.RouteChangeEvent):
         page.views.clear()

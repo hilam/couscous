@@ -12,6 +12,6 @@ class ConfirmDialog(ft.AlertDialog):
         ]
         self.actions_alignment = ft.MainAxisAlignment.END
 
-    async def _cancel(self, e):
+    def _cancel(self, e):
         self.open = False
-        await self.update_async()
+        self.update()

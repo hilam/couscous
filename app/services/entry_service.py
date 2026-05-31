@@ -1,11 +1,11 @@
-from sqlmodel import select
+from sqlmodel import desc, select
 
 from database.models.couscous import Entry
 
 
 async def list_entries(session, feed_url: str):
     result = session.execute(
-        select(Entry).where(Entry.feed == feed_url).order_by(Entry.published.desc())
+        select(Entry).where(Entry.feed == feed_url).order_by(desc(Entry.published))
     )
     return result.scalars().all()
 

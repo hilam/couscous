@@ -8,9 +8,9 @@ async def about_view(page: ft.Page, state: State) -> ft.View:
         route="/about",
         navigation_bar=ft.NavigationBar(
             destinations=[
-                ft.NavigationDestination(icon=ft.icons.HOME, label="Início"),
-                ft.NavigationDestination(icon=ft.icons.RSS_FEED, label="Feeds"),
-                ft.NavigationDestination(icon=ft.icons.INFO, label="Sobre"),
+                ft.NavigationDestination(icon=ft.Icons.HOME, label="Início"),
+                ft.NavigationDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
+                ft.NavigationDestination(icon=ft.Icons.INFO, label="Sobre"),
             ],
             selected_index=2,
             on_change=lambda e: page.go(
@@ -21,8 +21,8 @@ async def about_view(page: ft.Page, state: State) -> ft.View:
             ft.AppBar(title=ft.Text("Sobre"), bgcolor=ft.colors.CYAN_50),
             ft.Column(
                 controls=[
-                    ft.Icon(ft.icons.RSS_FEED, size=60, color=ft.colors.CYAN_400),
-                    ft.Text("CousCous", style=ft.TextThemeStyle.HEADLINE_MEDIUM),
+                    ft.Icon(ft.Icons.RSS_FEED, size=60, color=ft.colors.CYAN_400),
+                    ft.Text("CousCous", theme_style=ft.TextThemeStyle.HEADLINE_MEDIUM),
                     ft.Text("Versão 0.1.0"),
                     ft.Divider(),
                     ft.Text(

@@ -14,8 +14,8 @@ async def login_view(page: ft.Page, state: State) -> ft.View:
     async def toggle_mode(e):
         nonlocal is_login
         is_login = not is_login
-        submit_btn.text = "Entrar" if is_login else "Registrar"
-        toggle_btn.text = "Criar conta" if is_login else "Já tenho conta"
+        submit_btn.text = "Entrar" if is_login else "Registrar"  # type: ignore[attr-defined]
+        toggle_btn.text = "Criar conta" if is_login else "Já tenho conta"  # type: ignore[attr-defined]
         error_text.visible = False
         page.update()
 
@@ -64,10 +64,11 @@ async def login_view(page: ft.Page, state: State) -> ft.View:
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
-                    ft.Icon(ft.icons.RSS_FEED, size=80, color=ft.colors.CYAN_400),
-                    ft.Text("CousCous", style=ft.TextThemeStyle.HEADLINE_LARGE),
+                    ft.Icon(ft.Icons.RSS_FEED, size=80, color=ft.colors.CYAN_400),
+                    ft.Text("CousCous", theme_style=ft.TextThemeStyle.HEADLINE_LARGE),
                     ft.Text(
-                        "Entre com sua conta", style=ft.TextThemeStyle.TITLE_MEDIUM
+                        "Entre com sua conta",
+                        theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
                     ),
                     ft.Container(
                         content=ft.Column(

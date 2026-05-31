@@ -1,24 +1,25 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import cast
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
 
-from database.service.config import db_type
 from database.service.database import engine
 
 
 @asynccontextmanager
-async def get_db_session():
-    if db_type == "asyncpg":
-        async_session = sessionmaker(
+async def get_db_session() -> AsyncGenerator[AsyncSession]:
+    if isinstance(engine, AsyncEngine):
+        async_session = async_sessionmaker(
             engine, class_=AsyncSession, expire_on_commit=False
         )
         async with async_session() as session:
             yield session
     else:
         sync_session = sessionmaker(engine)
-        session = sync_session()
+        session = cast("AsyncSession", sync_session())
         try:
             yield session
         finally:
-            session.close()
+            await session.close()
