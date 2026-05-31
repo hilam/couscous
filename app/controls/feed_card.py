@@ -26,9 +26,9 @@ class FeedCard(ft.Card):
                 trailing=ft.IconButton(
                     ft.icons.DELETE_OUTLINE,
                     icon_color=ft.colors.RED_300,
-                    on_click=lambda e: self._delete(e),
+                    on_click=self._delete,
                 ),
-                on_click=lambda e: self._click(e),
+                on_click=self._click,
             ),
             padding=ft.padding.all(4),
         )

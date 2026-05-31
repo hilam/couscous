@@ -2,6 +2,8 @@ import flet as ft
 
 from database.models.couscous import Entry
 
+SUMMARY_MAX_LENGTH = 120
+
 
 class ArticleCard(ft.Card):
     def __init__(self, entry: Entry, on_click):
@@ -37,7 +39,11 @@ class ArticleCard(ft.Card):
                     controls=[
                         ft.Text(subtitle, size=12) if subtitle else ft.Text(),
                         ft.Text(
-                            summary[:120] + "..." if len(summary) > 120 else summary,
+                            (
+                                summary[:SUMMARY_MAX_LENGTH] + "..."
+                                if len(summary) > SUMMARY_MAX_LENGTH
+                                else summary
+                            ),
                             size=12,
                             color=ft.colors.GREY,
                             max_lines=2,

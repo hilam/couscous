@@ -11,7 +11,8 @@ async def list_feeds(session):
 async def add_feed(session, url: str):
     existing = session.execute(select(Feed).where(Feed.url == url)).scalar_one_or_none()
     if existing:
-        raise ValueError("Feed já cadastrado")
+        msg = "Feed já cadastrado"
+        raise ValueError(msg)
 
     new_feed = Feed(url=url)
     session.add(new_feed)

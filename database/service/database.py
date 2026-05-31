@@ -10,13 +10,11 @@ engine = create_async_engine(DB_URL) if db_type == "asyncpg" else create_engine(
 
 def init_db():
     with engine.begin() as conn:
-        # await conn.run_sync(SQLModel.metadata.drop_all)
         SQLModel.metadata.create_all(bind=conn)
 
 
 async def init_async_db():
     async with engine.begin() as conn:
-        # await conn.run_sync(SQLModel.metadata.drop_all)
         await conn.run_sync(SQLModel.metadata.create_all)
 
 

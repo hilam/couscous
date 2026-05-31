@@ -13,7 +13,8 @@ async def register(session, name: str, password: str) -> User:
         select(User).where(User.name == name)
     ).scalar_one_or_none()
     if existing:
-        raise ValueError("Nome de usuário já existe")
+        msg = "Nome de usuário já existe"
+        raise ValueError(msg)
 
     user = User(name=name, password=password)
     session.add(user)
@@ -27,9 +28,11 @@ async def login(session, name: str, password: str) -> User | None:
     user = result.scalar_one_or_none()
 
     if not user:
-        raise ValueError("Usuário não encontrado")
+        msg = "Usuário não encontrado"
+        raise ValueError(msg)
 
     if user.password != password:
-        raise ValueError("Senha incorreta")
+        msg = "Senha incorreta"
+        raise ValueError(msg)
 
     return user

@@ -16,8 +16,8 @@ async def get_db_session():
         async with async_session() as session:
             yield session
     else:
-        Session = sessionmaker(engine)
-        session = Session()
+        sync_session = sessionmaker(engine)
+        session = sync_session()
         try:
             yield session
         finally:

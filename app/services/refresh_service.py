@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+import datetime as _dt
 
 import feedparser
 import httpx
@@ -27,7 +27,7 @@ def refresh_single_feed(session, feed: Feed):
 
         feed.title = parsed.feed.get("title", feed.title)
         feed.link = parsed.feed.get("link", feed.link)
-        feed.updated = datetime.now()
+        feed.updated = _dt.datetime.now(tz=_dt.UTC)
         feed.last_exception = None
 
         for entry_data in parsed.entries:
@@ -48,7 +48,9 @@ def refresh_single_feed(session, feed: Feed):
             if hasattr(entry_data, "published_parsed") and entry_data.published_parsed:
                 from time import mktime
 
-                published = datetime.fromtimestamp(mktime(entry_data.published_parsed))
+                published = _dt.datetime.fromtimestamp(
+                    mktime(entry_data.published_parsed), tz=_dt.UTC
+                )
 
             entry = Entry(
                 feed=feed.url,
@@ -60,9 +62,9 @@ def refresh_single_feed(session, feed: Feed):
                 else None,
                 author=entry_data.get("author"),
                 published=published,
-                last_updated=datetime.now(),
-                first_updated=datetime.now(),
-                first_updated_epoch=datetime.now(),
+                last_updated=_dt.datetime.now(tz=_dt.UTC),
+                first_updated=_dt.datetime.now(tz=_dt.UTC),
+                first_updated_epoch=_dt.datetime.now(tz=_dt.UTC),
                 added_by="system",
                 feed_order=0,
             )

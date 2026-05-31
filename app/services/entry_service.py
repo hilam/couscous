@@ -15,7 +15,7 @@ async def get_entry(session, entry_id: int):
     return result.scalar_one_or_none()
 
 
-async def mark_read(session, entry_id: int, read: bool = True):
+async def mark_read(session, entry_id: int, *, read: bool = True):
     entry = session.execute(
         select(Entry).where(Entry.id == entry_id)
     ).scalar_one_or_none()
@@ -24,7 +24,7 @@ async def mark_read(session, entry_id: int, read: bool = True):
         session.commit()
 
 
-async def mark_important(session, entry_id: int, important: bool = True):
+async def mark_important(session, entry_id: int, *, important: bool = True):
     entry = session.execute(
         select(Entry).where(Entry.id == entry_id)
     ).scalar_one_or_none()

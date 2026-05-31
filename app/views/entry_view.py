@@ -97,5 +97,5 @@ async def toggle_important(page: ft.Page, entry_id: int):
     async with get_db_session() as session:
         entry = await get_entry(session, entry_id)
         if entry:
-            await mark_important(session, entry_id, not entry.important)
+            await mark_important(session, entry_id, important=not entry.important)
     page.update()

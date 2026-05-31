@@ -9,6 +9,23 @@ from app.services.refresh_service import refresh_all_feeds
 from app.state import State
 
 
+def _build_feed_card(feed, confirm_delete, page):
+    return FeedCard(
+        feed=feed,
+        on_click=lambda _, url=feed.url: page.go(f"/feed/{url}"),
+        on_delete=lambda _, url=feed.url: confirm_delete(url),
+    )
+
+
+async def _rebuild_feed_list(feed_list, confirm_delete, page):
+    async with get_db_session() as session:
+        feeds = await list_feeds(session)
+    feed_list.controls.clear()
+    for feed in feeds:
+        feed_list.controls.append(_build_feed_card(feed, confirm_delete, page))
+    return feeds
+
+
 async def feed_list_view(page: ft.Page, state: State) -> ft.View:
     async with get_db_session() as session:
         feeds = await list_feeds(session)
@@ -22,18 +39,7 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
         async with get_db_session() as session:
             await refresh_all_feeds(session)
 
-        async with get_db_session() as session:
-            feeds = await list_feeds(session)
-
-        feed_list.controls.clear()
-        for feed in feeds:
-            feed_list.controls.append(
-                FeedCard(
-                    feed=feed,
-                    on_click=lambda _, url=feed.url: page.go(f"/feed/{url}"),
-                    on_delete=lambda _, url=feed.url: confirm_delete(url),
-                )
-            )
+        await _rebuild_feed_list(feed_list, confirm_delete, page)
         state.loading = False
         page.update()
 
@@ -45,18 +51,7 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
                 page.show_snack_bar(ft.SnackBar(content=ft.Text("Feed já cadastrado")))
                 return
 
-        async with get_db_session() as session:
-            feeds = await list_feeds(session)
-
-        feed_list.controls.clear()
-        for feed in feeds:
-            feed_list.controls.append(
-                FeedCard(
-                    feed=feed,
-                    on_click=lambda _, url=feed.url: page.go(f"/feed/{url}"),
-                    on_delete=lambda _, url=feed.url: confirm_delete(url),
-                )
-            )
+        await _rebuild_feed_list(feed_list, confirm_delete, page)
         page.update()
 
     def confirm_delete(feed_url: str):
@@ -73,29 +68,12 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
         async with get_db_session() as session:
             await remove_feed(session, feed_url)
 
-        async with get_db_session() as session:
-            feeds = await list_feeds(session)
-
-        feed_list.controls.clear()
-        for feed in feeds:
-            feed_list.controls.append(
-                FeedCard(
-                    feed=feed,
-                    on_click=lambda _, url=feed.url: page.go(f"/feed/{url}"),
-                    on_delete=lambda _, url=feed.url: confirm_delete(url),
-                )
-            )
+        await _rebuild_feed_list(feed_list, confirm_delete, page)
         page.dialog.open = False
         page.update()
 
     for feed in feeds:
-        feed_list.controls.append(
-            FeedCard(
-                feed=feed,
-                on_click=lambda _, url=feed.url: page.go(f"/feed/{url}"),
-                on_delete=lambda _, url=feed.url: confirm_delete(url),
-            )
-        )
+        feed_list.controls.append(_build_feed_card(feed, confirm_delete, page))
 
     if not feeds:
         feed_list.controls.append(

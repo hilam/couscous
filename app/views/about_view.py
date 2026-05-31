@@ -26,7 +26,8 @@ async def about_view(page: ft.Page, state: State) -> ft.View:
                     ft.Text("Versão 0.1.0"),
                     ft.Divider(),
                     ft.Text(
-                        "CousCous é um leitor de feeds RSS construído com Python e Flet."
+                        "CousCous é um leitor de feeds RSS "
+                        "construído com Python e Flet."
                     ),
                     ft.Text(
                         "Permite adicionar feeds RSS, visualizar artigos, "

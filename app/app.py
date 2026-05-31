@@ -29,7 +29,7 @@ async def app_run(page: ft.Page):
 
         if route == "/login" or (not state.user and route != "/about"):
             v = await login_view(page, state)
-        elif route == "/feeds" or route == "/":
+        elif route in {"/feeds", "/"}:
             v = await feed_list_view(page, state)
         elif route.startswith("/feed/"):
             state.active_feed_url = route[len("/feed/") :]
