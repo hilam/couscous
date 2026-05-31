@@ -65,3 +65,7 @@ media/
 .env
 .tool-versions
 .pytest_cache/
+
+# Artefatos do projeto
+.ai-jail
+.opencode/
