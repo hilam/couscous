@@ -10,6 +10,7 @@ uv run pytest                    # run all tests
 ruff format .                    # format code
 ruff check .                     # lint (config excludes tests/)
 uv run mypy .                    # type-check (only app/ and database/ per config)
+uv run lint-security             # security scan with bandit (or `make lint-security`)
 ```
 
 One-time DB init before first launch:

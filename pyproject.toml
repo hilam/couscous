@@ -15,6 +15,16 @@ name = "couscous"
 version = "0.1.0"
 description = "Leitor de feeds RSS"
 
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+package = true
+
+[project.scripts]
+lint-security = "app.bandit_runner:main"
+
 [dependency-groups]
 dev = [
     "behave<2.0.0,>=1.2.6",
@@ -22,7 +32,14 @@ dev = [
     "pytest<9.0.0,>=8.3.3",
     "pytest-asyncio>=0.24.0",
     "ruff>=0.15.15",
+    "bandit>=1.8.0",
 ]
+
+[tool.setuptools.packages.find]
+include = ["app*", "database*"]
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv"]
 
 [tool.mypy]  # https://mypy.readthedocs.io/en/latest/config_file.html
 python_version = "3.13"
