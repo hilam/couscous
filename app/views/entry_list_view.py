@@ -1,9 +1,9 @@
 import flet as ft
 
-from app.db import get_db_session
-from app.state import State
-from app.services.entry_service import list_entries
 from app.controls.article_card import ArticleCard
+from app.db import get_db_session
+from app.services.entry_service import list_entries
+from app.state import State
 
 
 async def entry_list_view(page: ft.Page, state: State) -> ft.View:
@@ -11,6 +11,7 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
 
     async with get_db_session() as session:
         from sqlmodel import select
+
         from database.models.couscous import Feed
 
         result = await session.execute(select(Feed).where(Feed.url == feed_url))

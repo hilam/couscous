@@ -5,7 +5,7 @@ import feedparser
 import httpx
 from sqlmodel import select
 
-from database.models.couscous import Feed, Entry
+from database.models.couscous import Entry, Feed
 
 
 async def refresh_all_feeds(session):

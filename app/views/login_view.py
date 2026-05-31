@@ -1,8 +1,8 @@
 import flet as ft
 
 from app.db import get_db_session
+from app.services.user_service import login, register
 from app.state import State
-from app.services.user_service import register, login
 
 
 async def login_view(page: ft.Page, state: State) -> ft.View:

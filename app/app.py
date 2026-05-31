@@ -1,11 +1,11 @@
 import flet as ft
 
 from app.state import State
-from app.views.home_view import home_view
-from app.views.feed_list_view import feed_list_view
+from app.views.about_view import about_view
 from app.views.entry_list_view import entry_list_view
 from app.views.entry_view import entry_view
-from app.views.about_view import about_view
+from app.views.feed_list_view import feed_list_view
+from app.views.home_view import home_view
 from app.views.login_view import login_view
 
 
