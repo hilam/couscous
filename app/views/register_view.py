@@ -1,11 +1,11 @@
 import flet as ft
 
 from app.db import get_db_session
-from app.services.user_service import login
+from app.services.user_service import register
 from app.state import State
 
 
-async def login_view(page: ft.Page, state: State) -> ft.View:
+async def register_view(page: ft.Page, state: State) -> ft.View:
     name_field = ft.TextField(label="Nome de usuário", autofocus=True)
     password_field = ft.TextField(label="Senha", password=True)
     error_text = ft.Text("", color=ft.Colors.RED, visible=False)
@@ -22,13 +22,13 @@ async def login_view(page: ft.Page, state: State) -> ft.View:
 
         async with get_db_session() as session:
             try:
-                user = await login(session, name, password)
+                user = await register(session, name, password)
 
                 if user:
                     state.user = user
                     await page.push_route("/feeds")
                 else:
-                    error_text.value = "Usuário não encontrado"
+                    error_text.value = "Nome de usuário já existe"
                     error_text.visible = True
                     page.update()
             except ValueError as ex:
@@ -36,14 +36,14 @@ async def login_view(page: ft.Page, state: State) -> ft.View:
                 error_text.visible = True
                 page.update()
 
-    async def go_to_register(e):
-        await page.push_route("/register")
+    async def go_to_login(e):
+        await page.push_route("/login")
 
-    submit_btn = ft.FilledButton("Entrar", on_click=submit)
-    register_link = ft.TextButton("Criar conta", on_click=go_to_register)
+    submit_btn = ft.FilledButton("Registrar", on_click=submit)
+    login_link = ft.TextButton("Já tenho conta", on_click=go_to_login)
 
     return ft.View(
-        route="/login",
+        route="/register",
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         vertical_alignment=ft.MainAxisAlignment.CENTER,
         controls=[
@@ -54,7 +54,7 @@ async def login_view(page: ft.Page, state: State) -> ft.View:
                     ft.Icon(ft.Icons.RSS_FEED, size=80, color=ft.Colors.CYAN_400),
                     ft.Text("CousCous", theme_style=ft.TextThemeStyle.HEADLINE_LARGE),
                     ft.Text(
-                        "Entre com sua conta",
+                        "Crie sua conta",
                         theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
                     ),
                     ft.Container(
@@ -64,7 +64,7 @@ async def login_view(page: ft.Page, state: State) -> ft.View:
                                 password_field,
                                 error_text,
                                 submit_btn,
-                                register_link,
+                                login_link,
                             ],
                             spacing=10,
                         ),
