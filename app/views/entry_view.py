@@ -38,9 +38,11 @@ async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
                 ft.NavigationDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
                 ft.NavigationDestination(icon=ft.Icons.INFO, label="Sobre"),
             ],
-            on_change=lambda e: asyncio.create_task(page.push_route(
-                ["/feeds", "/feeds", "/about"][e.control.selected_index]
-            )),
+            on_change=lambda e: asyncio.create_task(
+                page.push_route(
+                    ["/feeds", "/feeds", "/about"][e.control.selected_index]
+                )
+            ),
         ),
         controls=[
             ft.AppBar(

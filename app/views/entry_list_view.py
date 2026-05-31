@@ -61,7 +61,7 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
                             "Nenhum artigo encontrado",
                             theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
                             color=ft.Colors.GREY,
-                ),
+                        ),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -80,9 +80,11 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
                 ft.NavigationDestination(icon=ft.Icons.INFO, label="Sobre"),
             ],
             selected_index=1,
-            on_change=lambda e: asyncio.create_task(page.push_route(
-                ["/feeds", "/feeds", "/about"][e.control.selected_index]
-            )),
+            on_change=lambda e: asyncio.create_task(
+                page.push_route(
+                    ["/feeds", "/feeds", "/about"][e.control.selected_index]
+                )
+            ),
         ),
         controls=[
             ft.AppBar(

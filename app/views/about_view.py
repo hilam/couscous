@@ -15,9 +15,11 @@ async def about_view(page: ft.Page, state: State) -> ft.View:
                 ft.NavigationDestination(icon=ft.Icons.INFO, label="Sobre"),
             ],
             selected_index=2,
-            on_change=lambda e: asyncio.create_task(page.push_route(
-                ["/feeds", "/feeds", "/about"][e.control.selected_index]
-            )),
+            on_change=lambda e: asyncio.create_task(
+                page.push_route(
+                    ["/feeds", "/feeds", "/about"][e.control.selected_index]
+                )
+            ),
         ),
         controls=[
             ft.AppBar(title=ft.Text("Sobre"), bgcolor=ft.Colors.CYAN_50),
