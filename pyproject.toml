@@ -22,9 +22,6 @@ build-backend = "setuptools.build_meta"
 [tool.uv]
 package = true
 
-[project.scripts]
-lint-security = "app.bandit_runner:main"
-
 [dependency-groups]
 dev = [
     "behave<2.0.0,>=1.2.6",

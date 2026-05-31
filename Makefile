@@ -1,2 +1,2 @@
 lint-security:
-	uv run lint-security
+	uv run bandit -r app/ database/
