@@ -38,7 +38,7 @@ async def login_view(page: ft.Page, state: State) -> ft.View:
 
                 if user:
                     state.user = user
-                    page.go("/feeds")
+                    await page.push_route("/feeds")
                 else:
                     error_text.value = (
                         "Usuário não encontrado"

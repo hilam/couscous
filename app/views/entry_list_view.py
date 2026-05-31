@@ -1,3 +1,5 @@
+import asyncio
+
 import flet as ft
 
 from app.controls.article_card import ArticleCard
@@ -32,7 +34,9 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
             entry_list.controls.append(
                 ArticleCard(
                     entry=entry,
-                    on_click=lambda _, eid=entry.id: page.go(f"/entry/{eid}"),
+                    on_click=lambda _, eid=entry.id: asyncio.create_task(
+                        page.push_route(f"/entry/{eid}")
+                    ),
                 )
             )
         page.update()
@@ -41,7 +45,9 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
         entry_list.controls.append(
             ArticleCard(
                 entry=entry,
-                on_click=lambda _, eid=entry.id: page.go(f"/entry/{eid}"),
+                on_click=lambda _, eid=entry.id: asyncio.create_task(
+                    page.push_route(f"/entry/{eid}")
+                ),
             )
         )
 
@@ -55,7 +61,7 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
                             "Nenhum artigo encontrado",
                             theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
                             color=ft.Colors.GREY,
-                        ),
+                ),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -74,9 +80,9 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
                 ft.NavigationDestination(icon=ft.Icons.INFO, label="Sobre"),
             ],
             selected_index=1,
-            on_change=lambda e: page.go(
+            on_change=lambda e: asyncio.create_task(page.push_route(
                 ["/feeds", "/feeds", "/about"][e.control.selected_index]
-            ),
+            )),
         ),
         controls=[
             ft.AppBar(

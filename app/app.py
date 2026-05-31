@@ -46,4 +46,4 @@ async def app_run(page: ft.Page):
         page.update()
 
     page.on_route_change = on_route_change
-    page.go("/login")
+    await page.push_route("/login")

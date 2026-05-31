@@ -1,3 +1,5 @@
+import asyncio
+
 import flet as ft
 
 from app.controls.add_feed_dialog import AddFeedDialog
@@ -12,7 +14,9 @@ from app.state import State
 def _build_feed_card(feed, confirm_delete, page):
     return FeedCard(
         feed=feed,
-        on_click=lambda _, url=feed.url: page.go(f"/feed/{url}"),
+        on_click=lambda _, url=feed.url: asyncio.create_task(
+            page.push_route(f"/feed/{url}")
+        ),
         on_delete=lambda _, url=feed.url: confirm_delete(url),
     )
 
@@ -88,7 +92,7 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
                             "Nenhum feed adicionado",
                             theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
                             color=ft.Colors.GREY,
-                        ),
+                ),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -114,9 +118,9 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
                 ft.NavigationDestination(icon=ft.Icons.INFO, label="Sobre"),
             ],
             selected_index=1,
-            on_change=lambda e: page.go(
+            on_change=lambda e: asyncio.create_task(page.push_route(
                 ["/feeds", "/feeds", "/about"][e.control.selected_index]
-            ),
+            )),
         ),
         controls=[
             ft.AppBar(
