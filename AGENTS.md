@@ -1,140 +1,62 @@
-# AGENTS.md – CousCous RSS Feed Reader
+# AGENTS.md – CousCous RSS Feed Reader (Flet)
 
-### Repository‑wide Commands  
+## Quick start
 
-- **Run the web UI** (Rio app)
-  ```bash
-  python -m rio run web
-  ```
-  *`rio` discovers the `app` object in `web/__init__.py` and serves it on the default port (8080).*
-
-- **Start the FastAPI backend**
-  ```bash
-  uvicorn api.main:app --reload
-  ```
-  *`api/main.py` defines the FastAPI instance named **app**.*
-
-- **Create the database schema** (run once, before any API call)
-  ```bash
-  python -c "from database.service.database import init_db; init_db()"
-  ```
-
-- **Run the test suite**
-  ```bash
-  pytest
-  ```
-  *Tests rely on the fixtures in `tests/conftest.py` which spin up a temporary SQLite DB and a Flask‑style test client for the web app.*
-
-- **Run a single test**
-  ```bash
-  pytest tests/test_home.py
-  ```
-
-- **Lint / Type‑check** (project uses `ruff` and `pyright` if installed)
-  ```bash
-  ruff check .
-  pyright .
-  ```
-
-- **Load environment variables** (required by the test fixtures and the apps)
-  ```bash
-  export $(cat .env | xargs)   # if you create an .env file
-  ```
-  *The only variables referenced are:*
-
-  | Variable | Meaning |
-  |----------|---------|
-  | `COUSCOUS_WEB_PROTOCOL`, `COUSCOUS_WEB_HOST`, `COUSCOUS_WEB_PORT` | Construct the web base URL used by fixtures |
-  | `COUSCOUS_API_PROTOCOL`, `COUSCOUS_API_HOST`, `COUSCOUS_API_PORT` | Construct the API base URL used by fixtures |
-  | `DB_TYPE` (used internally as `db_type`) | `"asyncpg"` → async engine, otherwise sync engine |
-  | `DB_URL` | SQLAlchemy connection string (e.g. `sqlite+aiosqlite:///test.db`) |
-
----
-
-### Database / ORM Details  
-
-- **Engine selection** (`database/service/config.py`)
-  ```python
-  db_type = os.getenv("DB_TYPE", "sqlite")
-  DB_URL = os.getenv("DB_URL", "sqlite:///couscous.db")
-  ```
-  *If `DB_TYPE` is `"asyncpg"` the async engine is used; otherwise a sync engine is created.*
-
-- **Models** (`database/models/couscous.py`)
-  - `User`: `id` (PK, optional), `name` (PK, unique), `password`
-  - `Feed`: `url` PK, many optional fields, relationship to `Entry` via `entries`
-  - `Entry`: composite PK (`id`, `feed` FK to `feeds.url`)
-
-- **Session helper** (`database/service/database.py`)
-  - `get_session` yields an `AsyncSession` when using asyncpg, otherwise a regular session.
-
-- **Init functions**
-  - `init_db()` sync version, called with `python -c "…"`
-  - `init_async_db()` async version, used only if you need an async‑only setup.
-
----
-
-### FastAPI Endpoints (`api/main.py`)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/health` | Health‑check, returns `{ "ping": "pong!" }` |
-| `GET` | `/` | Short message pointing to `/docs` |
-| `POST` | `/register` | Creates a `User`; returns the created model |
-| `GET` | `/feeds` | Returns a list of **Feed** objects (only `title` field is sent) |
-| `POST` | `/feeds` | Creates a new **Feed** entry |
-
-*All routes depend on `get_session` for DB access.*
-
----
-
-### Rio UI Structure (`web/__init__.py`)
-
-- **Theme** – primary `#01dffdff`, secondary `#0083ffff`, light mode.
-- **Pages** (ordered as they appear in the navigation bar)
-  1. **Home** – `pages.HomePage` (default route `''`)
-  2. **NewsPage** – `pages.NewsPage` (`'news-page'`)
-  3. **AboutPage** – `pages.AboutPage` (`'about-page'`)
-- **Root component** – `pages.RootPage` (holds the persistent navbar/footer).
-
-The app is instantiated as
-```python
-app = rio.App(
-    name='web',
-    pages=[…],
-    build=pages.RootPage,
-    theme=theme,
-    assets_dir=Path(__file__).parent / "assets",
-)
+```bash
+uv sync                          # install deps (uv is the package manager)
+python main.py                   # run the Flet app (desktop or web via -d)
+python -c "from database.service.database import init_db; init_db()"  # one-time schema init
+pytest                           # run all tests
+ruff check .                     # lint
+pyright .                        # type-check
 ```
----
 
-### Testing Fixtures (`tests/conftest.py`)
+Run Flet in web mode: `flet run -d` or `python -m flet run -d`.
 
-- `web_address` & `api_address` – build URLs from the environment variables above.
-- `app` – creates a Flask‑style test client from `web.create_app` (imported implicitly by `web/__init__.py`).
-- `client` – `app.test_client()` used by the endpoint tests.
-- `runner` – `app.test_cli_runner()` for CLI‑style tests (currently unused).
+## Project architecture
 
----
+| Directory | Purpose |
+|-----------|---------|
+| `main.py` | Entrypoint: `ft.app(target=app_run)` |
+| `app/` | Flet app: views, services, controls, DB session, state |
+| `app/services/` | Async service functions (`feed_service`, `entry_service`, `user_service`, `refresh_service`) |
+| `app/views/` | One file per route: `login_view`, `feed_list_view`, `entry_list_view`, `entry_view`, `home_view`, `about_view` |
+| `app/controls/` | Reusable UI components (`feed_card`, `article_card`, `add_feed_dialog`, `confirm_dialog`) |
+| `app/db.py` | `get_db_session()` — async context manager wrapping sync/async engine |
+| `app/state.py` | `State` class: `user`, `active_feed_url`, `loading` |
+| `database/models/couscous.py` | SQLModel models: `User`, `Feed`, `Entry`, `FeedMetadata`, `FeedTag` |
+| `database/service/` | DB engine, config, `init_db()` / `init_async_db()` |
+| `database/service/config.py` | Reads `COUSCOUS_DATABASE_TYPE`, path env vars |
 
-### Gotchas / Agent‑Specific Tips  
+## Environment variables
 
-- **Database creation must happen before the first API request** – otherwise the tables are missing and the endpoint will error with “no such table”.
-- The **async vs sync engine** is chosen solely by `DB_TYPE`. Most local usage leaves it at the default sync engine, so `init_db()` (sync) is sufficient.
-- The **web UI runs on port 8080** by default; changing the port requires setting `COUSCOUS_WEB_PORT` **before** starting `rio`.
-- The **FastAPI app is not started automatically** by the Rio app; they are independent processes. Run them in separate terminals or use a process manager.
-- The FastAPI routes return **only a subset** of model fields (e.g., `Feed` returns only `title`). If you need full data, add a custom response model.
+| Var | Default | Purpose |
+|-----|---------|---------|
+| `COUSCOUS_DATABASE_TYPE` | unset (sqlite) | `asyncpg` for async engine |
+| `COUSCOUS_DATABASE_NAME` | — | DB name (used for both sqlite and postgres) |
+| `COUSCOUS_DATABASE_HOST` | — | Postgres host |
+| `COUSCOUS_DATABASE_PORT` | 5432 | Postgres port |
+| `COUSCOUS_DATABASE_USER` | — | Postgres user |
+| `COUSCOUS_DATABASE_PASS` | — | Postgres password |
+
+## Testing
+
+- All tests use `db_session` fixture (in-memory SQLite via SQLModel).
+- Every service test is `@pytest.mark.asyncio` and calls async service functions.
+- Run a single test: `pytest tests/test_feed_service.py::test_add_feed`.
+
+## Gotchas
+
+- Run `init_db()` **once** before first app launch (tables created lazily).
+- All service functions in `app/services/` are **async** and take a `session` first arg.
+- The DB session (`app/db.get_db_session()`) is a sync OR async session depending on env — works with both engines.
+- Password is stored in plaintext (no hashing yet).
+- `flet run -d` serves via web browser on `localhost:8550` by default.
+
+## OpenSpec
+
+Structured changes live in `openspec/`. Skills in `.opencode/skills/openspec-*` handle the workflow. Use `/opsx-propose` for new change proposals, `/opsx-apply` to implement tasks.
 
 ## graphify
 
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-When the user types `/graphify`, invoke the `skill` tool with `skill: "graphify"` before doing anything else.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+Knowledge graph at `graphify-out/`. Run `graphify update .` after modifying code. Query it with `graphify query "..."`, use `graphify path "A" "B"` for relationships, read `graphify-out/GRAPH_REPORT.md` for architecture overview.
