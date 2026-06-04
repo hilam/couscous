@@ -1,3 +1,31 @@
+.PHONY: install run run-web test lint format format-check typecheck check-all lint-security db-up db-down db-shell clean
+
+install:
+	uv sync
+
+run:
+	uv run python main.py
+
+run-web:
+	uv run flet run -w
+
+test:
+	uv run pytest
+
+lint:
+	ruff check .
+
+format:
+	ruff format .
+
+lint-fix:
+	ruff check --fix
+
+typecheck:
+	uv run mypy .
+
+check-all: lint typecheck test lint-security
+
 lint-security:
 	uv run bandit -r app/ database/
 
@@ -6,3 +34,14 @@ db-up:
 
 db-down:
 	docker compose down --remove-orphans
+
+db-clean:
+	docker compose down --volumes --remove-orphans
+
+db-shell:
+	PGPASSWORD=couscous psql -h localhost -U couscous -d couscous -p 5432
+
+clean:
+	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name '*.pyc' -delete
+	rm -rf .pytest_cache/ reports/
