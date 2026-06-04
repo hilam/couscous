@@ -18,7 +18,9 @@ async def refresh_all_feeds(session):
 
 async def refresh_single_feed(session, feed: Feed):
     try:
-        response = await asyncio.to_thread(httpx.get, feed.url, timeout=30)
+        response = await asyncio.to_thread(
+            httpx.get, feed.url, timeout=30, follow_redirects=True
+        )
         response.raise_for_status()
 
         parsed = await asyncio.to_thread(feedparser.parse, response.text)
