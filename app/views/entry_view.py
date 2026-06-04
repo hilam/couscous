@@ -46,6 +46,12 @@ async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
         ),
         controls=[
             ft.AppBar(
+                leading=ft.IconButton(
+                    ft.Icons.ARROW_BACK,
+                    on_click=lambda _: asyncio.create_task(
+                        page.push_route(f"/feed/{entry.feed}")
+                    ),
+                ),
                 title=ft.Text(entry.title or "Artigo"),
                 bgcolor=ft.Colors.CYAN_50,
                 actions=[

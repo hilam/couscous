@@ -88,6 +88,10 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
         ),
         controls=[
             ft.AppBar(
+                leading=ft.IconButton(
+                    ft.Icons.ARROW_BACK,
+                    on_click=lambda _: asyncio.create_task(page.push_route("/feeds")),
+                ),
                 title=ft.Text(feed_title),
                 bgcolor=ft.Colors.CYAN_50,
                 actions=[
