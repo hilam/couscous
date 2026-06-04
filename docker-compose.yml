@@ -2,11 +2,11 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: couscous
-      POSTGRES_PASSWORD: couscous
-      POSTGRES_DB: couscous
+      POSTGRES_USER: ${COUSCOUS_DATABASE_USER:-couscous}
+      POSTGRES_PASSWORD: ${COUSCOUS_DATABASE_PASS:-couscous}
+      POSTGRES_DB: ${COUSCOUS_DATABASE_NAME:-couscous}
     ports:
-      - "5432:5432"
+      - "${COUSCOUS_DATABASE_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
