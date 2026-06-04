@@ -1,3 +1,5 @@
+import asyncio
+
 import flet as ft
 
 from app.services.user_service import register
@@ -39,6 +41,8 @@ async def register_view(page: ft.Page, state: State) -> ft.View:
     async def go_to_login(e):
         await page.push_route("/login")
 
+    name_field.on_submit = lambda e: asyncio.create_task(password_field.focus())
+    password_field.on_submit = submit
     submit_btn = ft.FilledButton("Registrar", on_click=submit)
     login_link = ft.TextButton("Já tenho conta", on_click=go_to_login)
 
