@@ -1,8 +1,8 @@
 import flet as ft
 
-from app.db import get_db_session
 from app.services.user_service import register
 from app.state import State
+from database.service.database import get_db_session
 
 
 async def register_view(page: ft.Page, state: State) -> ft.View:

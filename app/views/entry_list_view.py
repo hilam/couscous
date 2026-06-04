@@ -3,9 +3,9 @@ import asyncio
 import flet as ft
 
 from app.controls.article_card import ArticleCard
-from app.db import get_db_session
 from app.services.entry_service import list_entries
 from app.state import State
+from database.service.database import get_db_session
 
 
 async def entry_list_view(page: ft.Page, state: State) -> ft.View:

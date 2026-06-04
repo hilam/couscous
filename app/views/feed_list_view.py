@@ -5,10 +5,10 @@ import flet as ft
 from app.controls.add_feed_dialog import AddFeedDialog
 from app.controls.confirm_dialog import ConfirmDialog
 from app.controls.feed_card import FeedCard
-from app.db import get_db_session
 from app.services.feed_service import add_feed, list_feeds, remove_feed
 from app.services.refresh_service import refresh_all_feeds
 from app.state import State
+from database.service.database import get_db_session
 
 
 def _build_feed_card(feed, confirm_delete, page):

@@ -2,9 +2,9 @@ import asyncio
 
 import flet as ft
 
-from app.db import get_db_session
 from app.services.entry_service import get_entry, mark_important, mark_read
 from app.state import State
+from database.service.database import get_db_session
 
 
 async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
