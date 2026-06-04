@@ -1,10 +1,27 @@
 import asyncio
+import contextlib
 
 import flet as ft
+from fletify import FletifyHTML
 
 from app.services.entry_service import get_entry, mark_important, mark_read
 from app.state import State
 from database.service.database import get_db_session
+
+
+def _get_content_renderer(content: str) -> ft.Control:
+    if not content:
+        return ft.Text("Sem conteúdo disponível.")
+
+    with contextlib.suppress(Exception):
+        result = FletifyHTML(content).get_flet()
+        if result.content is not None:
+            return result
+
+    return ft.Markdown(
+        content,
+        extension_set=ft.MarkdownExtensionSet.GITHUB_WEB,
+    )
 
 
 async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
@@ -84,15 +101,14 @@ async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
                             ],
                         ),
                         ft.Divider(),
-                        ft.Markdown(
-                            content,
-                            extension_set=ft.MarkdownExtensionSet.GITHUB_WEB,
-                        ),
+                        _get_content_renderer(content),
                         ft.Container(
                             content=ft.FilledButton(
                                 "Ver original",
                                 icon=ft.Icons.OPEN_IN_NEW,
-                                on_click=lambda _: page.launch_url(entry.link or ""),
+                                on_click=lambda _: asyncio.create_task(
+                                    page.launch_url(entry.link or "")
+                                ),
                             )
                             if entry.link
                             else None,
