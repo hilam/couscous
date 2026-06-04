@@ -1,3 +1,5 @@
+import asyncio
+
 import flet as ft
 
 
@@ -36,4 +38,4 @@ class AddFeedDialog(ft.AlertDialog):
             self.url_field.value = ""
             self.update()
             if self.on_submit:
-                self.on_submit(url)
+                self._task = asyncio.ensure_future(self.on_submit(url))

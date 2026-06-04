@@ -6,7 +6,7 @@ from app.controls.add_feed_dialog import AddFeedDialog
 from app.controls.confirm_dialog import ConfirmDialog
 from app.controls.feed_card import FeedCard
 from app.services.feed_service import add_feed, list_feeds, remove_feed
-from app.services.refresh_service import refresh_all_feeds
+from app.services.refresh_service import refresh_all_feeds, refresh_single_feed
 from app.state import State
 from database.service.database import get_db_session
 
@@ -50,7 +50,7 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
     async def on_feed_added(url: str):
         async with get_db_session() as session:
             try:
-                await add_feed(session, url)
+                feed = await add_feed(session, url)
             except ValueError:
                 snack = ft.SnackBar(content=ft.Text("Feed já cadastrado"))
                 page.overlay.append(snack)
@@ -58,8 +58,20 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
                 page.update()
                 return
 
-        await _rebuild_feed_list(feed_list, confirm_delete, page)
-        page.update()
+            await refresh_single_feed(session, feed)
+
+            if feed.last_exception:
+                snack = ft.SnackBar(
+                    content=ft.Text(f"Erro: {feed.last_exception}")
+                )
+                page.overlay.append(snack)
+                snack.open = True
+                page.update()
+                await _rebuild_feed_list(feed_list, confirm_delete, page)
+                page.update()
+                return
+
+        await page.push_route(f"/feed/{url}")
 
     def confirm_delete(feed_url: str):
         dlg: ft.AlertDialog = ConfirmDialog(

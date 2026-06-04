@@ -27,48 +27,56 @@ async def refresh_single_feed(session, feed: Feed):
         feed.link = parsed.feed.get("link", feed.link)
         feed.updated = _dt.datetime.now(_dt.UTC).replace(tzinfo=None)
         feed.last_exception = None
+        await session.commit()
 
         for entry_data in parsed.entries:
-            entry_id = entry_data.get("id") or entry_data.get("link")
-            if not entry_id:
-                continue
+            try:
+                entry_id = entry_data.get("id") or entry_data.get("link")
+                if not entry_id:
+                    continue
 
-            existing = (
-                await session.execute(
-                    select(Entry).where(
-                        Entry.feed == feed.url, Entry.link == entry_data.get("link")
+                existing = (
+                    await session.execute(
+                        select(Entry).where(
+                            Entry.feed == feed.url,
+                            Entry.link == entry_data.get("link"),
+                        )
                     )
+                ).scalar_one_or_none()
+
+                if existing:
+                    continue
+
+                published = None
+                if (
+                    hasattr(entry_data, "published_parsed")
+                    and entry_data.published_parsed
+                ):
+                    from time import mktime
+
+                    published = _dt.datetime.fromtimestamp(
+                        mktime(entry_data.published_parsed), tz=_dt.UTC
+                    ).replace(tzinfo=None)
+
+                entry = Entry(
+                    feed=feed.url,
+                    title=entry_data.get("title"),
+                    link=entry_data.get("link"),
+                    summary=entry_data.get("summary"),
+                    content=entry_data.get("content", [{}])[0].get("value")
+                    if entry_data.get("content")
+                    else None,
+                    author=entry_data.get("author"),
+                    published=published,
+                    last_updated=_dt.datetime.now(_dt.UTC).replace(tzinfo=None),
+                    first_updated=_dt.datetime.now(_dt.UTC).replace(tzinfo=None),
+                    first_updated_epoch=_dt.datetime.now(_dt.UTC).replace(tzinfo=None),
+                    added_by="system",
+                    feed_order=0,
                 )
-            ).scalar_one_or_none()
-
-            if existing:
-                continue
-
-            published = None
-            if hasattr(entry_data, "published_parsed") and entry_data.published_parsed:
-                from time import mktime
-
-                published = _dt.datetime.fromtimestamp(
-                    mktime(entry_data.published_parsed), tz=_dt.UTC
-                ).replace(tzinfo=None)
-
-            entry = Entry(
-                feed=feed.url,
-                title=entry_data.get("title"),
-                link=entry_data.get("link"),
-                summary=entry_data.get("summary"),
-                content=entry_data.get("content", [{}])[0].get("value")
-                if entry_data.get("content")
-                else None,
-                author=entry_data.get("author"),
-                published=published,
-                last_updated=_dt.datetime.now(_dt.UTC).replace(tzinfo=None),
-                first_updated=_dt.datetime.now(_dt.UTC).replace(tzinfo=None),
-                first_updated_epoch=_dt.datetime.now(_dt.UTC).replace(tzinfo=None),
-                added_by="system",
-                feed_order=0,
-            )
-            session.add(entry)
+                session.add(entry)
+            except Exception as e:
+                print(f"Skipped entry in {feed.url}: {e}")
 
         await session.commit()
 
