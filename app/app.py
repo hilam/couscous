@@ -2,6 +2,7 @@ import flet as ft
 
 from app.state import State
 from app.views.about_view import about_view
+from app.views.category_list_view import category_list_view
 from app.views.entry_list_view import entry_list_view
 from app.views.entry_view import entry_view
 from app.views.feed_list_view import feed_list_view
@@ -49,6 +50,8 @@ async def app_run(page: ft.Page):
             v = await oauth_callback_view(page, state)
         elif route == "/register":
             v = await register_view(page, state)
+        elif route == "/categories":
+            v = await category_list_view(page, state)
         elif route == "/about":
             v = await about_view(page, state)
         else:

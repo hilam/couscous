@@ -32,7 +32,8 @@ async def test_feed_list_view_route():
     page = MagicMock()
     state = _auth_state()
 
-    with patch("app.views.feed_list_view.list_feeds", AsyncMock(return_value=[])):
+    with patch("app.views.feed_list_view.list_feeds", AsyncMock(return_value=[])), \
+         patch("app.views.feed_list_view.list_categories", AsyncMock(return_value=[])):
         view = await feed_list_view(page, state)
 
     assert view.route == "/feeds"
@@ -43,7 +44,8 @@ async def test_feed_list_view_contains_appbar():
     page = MagicMock()
     state = _auth_state()
 
-    with patch("app.views.feed_list_view.list_feeds", AsyncMock(return_value=[])):
+    with patch("app.views.feed_list_view.list_feeds", AsyncMock(return_value=[])), \
+         patch("app.views.feed_list_view.list_categories", AsyncMock(return_value=[])):
         view = await feed_list_view(page, state)
 
     app_bars = _find_controls(view, ft.AppBar)
@@ -56,7 +58,8 @@ async def test_feed_list_view_contains_navigation_bar():
     page = MagicMock()
     state = _auth_state()
 
-    with patch("app.views.feed_list_view.list_feeds", AsyncMock(return_value=[])):
+    with patch("app.views.feed_list_view.list_feeds", AsyncMock(return_value=[])), \
+         patch("app.views.feed_list_view.list_categories", AsyncMock(return_value=[])):
         view = await feed_list_view(page, state)
 
     assert view.navigation_bar is not None

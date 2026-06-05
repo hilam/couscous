@@ -5,11 +5,15 @@ Define requirements for viewing RSS feeds and articles in CousCous.
 ## Requirements
 
 ### Requirement: List all feeds
-The system SHALL display a list of all registered RSS feeds for the authenticated user on the feeds page.
+The system SHALL display a list of all registered RSS feeds for the authenticated user on the feeds page, grouped by category. Uncategorized feeds SHALL appear under a "Sem categoria" header displayed last.
 
-#### Scenario: View feed list
-- **WHEN** user navigates to `/feeds`
-- **THEN** the system displays a list of feed titles owned by the current user
+#### Scenario: View feed list grouped by category
+- **WHEN** user navigates to `/feeds` and has feeds in one or more categories
+- **THEN** the system displays feeds grouped under their respective category section headers
+
+#### Scenario: View feed list with uncategorized feeds
+- **WHEN** user navigates to `/feeds` and has feeds without a category
+- **THEN** the system displays those feeds under a "Sem categoria" section header, shown after all categorized groups
 
 #### Scenario: Feed list is empty
 - **WHEN** user navigates to `/feeds` and no feeds exist for the current user

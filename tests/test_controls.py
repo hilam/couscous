@@ -99,28 +99,31 @@ class TestArticleCard:
 
 class TestAddFeedDialog:
     def test_dialog_structure(self):
-        dlg = AddFeedDialog(on_submit=lambda url: None)
+        dlg = AddFeedDialog(on_submit=lambda url, cat_id=None: None, user_id=0)
         assert dlg.title == "Adicionar Feed"
         assert dlg.url_field.label == "URL do Feed RSS"
+        assert dlg.category_dropdown.label == "Categoria (opcional)"
         assert len(dlg.actions) == 2
 
     @pytest.mark.asyncio
     async def test_submit_with_valid_url(self):
         callback = AsyncMock()
-        dlg = AddFeedDialog(on_submit=callback)
+        dlg = AddFeedDialog(on_submit=callback, user_id=0)
         dlg.url_field.value = "https://example.com/feed.xml"
+        dlg.category_dropdown.value = ""
 
         with patch.object(dlg, "update"):
             dlg._submit(None)
 
         assert dlg.open is False
         assert dlg.url_field.value == ""
-        callback.assert_called_once_with("https://example.com/feed.xml")
+        callback.assert_called_once_with("https://example.com/feed.xml", None)
 
     def test_cancel_clears_and_closes(self):
         callback = MagicMock()
-        dlg = AddFeedDialog(on_submit=callback)
+        dlg = AddFeedDialog(on_submit=callback, user_id=0)
         dlg.url_field.value = "https://example.com/feed.xml"
+        dlg.category_dropdown.value = ""
         dlg.open = True
 
         with patch.object(dlg, "update"):
@@ -132,7 +135,7 @@ class TestAddFeedDialog:
 
     def test_empty_url_does_not_submit(self):
         callback = MagicMock()
-        dlg = AddFeedDialog(on_submit=callback)
+        dlg = AddFeedDialog(on_submit=callback, user_id=0)
         dlg.url_field.value = "   "
 
         dlg._submit(None)

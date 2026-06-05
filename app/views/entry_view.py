@@ -64,12 +64,14 @@ async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
             destinations=[
                 ft.NavigationBarDestination(icon=ft.Icons.HOME, label="Início"),
                 ft.NavigationBarDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
+                ft.NavigationBarDestination(icon=ft.Icons.FOLDER, label="Categorias"),
                 ft.NavigationBarDestination(icon=ft.Icons.INFO, label="Sobre"),
             ],
             on_change=lambda e: asyncio.create_task(
-                page.push_route(
-                    ["/feeds", "/feeds", "/about"][e.control.selected_index]
-                )
+                        page.push_route(
+                            ["/feeds", "/feeds", "/categories", "/about"]
+                            [e.control.selected_index]
+                        )
             ),
         ),
         controls=[

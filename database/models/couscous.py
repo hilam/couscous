@@ -31,6 +31,9 @@ class Feed(SQLModel, table=True):
     stale: int = Field(nullable=False, default=0)
     updates_enabled: int = Field(nullable=False, default=1)
     last_updated: _dt.datetime | None
+    category_id: int | None = Field(
+        foreign_key="categories.id", nullable=True, default=None
+    )
     added: _dt.datetime = Field(
         nullable=False,
         default_factory=lambda: _dt.datetime.now(_dt.UTC).replace(tzinfo=None),
@@ -76,6 +79,17 @@ class FeedMetadata(SQLModel, table=True):
     feed: str = Field(primary_key=True, foreign_key="feeds.url")
     key: str = Field(primary_key=True)
     value: str
+
+
+class Category(SQLModel, table=True):
+    __tablename__ = "categories"
+
+    id: int | None = Field(primary_key=True, default=None)
+    user_id: int = Field(foreign_key="users.id", nullable=False)
+    name: str = Field(nullable=False)
+    parent_id: int | None = Field(
+        foreign_key="categories.id", nullable=True, default=None
+    )
 
 
 class FeedTag(SQLModel, table=True):
