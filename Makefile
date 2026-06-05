@@ -22,7 +22,7 @@ lint-fix:
 	ruff check --fix
 
 typecheck:
-	uv run mypy .
+	uv run mypy
 
 check-all: lint typecheck test lint-security
 
