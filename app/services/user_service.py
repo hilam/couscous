@@ -1,3 +1,4 @@
+import bcrypt
 from sqlmodel import select
 
 from database.models.couscous import User
@@ -16,7 +17,8 @@ async def register(session, name: str, password: str) -> User:
         msg = "Nome de usuário já existe"
         raise ValueError(msg)
 
-    user = User(name=name, password=password)
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    user = User(name=name, password=hashed)
     session.add(user)
     await session.commit()
     await session.refresh(user)
@@ -31,7 +33,7 @@ async def login(session, name: str, password: str) -> User | None:
         msg = "Usuário não encontrado"
         raise ValueError(msg)
 
-    if user.password != password:
+    if not bcrypt.checkpw(password.encode("utf-8"), user.password.encode("utf-8")):
         msg = "Senha incorreta"
         raise ValueError(msg)
 

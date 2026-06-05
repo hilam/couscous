@@ -1,8 +1,4 @@
-## Purpose
-
-Define requirements for viewing RSS feeds and articles in CousCous.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: List all feeds
 The system SHALL display a list of all registered RSS feeds for the authenticated user on the feeds page.

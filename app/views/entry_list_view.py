@@ -8,8 +8,52 @@ from app.state import State
 from database.service.database import get_db_session
 
 
+def _empty_state() -> ft.Container:
+    return ft.Container(
+        content=ft.Column(
+            controls=[
+                ft.Icon(ft.Icons.ARTICLE, size=60, color=ft.Colors.GREY_400),
+                ft.Text(
+                    "Nenhum artigo encontrado",
+                    theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
+                    color=ft.Colors.GREY,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        ),
+        alignment=ft.Alignment.CENTER,
+        padding=ft.Padding.all(40),
+    )
+
+
+def _filter_chip(label: str, on_click) -> ft.Chip:
+    return ft.Chip(
+        label=ft.Text(label, size=12),
+        on_click=on_click,
+    )
+
+
+def _build_article_card(entry, page) -> ArticleCard:
+    return ArticleCard(
+        entry=entry,
+        on_click=lambda _, eid=entry.id: asyncio.create_task(
+            page.push_route(f"/entry/{eid}")
+        ),
+    )
+
+
+def _populate_entry_list(entry_list: ft.ListView, entries: list, page: ft.Page):
+    entry_list.controls.clear()
+    for entry in entries:
+        entry_list.controls.append(_build_article_card(entry, page))
+    if not entries:
+        entry_list.controls.append(_empty_state())
+
+
 async def entry_list_view(page: ft.Page, state: State) -> ft.View:
     feed_url = state.active_feed_url or ""
+    user_id: int = (state.user.id or 0) if state.user else 0
 
     async with get_db_session() as session:
         from sqlmodel import select
@@ -22,54 +66,37 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
     feed_title = feed.title if feed and feed.title else feed_url
 
     async with get_db_session() as session:
-        entries = await list_entries(session, feed_url)
+        entries = await list_entries(session, feed_url, user_id=user_id)
 
     entry_list = ft.ListView(spacing=8, padding=10, expand=True)
+    show_unread = False
+    show_important = False
+
+    async def load_entries():
+        nonlocal show_unread, show_important
+        async with get_db_session() as session:
+            return await list_entries(
+                session, feed_url, user_id=user_id,
+                unread_only=show_unread,
+                important_only=show_important,
+            )
 
     async def refresh(e):
-        async with get_db_session() as session:
-            entries = await list_entries(session, feed_url)
-        entry_list.controls.clear()
-        for entry in entries:
-            entry_list.controls.append(
-                ArticleCard(
-                    entry=entry,
-                    on_click=lambda _, eid=entry.id: asyncio.create_task(
-                        page.push_route(f"/entry/{eid}")
-                    ),
-                )
-            )
+        entries = await load_entries()
+        _populate_entry_list(entry_list, entries, page)
         page.update()
 
-    for entry in entries:
-        entry_list.controls.append(
-            ArticleCard(
-                entry=entry,
-                on_click=lambda _, eid=entry.id: asyncio.create_task(
-                    page.push_route(f"/entry/{eid}")
-                ),
-            )
-        )
+    async def toggle_unread(e):
+        nonlocal show_unread
+        show_unread = not show_unread
+        await refresh(e)
 
-    if not entries:
-        entry_list.controls.append(
-            ft.Container(
-                content=ft.Column(
-                    controls=[
-                        ft.Icon(ft.Icons.ARTICLE, size=60, color=ft.Colors.GREY_400),
-                        ft.Text(
-                            "Nenhum artigo encontrado",
-                            theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
-                            color=ft.Colors.GREY,
-                        ),
-                    ],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                ),
-                alignment=ft.Alignment.CENTER,
-                padding=ft.Padding.all(40),
-            )
-        )
+    async def toggle_important(e):
+        nonlocal show_important
+        show_important = not show_important
+        await refresh(e)
+
+    _populate_entry_list(entry_list, entries, page)
 
     return ft.View(
         route=f"/feed/{feed_url}",
@@ -98,6 +125,16 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
                     ft.Text(state.user.name if state.user else "", size=14),
                     ft.IconButton(ft.Icons.REFRESH, on_click=refresh),
                 ],
+            ),
+            ft.Container(
+                content=ft.Row(
+                    controls=[
+                        _filter_chip("Não lidos", toggle_unread),
+                        _filter_chip("Importantes", toggle_important),
+                    ],
+                    spacing=8,
+                ),
+                padding=ft.Padding(left=10, top=5, right=10, bottom=5),
             ),
             entry_list,
         ],

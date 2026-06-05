@@ -1,8 +1,4 @@
-## Purpose
-
-Define user authentication requirements for CousCous.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Register new user
 The system SHALL allow a new user to create an account with name and password. The password SHALL be hashed with bcrypt before storage. The registration form SHALL be available at `/register` route or via toggle on the login page.

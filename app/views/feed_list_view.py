@@ -21,9 +21,9 @@ def _build_feed_card(feed, confirm_delete, page):
     )
 
 
-async def _rebuild_feed_list(feed_list, confirm_delete, page):
+async def _rebuild_feed_list(feed_list, confirm_delete, page, user_id: int):
     async with get_db_session() as session:
-        feeds = await list_feeds(session)
+        feeds = await list_feeds(session, user_id)
     feed_list.controls.clear()
     for feed in feeds:
         feed_list.controls.append(_build_feed_card(feed, confirm_delete, page))
@@ -31,8 +31,10 @@ async def _rebuild_feed_list(feed_list, confirm_delete, page):
 
 
 async def feed_list_view(page: ft.Page, state: State) -> ft.View:
+    user_id: int = (state.user.id or 0) if state.user else 0
+
     async with get_db_session() as session:
-        feeds = await list_feeds(session)
+        feeds = await list_feeds(session, user_id)
 
     feed_list = ft.ListView(spacing=10, padding=10, expand=True)
 
@@ -41,16 +43,16 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
         page.update()
 
         async with get_db_session() as session:
-            await refresh_all_feeds(session)
+            await refresh_all_feeds(session, user_id)
 
-        await _rebuild_feed_list(feed_list, confirm_delete, page)
+        await _rebuild_feed_list(feed_list, confirm_delete, page, user_id)
         state.loading = False
         page.update()
 
     async def on_feed_added(url: str):
         async with get_db_session() as session:
             try:
-                feed = await add_feed(session, url)
+                feed = await add_feed(session, user_id, url)
             except ValueError:
                 snack = ft.SnackBar(content=ft.Text("Feed já cadastrado"))
                 page.overlay.append(snack)
@@ -67,7 +69,7 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
                 page.overlay.append(snack)
                 snack.open = True
                 page.update()
-                await _rebuild_feed_list(feed_list, confirm_delete, page)
+                await _rebuild_feed_list(feed_list, confirm_delete, page, user_id)
                 page.update()
                 return
 
@@ -86,9 +88,9 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
         dlg.open = False
         page.update()
         async with get_db_session() as session:
-            await remove_feed(session, feed_url)
+            await remove_feed(session, user_id, feed_url)
 
-        await _rebuild_feed_list(feed_list, confirm_delete, page)
+        await _rebuild_feed_list(feed_list, confirm_delete, page, user_id)
         page.update()
 
     for feed in feeds:

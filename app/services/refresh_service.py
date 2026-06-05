@@ -8,8 +8,10 @@ from sqlmodel import select
 from database.models.couscous import Entry, Feed
 
 
-async def refresh_all_feeds(session):
-    result = await session.execute(select(Feed))
+async def refresh_all_feeds(session, user_id: int):
+    result = await session.execute(
+        select(Feed).where(Feed.user_id == user_id)
+    )
     feeds = result.scalars().all()
 
     for feed in feeds:
@@ -62,6 +64,7 @@ async def refresh_single_feed(session, feed: Feed):
 
                 entry = Entry(
                     feed=feed.url,
+                    user_id=feed.user_id,
                     title=entry_data.get("title"),
                     link=entry_data.get("link"),
                     summary=entry_data.get("summary"),

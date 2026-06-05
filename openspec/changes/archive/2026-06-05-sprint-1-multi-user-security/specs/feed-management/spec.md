@@ -1,8 +1,4 @@
-## Purpose
-
-Define requirements for managing RSS feeds in CousCous.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Add feed by URL
 The system SHALL allow the user to add a new RSS feed by providing its URL. The feed SHALL be associated with the authenticated user's `user_id`.

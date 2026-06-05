@@ -1,3 +1,4 @@
+import bcrypt
 import pytest
 
 from app.services.user_service import register, login, get_by_name
@@ -7,7 +8,7 @@ from app.services.user_service import register, login, get_by_name
 async def test_register_user(db_session):
     user = await register(db_session, "testuser", "password123")
     assert user.name == "testuser"
-    assert user.password == "password123"
+    assert user.password.startswith("$2b$")
 
 
 @pytest.mark.asyncio
@@ -50,3 +51,26 @@ async def test_get_by_name(db_session):
 async def test_get_by_name_nonexistent(db_session):
     user = await get_by_name(db_session, "nonexistent")
     assert user is None
+
+
+@pytest.mark.asyncio
+async def test_bcrypt_hash_format(db_session):
+    user = await register(db_session, "bob", "s3cret")
+    assert user.password.startswith("$2b$")
+    assert len(user.password) == 60
+
+
+@pytest.mark.asyncio
+async def test_bcrypt_different_hashes(db_session):
+    u1 = await register(db_session, "alice", "samepass")
+    u2 = await register(db_session, "charlie", "samepass")
+    assert u1.password != u2.password
+    assert bcrypt.checkpw(b"samepass", u1.password.encode("utf-8"))
+    assert bcrypt.checkpw(b"samepass", u2.password.encode("utf-8"))
+
+
+@pytest.mark.asyncio
+async def test_bcrypt_hash_verify_raw(db_session):
+    user = await register(db_session, "dave", "mypassword")
+    assert bcrypt.checkpw(b"mypassword", user.password.encode("utf-8"))
+    assert not bcrypt.checkpw(b"wrongpass", user.password.encode("utf-8"))

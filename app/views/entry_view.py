@@ -25,6 +25,8 @@ def _get_content_renderer(content: str) -> ft.Control:
 
 
 async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
+    user_id: int = (state.user.id or 0) if state.user else 0
+
     async with get_db_session() as session:
         entry = await get_entry(session, entry_id)
 
@@ -42,9 +44,18 @@ async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
         )
 
     async with get_db_session() as session:
-        await mark_read(session, entry_id)
+        await mark_read(session, entry_id, user_id)
 
     content = entry.content or entry.summary or "Sem conteúdo disponível."
+
+    async def handle_toggle_important(e):
+        async with get_db_session() as session:
+            entry_data = await get_entry(session, entry_id)
+            if entry_data:
+                new_val = not entry_data.important
+                await mark_important(session, entry_id, user_id, important=new_val)
+                e.control.icon = ft.Icons.STAR if new_val else ft.Icons.STAR_BORDER
+                e.control.update()
 
     return ft.View(
         route=f"/entry/{entry_id}",
@@ -74,8 +85,8 @@ async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
                 actions=[
                     ft.Text(state.user.name if state.user else "", size=14),
                     ft.IconButton(
-                        ft.Icons.STAR_BORDER,
-                        on_click=lambda e: toggle_important(page, entry_id),
+                        ft.Icons.STAR if entry.important else ft.Icons.STAR_BORDER,
+                        on_click=handle_toggle_important,
                     ),
                 ],
             ),
@@ -122,11 +133,3 @@ async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
             ),
         ],
     )
-
-
-async def toggle_important(page: ft.Page, entry_id: int):
-    async with get_db_session() as session:
-        entry = await get_entry(session, entry_id)
-        if entry:
-            await mark_important(session, entry_id, important=not entry.important)
-    page.update()

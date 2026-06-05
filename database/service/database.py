@@ -17,6 +17,7 @@ async def init_async_db():
     from database.models import couscous  # noqa: F401
 
     async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.drop_all)
         await conn.run_sync(SQLModel.metadata.create_all)
 
 

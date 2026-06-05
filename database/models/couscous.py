@@ -15,6 +15,7 @@ class Feed(SQLModel, table=True):
     __tablename__ = "feeds"
 
     url: str = Field(primary_key=True)
+    user_id: int = Field(foreign_key="users.id", nullable=False)
     title: str | None
     link: str | None
     updated: _dt.datetime | None
@@ -42,6 +43,7 @@ class Entry(SQLModel, table=True):
 
     id: int | None = Field(primary_key=True, default=None)
     feed: str = Field(foreign_key="feeds.url")
+    user_id: int = Field(foreign_key="users.id", nullable=False)
     title: str | None
     link: str | None
     updated: _dt.datetime | None

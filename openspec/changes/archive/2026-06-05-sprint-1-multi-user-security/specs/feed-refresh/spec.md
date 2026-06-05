@@ -1,8 +1,4 @@
-## Purpose
-
-Define requirements for refreshing RSS feed content in CousCous.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Refresh all feeds
 The system SHALL allow the user to trigger a refresh of all feeds owned by the authenticated user to fetch the latest articles.
