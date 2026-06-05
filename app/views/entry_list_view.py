@@ -76,7 +76,9 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
         nonlocal show_unread, show_important
         async with get_db_session() as session:
             return await list_entries(
-                session, feed_url, user_id=user_id,
+                session,
+                feed_url,
+                user_id=user_id,
                 unread_only=show_unread,
                 important_only=show_important,
             )

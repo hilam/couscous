@@ -13,6 +13,16 @@ password = os.getenv("COUSCOUS_DATABASE_PASS", "couscous")
 DB_URL = f"postgresql+asyncpg://{user}:{password}@{host}:{port}/couscous_test"
 
 
+@pytest.fixture
+def mock_oauth_config(monkeypatch):
+    import app.services.oauth_service as oauth_svc
+
+    monkeypatch.setattr(oauth_svc, "GOOGLE_CLIENT_ID", "test-google-id")
+    monkeypatch.setattr(oauth_svc, "GOOGLE_CLIENT_SECRET", "test-google-secret")
+    monkeypatch.setattr(oauth_svc, "GITHUB_CLIENT_ID", "test-github-id")
+    monkeypatch.setattr(oauth_svc, "GITHUB_CLIENT_SECRET", "test-github-secret")
+
+
 @pytest_asyncio.fixture
 async def db_session():
     engine = create_async_engine(DB_URL, echo=False)

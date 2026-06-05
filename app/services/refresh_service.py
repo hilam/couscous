@@ -9,9 +9,7 @@ from database.models.couscous import Entry, Feed
 
 
 async def refresh_all_feeds(session, user_id: int):
-    result = await session.execute(
-        select(Feed).where(Feed.user_id == user_id)
-    )
+    result = await session.execute(select(Feed).where(Feed.user_id == user_id))
     feeds = result.scalars().all()
 
     for feed in feeds:

@@ -63,9 +63,7 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
             await refresh_single_feed(session, feed)
 
             if feed.last_exception:
-                snack = ft.SnackBar(
-                    content=ft.Text(f"Erro: {feed.last_exception}")
-                )
+                snack = ft.SnackBar(content=ft.Text(f"Erro: {feed.last_exception}"))
                 page.overlay.append(snack)
                 snack.open = True
                 page.update()

@@ -4,9 +4,7 @@ from database.models.couscous import Feed
 
 
 async def list_feeds(session, user_id: int):
-    result = await session.execute(
-        select(Feed).where(Feed.user_id == user_id)
-    )
+    result = await session.execute(select(Feed).where(Feed.user_id == user_id))
     return result.scalars().all()
 
 

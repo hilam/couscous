@@ -7,6 +7,7 @@ from app.views.entry_view import entry_view
 from app.views.feed_list_view import feed_list_view
 from app.views.home_view import home_view
 from app.views.login_view import login_view
+from app.views.oauth_callback_view import oauth_callback_view
 from app.views.register_view import register_view
 from database.service.database import init_async_db
 
@@ -31,7 +32,9 @@ async def app_run(page: ft.Page):
         page.views.clear()
         route = e.route
 
-        is_public = route in {"/about", "/register"}
+        is_public = route in {"/about", "/register"} or route.startswith(
+            "/oauth/callback"
+        )
         if route == "/login" or (not state.user and not is_public):
             v = await login_view(page, state)
         elif route in {"/feeds", "/"}:
@@ -42,6 +45,8 @@ async def app_run(page: ft.Page):
         elif route.startswith("/entry/"):
             entry_id = int(route[len("/entry/") :])
             v = await entry_view(page, state, entry_id)
+        elif route.startswith("/oauth/callback"):
+            v = await oauth_callback_view(page, state)
         elif route == "/register":
             v = await register_view(page, state)
         elif route == "/about":

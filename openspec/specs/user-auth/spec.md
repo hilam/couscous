@@ -20,11 +20,11 @@ The system SHALL allow a new user to create an account with name and password. T
 - **THEN** the system navigates to `/register`
 
 ### Requirement: Login
-The system SHALL allow a registered user to log in. The password SHALL be verified against the stored bcrypt hash.
+The system SHALL allow a registered user to log in via password or OAuth provider. For password login, the password SHALL be verified against the stored bcrypt hash. For OAuth login, the system SHALL authenticate the user based on `oauth_provider` and `oauth_id` match.
 
-#### Scenario: Successful login
+#### Scenario: Successful password login
 - **WHEN** user enters a valid name and matching password
-- **THEN** the system verifies the password against the stored bcrypt hash and logs the user in, navigating to the home page
+- **THEN** the system verifies the password against the stored bcrypt hash and logs the user in, navigating to `/feeds`
 
 #### Scenario: Wrong password
 - **WHEN** user enters a valid name but incorrect password
@@ -33,6 +33,10 @@ The system SHALL allow a registered user to log in. The password SHALL be verifi
 #### Scenario: Unknown user
 - **WHEN** user enters a name that does not exist
 - **THEN** the system shows an error message "Usuário não encontrado"
+
+#### Scenario: Successful OAuth login
+- **WHEN** user completes OAuth flow with a previously linked provider and id
+- **THEN** the system logs the user in without requiring password, navigating to `/feeds`
 
 ### Requirement: Persistent session
 The system SHALL remember the logged-in user while the app is running.

@@ -8,7 +8,9 @@ class User(SQLModel, table=True):
 
     id: int | None = Field(primary_key=True, default=None)
     name: str = Field(unique=True, nullable=False)
-    password: str
+    password: str | None
+    oauth_provider: str | None = Field(default=None, nullable=True)
+    oauth_id: str | None = Field(default=None, nullable=True)
 
 
 class Feed(SQLModel, table=True):

@@ -1,7 +1,14 @@
 import bcrypt
 import pytest
 
-from app.services.user_service import register, login, get_by_name
+from app.services.user_service import (
+    get_by_name,
+    get_by_oauth,
+    get_or_create_oauth_user,
+    login,
+    register,
+)
+from database.models.couscous import User
 
 
 @pytest.mark.asyncio
@@ -74,3 +81,42 @@ async def test_bcrypt_hash_verify_raw(db_session):
     user = await register(db_session, "dave", "mypassword")
     assert bcrypt.checkpw(b"mypassword", user.password.encode("utf-8"))
     assert not bcrypt.checkpw(b"wrongpass", user.password.encode("utf-8"))
+
+
+@pytest.mark.asyncio
+async def test_get_by_oauth_returns_user(db_session):
+    await get_or_create_oauth_user(db_session, "google", "abc123", "oauthuser")
+    user = await get_by_oauth(db_session, "google", "abc123")
+    assert user is not None
+    assert user.name == "oauthuser"
+    assert user.oauth_provider == "google"
+    assert user.oauth_id == "abc123"
+
+
+@pytest.mark.asyncio
+async def test_get_by_oauth_returns_none(db_session):
+    user = await get_by_oauth(db_session, "github", "nonexistent")
+    assert user is None
+
+
+@pytest.mark.asyncio
+async def test_get_or_create_oauth_user_creates(db_session):
+    user = await get_or_create_oauth_user(db_session, "github", "42", "ghuser")
+    assert user.name == "ghuser"
+    assert user.password is None
+    assert user.oauth_provider == "github"
+    assert user.oauth_id == "42"
+
+
+@pytest.mark.asyncio
+async def test_get_or_create_oauth_user_reuses(db_session):
+    u1 = await get_or_create_oauth_user(db_session, "github", "42", "ghuser")
+    u2 = await get_or_create_oauth_user(db_session, "github", "42", "ghuser")
+    assert u1.id == u2.id
+
+
+@pytest.mark.asyncio
+async def test_get_or_create_oauth_user_name_collision(db_session):
+    await register(db_session, "regular", "password123")
+    user = await get_or_create_oauth_user(db_session, "google", "99", "regular")
+    assert user.name == "google_regular"
