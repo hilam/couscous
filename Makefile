@@ -7,7 +7,7 @@ run:
 	uv run python main.py
 
 run-web:
-	uv run flet run -w
+	uv run flet run -w -p 8550
 
 test:
 	uv run pytest
