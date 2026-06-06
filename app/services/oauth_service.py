@@ -2,6 +2,7 @@ import secrets
 from typing import Any
 from urllib.parse import urlencode
 
+import flet as ft
 import httpx
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 from authlib.oauth2.rfc7636 import create_s256_code_challenge
@@ -13,6 +14,8 @@ from database.service.config import (
     GOOGLE_CLIENT_SECRET,
     OAUTH_REDIRECT_URI,
 )
+
+_SESSION_KEY_PREFIX = "oauth_state_"
 
 
 def _provider_config(provider: str) -> dict[str, Any] | None:
@@ -45,14 +48,11 @@ def _provider_config(provider: str) -> dict[str, Any] | None:
     return None
 
 
-_oauth_states: dict[str, dict[str, str]] = {}
-
-
 def is_provider_available(provider: str) -> bool:
     return _provider_config(provider) is not None
 
 
-def get_authorization_url(provider: str) -> tuple[str, str]:
+def get_authorization_url(page: ft.Page, provider: str) -> tuple[str, str]:
     config = _provider_config(provider)
     if not config:
         msg = f"OAuth provider '{provider}' is not configured"
@@ -73,12 +73,16 @@ def get_authorization_url(provider: str) -> tuple[str, str]:
     }
 
     uri = f"{config['authorization_url']}?{urlencode(params)}"
-    _oauth_states[state] = {"code_verifier": code_verifier, "provider": provider}
+    page.session.store[f"{_SESSION_KEY_PREFIX}{state}"] = {
+        "code_verifier": code_verifier,
+        "provider": provider,
+    }
     return uri, state
 
 
-async def handle_callback(code: str, state: str) -> dict[str, Any]:
-    stored = _oauth_states.pop(state, None)
+async def handle_callback(page: ft.Page, code: str, state: str) -> dict[str, Any]:
+    session_key = f"{_SESSION_KEY_PREFIX}{state}"
+    stored = page.session.store.pop(session_key, None)
     if not stored:
         msg = "Sessão OAuth inválida ou expirada"
         raise ValueError(msg)

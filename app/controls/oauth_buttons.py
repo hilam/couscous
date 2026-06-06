@@ -1,14 +1,12 @@
-import asyncio
-
 import flet as ft
 
 from app.services import oauth_service
 
 
-async def _oauth_click(page: ft.Page, error_text: ft.Text, provider: str):
+def _oauth_click(page: ft.Page, error_text: ft.Text, provider: str):
     try:
-        uri, _state = oauth_service.get_authorization_url(provider)
-        await page.launch_url(uri)
+        uri, _state = oauth_service.get_authorization_url(page, provider)
+        ft.UrlLauncher().launch_url(uri)
     except ValueError as ex:
         error_text.value = str(ex)
         error_text.visible = True
@@ -25,9 +23,7 @@ def get_oauth_buttons(page: ft.Page, error_text: ft.Text) -> list[ft.Control]:
         btn = ft.OutlinedButton(
             label,
             icon=icon,
-            on_click=lambda _, p=provider: asyncio.create_task(
-                _oauth_click(page, error_text, p)
-            ),
+            on_click=lambda _, p=provider: _oauth_click(page, error_text, p),
         )
         buttons.append(btn)
     if buttons:

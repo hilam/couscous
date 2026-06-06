@@ -1,7 +1,15 @@
 import pytest
+from unittest.mock import MagicMock
 
 from app.services.oauth_service import get_authorization_url, is_provider_available
 from app.services.user_service import get_by_oauth, get_or_create_oauth_user
+
+
+@pytest.fixture
+def mock_page():
+    page = MagicMock()
+    page.session.store = {}
+    return page
 
 
 def _clear_oauth_config(monkeypatch):
@@ -33,8 +41,8 @@ async def test_is_provider_available_unknown(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_get_authorization_url_google(mock_oauth_config):
-    uri, state = get_authorization_url("google")
+async def test_get_authorization_url_google(mock_oauth_config, mock_page):
+    uri, state = get_authorization_url(mock_page, "google")
     assert uri.startswith("https://accounts.google.com/")
     assert "state=" in uri
     assert "code_challenge=" in uri
@@ -43,8 +51,8 @@ async def test_get_authorization_url_google(mock_oauth_config):
 
 
 @pytest.mark.asyncio
-async def test_get_authorization_url_github(mock_oauth_config):
-    uri, state = get_authorization_url("github")
+async def test_get_authorization_url_github(mock_oauth_config, mock_page):
+    uri, state = get_authorization_url(mock_page, "github")
     assert uri.startswith("https://github.com/")
     assert "state=" in uri
     assert "code_challenge=" in uri
@@ -53,16 +61,16 @@ async def test_get_authorization_url_github(mock_oauth_config):
 
 
 @pytest.mark.asyncio
-async def test_get_authorization_url_not_configured(monkeypatch):
+async def test_get_authorization_url_not_configured(monkeypatch, mock_page):
     _clear_oauth_config(monkeypatch)
     with pytest.raises(ValueError, match="not configured"):
-        get_authorization_url("google")
+        get_authorization_url(mock_page, "google")
 
 
 @pytest.mark.asyncio
-async def test_get_authorization_url_unknown_provider(mock_oauth_config):
+async def test_get_authorization_url_unknown_provider(mock_oauth_config, mock_page):
     with pytest.raises(ValueError, match="not configured"):
-        get_authorization_url("gitlab")
+        get_authorization_url(mock_page, "gitlab")
 
 
 @pytest.mark.asyncio

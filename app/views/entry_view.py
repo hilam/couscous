@@ -119,8 +119,8 @@ async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
                             content=ft.FilledButton(
                                 "Ver original",
                                 icon=ft.Icons.OPEN_IN_NEW,
-                                on_click=lambda _: asyncio.create_task(
-                                    page.launch_url(entry.link or "")
+                                on_click=lambda _: ft.UrlLauncher().launch_url(
+                                    entry.link or ""
                                 ),
                             )
                             if entry.link

@@ -19,7 +19,7 @@ async def oauth_callback_view(page: ft.Page, state: State) -> ft.View:
         return await _error_view(page, "Parâmetros OAuth inválidos")
 
     try:
-        user_info = await oauth_service.handle_callback(code, state_param)
+        user_info = await oauth_service.handle_callback(page, code, state_param)
     except ValueError as ex:
         return await _error_view(page, str(ex))
 
