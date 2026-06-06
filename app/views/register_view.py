@@ -2,42 +2,10 @@ import asyncio
 
 import flet as ft
 
-from app.services import oauth_service
+from app.controls.oauth_buttons import get_oauth_buttons
 from app.services.user_service import register
 from app.state import State
 from database.service.database import get_db_session
-
-
-async def _oauth_click(page: ft.Page, error_text: ft.Text, provider: str):
-    try:
-        uri, _state = oauth_service.get_authorization_url(provider)
-        await page.launch_url(uri)
-    except ValueError as ex:
-        error_text.value = str(ex)
-        error_text.visible = True
-        page.update()
-
-
-def _oauth_buttons(page: ft.Page, error_text: ft.Text) -> list[ft.Control]:
-    buttons: list[ft.Control] = []
-    providers = [
-        ("google", "Entrar com Google", ft.Icons.ACCOUNT_CIRCLE),
-        ("github", "Entrar com GitHub", ft.Icons.ACCOUNT_TREE),
-    ]
-    for provider, label, icon in providers:
-        if not oauth_service.is_provider_available(provider):
-            continue
-        btn = ft.OutlinedButton(
-            label,
-            icon=icon,
-            on_click=lambda _, p=provider: asyncio.create_task(
-                _oauth_click(page, error_text, p)
-            ),
-        )
-        buttons.append(btn)
-    if buttons:
-        buttons.insert(0, ft.Divider(height=20, color=ft.Colors.OUTLINE_VARIANT))
-    return buttons
 
 
 async def register_view(page: ft.Page, state: State) -> ft.View:
@@ -86,7 +54,7 @@ async def register_view(page: ft.Page, state: State) -> ft.View:
         submit_btn,
         login_link,
     ]
-    form_controls.extend(_oauth_buttons(page, error_text))
+    form_controls.extend(get_oauth_buttons(page, error_text))
 
     return ft.View(
         route="/register",

@@ -65,7 +65,7 @@ The system SHALL read OAuth provider credentials from environment variables. Eac
 
 #### Scenario: Missing OAuth configuration
 - **WHEN** OAuth environment variables are not set for a provider
-- **THEN** the corresponding OAuth button is hidden on the login and registration pages
+- **THEN** the OAuth button is still visible on the login and registration pages, and clicking it shows an error message indicating the provider is not configured
 
 #### Scenario: Complete OAuth configuration
 - **WHEN** `COUSCOUS_GOOGLE_CLIENT_ID` and `COUSCOUS_GOOGLE_CLIENT_SECRET` are set
