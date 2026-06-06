@@ -111,10 +111,11 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
             ],
             selected_index=1,
             on_change=lambda e: asyncio.create_task(
-                        page.push_route(
-                            ["/feeds", "/feeds", "/categories", "/about"]
-                            [e.control.selected_index]
-                        )
+                page.push_route(
+                    ["/feeds", "/feeds", "/categories", "/about"][
+                        e.control.selected_index
+                    ]
+                )
             ),
         ),
         controls=[

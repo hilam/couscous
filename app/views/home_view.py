@@ -17,10 +17,11 @@ async def home_view(page: ft.Page, state: State) -> ft.View:
                 ft.NavigationBarDestination(icon=ft.Icons.INFO, label="Sobre"),
             ],
             on_change=lambda e: asyncio.create_task(
-                        page.push_route(
-                            ["/feeds", "/feeds", "/categories", "/about"]
-                            [e.control.selected_index]
-                        )
+                page.push_route(
+                    ["/feeds", "/feeds", "/categories", "/about"][
+                        e.control.selected_index
+                    ]
+                )
             ),
         ),
         controls=[

@@ -8,7 +8,12 @@ from app.services.user_service import get_by_oauth, get_or_create_oauth_user
 @pytest.fixture
 def mock_page():
     page = MagicMock()
-    page.session.store = {}
+    store = MagicMock()
+    _store_data: dict[str, object] = {}
+    store.set = MagicMock(side_effect=lambda k, v: _store_data.__setitem__(k, v))
+    store.get = MagicMock(side_effect=lambda k: _store_data.get(k))
+    store.remove = MagicMock(side_effect=lambda k: _store_data.pop(k, None))
+    page.session.store = store
     return page
 
 

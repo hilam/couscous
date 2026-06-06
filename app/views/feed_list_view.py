@@ -137,9 +137,7 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
             await refresh_single_feed(session, feed)
 
             if feed.last_exception:
-                snack = ft.SnackBar(
-                    content=ft.Text(f"Erro: {feed.last_exception}")
-                )
+                snack = ft.SnackBar(content=ft.Text(f"Erro: {feed.last_exception}"))
                 page.overlay.append(snack)
                 snack.open = True
                 page.update()
@@ -168,9 +166,7 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
         page.update()
 
     init_controls = _build_group_controls(feeds, categories, confirm_delete, page)
-    feed_list.controls.extend(
-        init_controls if feeds else [_empty_state()]
-    )
+    feed_list.controls.extend(init_controls if feeds else [_empty_state()])
 
     add_feed_dialog = AddFeedDialog(on_submit=on_feed_added, user_id=user_id)
 
@@ -192,8 +188,9 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
             selected_index=1,
             on_change=lambda e: asyncio.create_task(
                 page.push_route(
-                    ["/feeds", "/feeds", "/categories", "/about"]
-                    [e.control.selected_index]
+                    ["/feeds", "/feeds", "/categories", "/about"][
+                        e.control.selected_index
+                    ]
                 )
             ),
         ),

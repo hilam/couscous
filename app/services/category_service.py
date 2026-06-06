@@ -36,9 +36,7 @@ async def list_categories(session, user_id: int):
 async def get_category_tree(session, user_id: int):
     cats = await list_categories(session, user_id)
     cat_map = {
-        c.id: {
-            "id": c.id, "name": c.name, "parent_id": c.parent_id, "children": []
-        }
+        c.id: {"id": c.id, "name": c.name, "parent_id": c.parent_id, "children": []}
         for c in cats
     }
     tree = []
@@ -51,9 +49,7 @@ async def get_category_tree(session, user_id: int):
     return tree
 
 
-async def rename_category(
-    session, user_id: int, category_id: int, new_name: str
-):
+async def rename_category(session, user_id: int, category_id: int, new_name: str):
     cat = (
         await session.execute(
             select(Category).where(
@@ -85,9 +81,7 @@ async def rename_category(
     return cat
 
 
-async def delete_category(
-    session, user_id: int, category_id: int
-):
+async def delete_category(session, user_id: int, category_id: int):
     cat = (
         await session.execute(
             select(Category).where(
@@ -100,23 +94,31 @@ async def delete_category(
         raise ValueError(msg)
 
     children = (
-        await session.execute(
-            select(Category).where(
-                Category.parent_id == category_id, Category.user_id == user_id
+        (
+            await session.execute(
+                select(Category).where(
+                    Category.parent_id == category_id, Category.user_id == user_id
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     for child in children:
         child.parent_id = None
         session.add(child)
 
     feeds = (
-        await session.execute(
-            select(Feed).where(
-                Feed.category_id == category_id, Feed.user_id == user_id
+        (
+            await session.execute(
+                select(Feed).where(
+                    Feed.category_id == category_id, Feed.user_id == user_id
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     for feed in feeds:
         feed.category_id = None
         session.add(feed)

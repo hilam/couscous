@@ -73,16 +73,21 @@ def get_authorization_url(page: ft.Page, provider: str) -> tuple[str, str]:
     }
 
     uri = f"{config['authorization_url']}?{urlencode(params)}"
-    page.session.store[f"{_SESSION_KEY_PREFIX}{state}"] = {
-        "code_verifier": code_verifier,
-        "provider": provider,
-    }
+    page.session.store.set(
+        f"{_SESSION_KEY_PREFIX}{state}",
+        {
+            "code_verifier": code_verifier,
+            "provider": provider,
+        },
+    )
     return uri, state
 
 
 async def handle_callback(page: ft.Page, code: str, state: str) -> dict[str, Any]:
     session_key = f"{_SESSION_KEY_PREFIX}{state}"
-    stored = page.session.store.pop(session_key, None)
+    stored = page.session.store.get(session_key)
+    if stored is not None:
+        page.session.store.remove(session_key)
     if not stored:
         msg = "Sessão OAuth inválida ou expirada"
         raise ValueError(msg)

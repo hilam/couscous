@@ -25,7 +25,7 @@ def _build_tree_controls(tree, on_rename, on_delete, level=0):
             controls=[
                 indent,
                 tile,
-                    ft.IconButton(
+                ft.IconButton(
                     ft.Icons.EDIT,
                     icon_size=18,
                     on_click=lambda _, n=node: asyncio.create_task(on_rename(n)),
@@ -129,10 +129,11 @@ async def category_list_view(page: ft.Page, state: State) -> ft.View:
             ],
             selected_index=2,
             on_change=lambda e: asyncio.create_task(
-                        page.push_route(
-                            ["/feeds", "/feeds", "/categories", "/about"]
-                            [e.control.selected_index]
-                        )
+                page.push_route(
+                    ["/feeds", "/feeds", "/categories", "/about"][
+                        e.control.selected_index
+                    ]
+                )
             ),
         ),
         controls=[
@@ -221,9 +222,7 @@ def _build_rename_dialog(node, page, refresh_cb, user_id):
         dlg.update()
         async with get_db_session() as session:
             try:
-                await rename_category(
-                    session, user_id, node["id"], new_name
-                )
+                await rename_category(session, user_id, node["id"], new_name)
             except ValueError:
                 snack = ft.SnackBar(
                     content=ft.Text("Categoria j\u00e1 existe neste n\u00edvel")
@@ -257,8 +256,6 @@ def _build_rename_dialog(node, page, refresh_cb, user_id):
 def _flatten_tree_for_dropdown(tree, options, level):
     for node in tree:
         prefix = "  " * level + "\u2514 " if level > 0 else ""
-        options.append(
-            ft.dropdown.Option(str(node["id"]), f"{prefix}{node['name']}")
-        )
+        options.append(ft.dropdown.Option(str(node["id"]), f"{prefix}{node['name']}"))
         if node["children"]:
             _flatten_tree_for_dropdown(node["children"], options, level + 1)
