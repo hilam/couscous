@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
-from database.models.couscous import Entry, Feed, FeedMetadata, FeedTag, User
+from database.models.couscous import Entry, EntryTag, Feed, FeedMetadata, User
 from tests.test_factory import make_user
 
 
@@ -186,34 +186,67 @@ async def test_feed_metadata_duplicate_raises(db_session):
 
 
 @pytest.mark.asyncio
-async def test_feed_tag_create(db_session):
+async def test_entry_tag_create(db_session):
     user = await make_user(db_session)
     feed = Feed(url="https://example.com/rss", user_id=user.id)
     db_session.add(feed)
     await db_session.commit()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    entry = Entry(
+        feed=feed.url,
+        user_id=user.id,
+        title="Test",
+        link="https://example.com/a1",
+        published=now,
+        last_updated=now,
+        first_updated=now,
+        first_updated_epoch=now,
+        added_by="test",
+        feed_order=0,
+    )
+    db_session.add(entry)
+    await db_session.commit()
 
-    tag = FeedTag(feed=feed.url, tag="technology")
+    tag = EntryTag(entry_id=entry.id, tag="python", user_id=user.id)
     db_session.add(tag)
     await db_session.commit()
 
-    result = await db_session.execute(select(FeedTag).where(FeedTag.feed == feed.url))
+    result = await db_session.execute(
+        select(EntryTag).where(EntryTag.entry_id == entry.id)
+    )
     tags = result.scalars().all()
     assert len(tags) == 1
-    assert tags[0].tag == "technology"
+    assert tags[0].tag == "python"
+    assert tags[0].user_id == user.id
 
 
 @pytest.mark.asyncio
-async def test_feed_tag_duplicate_raises(db_session):
+async def test_entry_tag_duplicate_raises(db_session):
     user = await make_user(db_session)
     feed = Feed(url="https://example.com/rss", user_id=user.id)
     db_session.add(feed)
     await db_session.commit()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    entry = Entry(
+        feed=feed.url,
+        user_id=user.id,
+        title="Test",
+        link="https://example.com/a1",
+        published=now,
+        last_updated=now,
+        first_updated=now,
+        first_updated_epoch=now,
+        added_by="test",
+        feed_order=0,
+    )
+    db_session.add(entry)
+    await db_session.commit()
 
-    tag1 = FeedTag(feed=feed.url, tag="tech")
+    tag1 = EntryTag(entry_id=entry.id, tag="python", user_id=user.id)
     db_session.add(tag1)
     await db_session.commit()
 
-    tag2 = FeedTag(feed=feed.url, tag="tech")
+    tag2 = EntryTag(entry_id=entry.id, tag="python", user_id=user.id)
     db_session.add(tag2)
     with pytest.raises(IntegrityError):
         await db_session.commit()

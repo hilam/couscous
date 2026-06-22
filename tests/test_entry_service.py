@@ -9,6 +9,7 @@ from app.services.entry_service import (
     mark_important,
     get_unread_count,
 )
+from app.services.tag_service import assign_tag
 from app.services.user_service import register
 from database.models.couscous import Feed, Entry
 
@@ -140,3 +141,98 @@ async def test_get_unread_count(db_session):
 
     count = await get_unread_count(db_session, user.id)
     assert count == 1
+
+
+@pytest.mark.asyncio
+async def test_list_entries_tag_filter(db_session):
+    user = await _make_user(db_session)
+    _, e1 = await _create_feed_and_entry(db_session, user.id)
+    _, e2 = await _create_feed_and_entry(
+        db_session, user.id, url="https://example.com/rss2"
+    )
+
+    assert e1.id is not None
+    assert e2.id is not None
+    await assign_tag(db_session, e1.id, "python", user.id)
+    await assign_tag(db_session, e2.id, "django", user.id)
+
+    tagged = await list_entries(
+        db_session, "https://example.com/rss", user_id=user.id, tag="python"
+    )
+    assert len(tagged) == 1
+    assert tagged[0].id == e1.id
+
+
+@pytest.mark.asyncio
+async def test_list_entries_tag_none_shows_all(db_session):
+    user = await _make_user(db_session)
+    e1_fe, e1 = await _create_feed_and_entry(db_session, user.id)
+    _, e2 = await _create_feed_and_entry(
+        db_session, user.id, url="https://example.com/rss2"
+    )
+
+    assert e1.id is not None
+    assert e2.id is not None
+    await assign_tag(db_session, e1.id, "python", user.id)
+
+    all_entries = await list_entries(
+        db_session, "https://example.com/rss", user_id=user.id, tag=None
+    )
+    assert len(all_entries) == 1
+
+
+@pytest.mark.asyncio
+async def test_list_entries_tag_with_other_filters(db_session):
+    user = await _make_user(db_session)
+    _, e1 = await _create_feed_and_entry(db_session, user.id)
+    _, e2 = await _create_feed_and_entry(
+        db_session, user.id, url="https://example.com/rss2"
+    )
+
+    assert e1.id is not None
+    assert e2.id is not None
+    await assign_tag(db_session, e1.id, "python", user.id)
+    await assign_tag(db_session, e2.id, "python", user.id)
+    await mark_important(db_session, e2.id, user.id)
+    await mark_read(db_session, e1.id, user.id)
+
+    result = await list_entries(
+        db_session,
+        "https://example.com/rss",
+        user_id=user.id,
+        tag="python",
+        unread_only=False,
+        important_only=False,
+    )
+    assert len(result) == 1
+
+    result = await list_entries(
+        db_session,
+        "https://example.com/rss",
+        user_id=user.id,
+        tag="python",
+        unread_only=True,
+        important_only=True,
+    )
+    assert len(result) == 0
+
+    result = await list_entries(
+        db_session,
+        "https://example.com/rss2",
+        user_id=user.id,
+        tag="python",
+        important_only=True,
+    )
+    assert len(result) == 1
+    assert result[0].id == e2.id
+
+
+@pytest.mark.asyncio
+async def test_list_entries_tag_no_match(db_session):
+    user = await _make_user(db_session)
+    await _create_feed_and_entry(db_session, user.id)
+
+    result = await list_entries(
+        db_session, "https://example.com/rss", user_id=user.id, tag="rust"
+    )
+    assert result == []
