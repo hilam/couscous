@@ -1,20 +1,31 @@
-schema: spec-driven
+schema: meu-fluxo-qa
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+    Você está trabalhando em um Portal de leitura de notícias.
+    Tecnologias principais:
+    - Python Flet (wrapper Flutter)
+    - Banco de Dados: PostgreSQL, SQLModel (Async), Alembic para migrations.
+    - Infraestrutura: Docker e Docker Compose, gerenciador de pacotes 'uv', linter/formatter 'Ruff'.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+    Diretriz crítica:
+    - Todas as comunicações e documentação interna devem ser feitas em Português do Brasil (PT-BR).
+
+    Regras Rígidas de Git Workflow (OBRIGATÓRIO):
+    0. IDIOMA DOS COMMITS: Todos os commits devem ser feitos em Português do Brasil (PT-BR).
+    1. PROTEÇÃO DA MAIN: Você está estritamente proibido de codificar ou gerar planos na branch `main`.
+    2. BRANCHING: Ao iniciar uma nova mudança, use o terminal para criar uma branch usando o padrão `feat/<nome-da-mudanca>`, `fix/<nome-da-mudanca>` ou `chore/<nome-da-mudanca>`.
+    3. COMMITS DE ARTEFATOS: Após terminar de gerar QUALQUER arquivo de planejamento do OpenSpec (proposal.md, specs/, design.md, qa-plan.md, tasks.md), você DEVE abrir o terminal e "comitar" o arquivo gerado usando Conventional Commits. Exemplo: `git add <arquivo> && git commit -m "docs(planning): generate <nome-do-artefato>"`.
+    4. COMMITS DE CÓDIGO: Durante a implementação, todo código escrito deve ser "comitado" usando os prefixos corretos (feat:, fix:, test:, refactor:, chore:).
+
+rules:
+    proposal:
+        - "Use a skill 'grill-with-docs' para esclarecer dúvidas no contexto"
+    # specs:
+    #   - "Escrever em Português do Brasil (PT-BR)"
+    #   - "Detalhar mudanças de banco de dados (Alembic) e assinaturas de rotas FastAPI"
+    design:
+        - "Use a skill 'domain-modeling como auxiliar"
+    tasks:
+        - "Incluir etapas de execução de QA"
+    # qa-plan:
+    #   - "Escrever em Português do Brasil (PT-BR)"
