@@ -3,12 +3,11 @@ from urllib.parse import parse_qs, urlparse
 import flet as ft
 
 from app.services import oauth_service, user_service
-from app.state import State
 from app.views.feed_list_view import feed_list_view
-from database.service.database import get_db_session
 
 
-async def oauth_callback_view(page: ft.Page, state: State) -> ft.View:
+async def oauth_callback_view(ctx) -> ft.View:
+    page = ctx.page
     parsed = urlparse(page.route)
     params = parse_qs(parsed.query)
 
@@ -16,23 +15,22 @@ async def oauth_callback_view(page: ft.Page, state: State) -> ft.View:
     state_param = params.get("state", [None])[0]
 
     if not code or not state_param:
-        return await _error_view(page, "Parâmetros OAuth inválidos")
+        return await _error_view(page, "Par\u00e2metros OAuth inv\u00e1lidos")
 
     try:
         user_info = await oauth_service.handle_callback(page, code, state_param)
     except ValueError as ex:
         return await _error_view(page, str(ex))
 
-    async with get_db_session() as session:
-        user = await user_service.get_or_create_oauth_user(
-            session,
-            provider=user_info["provider"],
-            oauth_id=user_info["oauth_id"],
-            name=user_info["name"],
-        )
-        state.user = user
+    user = await user_service.get_or_create_oauth_user(
+        ctx.session,
+        provider=user_info["provider"],
+        oauth_id=user_info["oauth_id"],
+        name=user_info["name"],
+    )
+    ctx.state.user = user
 
-    return await feed_list_view(page, state)
+    return await feed_list_view(ctx)
 
 
 async def _error_view(page: ft.Page, message: str) -> ft.View:
@@ -47,7 +45,7 @@ async def _error_view(page: ft.Page, message: str) -> ft.View:
                 controls=[
                     ft.Icon(ft.Icons.ERROR_OUTLINE, size=64, color=ft.Colors.RED_400),
                     ft.Text(
-                        "Falha na autenticação",
+                        "Falha na autentica\u00e7\u00e3o",
                         theme_style=ft.TextThemeStyle.HEADLINE_SMALL,
                     ),
                     ft.Text(message, text_align=ft.TextAlign.CENTER),

@@ -9,8 +9,6 @@ from app.controls.nav_bar import set_navbar
 from app.services.category_service import list_categories
 from app.services.feed_service import add_feed, list_feeds, remove_feed
 from app.services.refresh_service import refresh_all_feeds, refresh_single_feed
-from app.state import State
-from database.service.database import get_db_session
 
 
 def _build_feed_card(feed, confirm_delete, page):
@@ -90,10 +88,9 @@ def _empty_state():
     )
 
 
-async def _rebuild_feed_list(feed_list, confirm_delete, page, user_id: int):
-    async with get_db_session() as session:
-        feeds = await list_feeds(session, user_id)
-        categories = await list_categories(session, user_id)
+async def _rebuild_feed_list(feed_list, confirm_delete, session, page, user_id: int):
+    feeds = await list_feeds(session, user_id)
+    categories = await list_categories(session, user_id)
     feed_list.controls.clear()
     if feeds:
         feed_list.controls.extend(
@@ -104,12 +101,14 @@ async def _rebuild_feed_list(feed_list, confirm_delete, page, user_id: int):
     return feeds
 
 
-async def feed_list_view(page: ft.Page, state: State) -> ft.View:
+async def feed_list_view(ctx) -> ft.View:
+    page = ctx.page
+    state = ctx.state
+    session = ctx.session
     user_id: int = (state.user.id or 0) if state.user else 0
 
-    async with get_db_session() as session:
-        feeds = await list_feeds(session, user_id)
-        categories = await list_categories(session, user_id)
+    feeds = await list_feeds(session, user_id)
+    categories = await list_categories(session, user_id)
 
     feed_list = ft.ListView(spacing=10, padding=10, expand=True)
 
@@ -117,17 +116,17 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
         state.loading = True
         page.update()
 
-        async with get_db_session() as session:
-            await refresh_all_feeds(session, user_id)
+        async with ctx.new_session() as s:
+            await refresh_all_feeds(s, user_id)
+            await _rebuild_feed_list(feed_list, confirm_delete, s, page, user_id)
 
-        await _rebuild_feed_list(feed_list, confirm_delete, page, user_id)
         state.loading = False
         page.update()
 
     async def on_feed_added(url: str, category_id: int | None = None):
-        async with get_db_session() as session:
+        async with ctx.new_session() as s:
             try:
-                feed = await add_feed(session, user_id, url, category_id)
+                feed = await add_feed(s, user_id, url, category_id)
             except ValueError:
                 snack = ft.SnackBar(content=ft.Text("Feed j\u00e1 cadastrado"))
                 page.overlay.append(snack)
@@ -135,14 +134,14 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
                 page.update()
                 return
 
-            await refresh_single_feed(session, feed)
+            await refresh_single_feed(s, feed)
 
             if feed.last_exception:
                 snack = ft.SnackBar(content=ft.Text(f"Erro: {feed.last_exception}"))
                 page.overlay.append(snack)
                 snack.open = True
                 page.update()
-                await _rebuild_feed_list(feed_list, confirm_delete, page, user_id)
+                await _rebuild_feed_list(feed_list, confirm_delete, s, page, user_id)
                 page.update()
                 return
 
@@ -160,10 +159,9 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
     async def delete_feed(feed_url: str, dlg: ft.AlertDialog):
         dlg.open = False
         page.update()
-        async with get_db_session() as session:
-            await remove_feed(session, user_id, feed_url)
-
-        await _rebuild_feed_list(feed_list, confirm_delete, page, user_id)
+        async with ctx.new_session() as s:
+            await remove_feed(s, user_id, feed_url)
+            await _rebuild_feed_list(feed_list, confirm_delete, s, page, user_id)
         page.update()
 
     init_controls = _build_group_controls(feeds, categories, confirm_delete, page)

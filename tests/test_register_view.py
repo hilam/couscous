@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import flet as ft
 import pytest
 
+from app.context import PageContext
 from app.services.user_service import login, register
 from app.state import State
 from app.views.register_view import register_view
@@ -24,7 +25,8 @@ def _find_controls(control, control_type):
 async def test_register_view_route():
     page = MagicMock()
     state = State()
-    view = await register_view(page, state)
+    ctx = PageContext(page=page, state=state)
+    view = await register_view(ctx)
 
     assert view.route == "/register"
 
@@ -33,7 +35,8 @@ async def test_register_view_route():
 async def test_register_view_contains_fields():
     page = MagicMock()
     state = State()
-    view = await register_view(page, state)
+    ctx = PageContext(page=page, state=state)
+    view = await register_view(ctx)
 
     textfields = _find_controls(view, ft.TextField)
     labels = [tf.label for tf in textfields if hasattr(tf, "label")]
@@ -45,7 +48,8 @@ async def test_register_view_contains_fields():
 async def test_register_view_contains_register_button():
     page = MagicMock()
     state = State()
-    view = await register_view(page, state)
+    ctx = PageContext(page=page, state=state)
+    view = await register_view(ctx)
 
     buttons = _find_controls(view, ft.FilledButton)
     assert any("Registrar" in str(getattr(b, "content", "")) for b in buttons)

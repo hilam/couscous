@@ -1,11 +1,10 @@
 import flet as ft
 
 from app.controls.nav_bar import set_navbar
-from app.state import State
 
 
-async def about_view(page: ft.Page, state: State) -> ft.View:
-    set_navbar(page)
+async def about_view(ctx) -> ft.View:
+    set_navbar(ctx.page)
     return ft.View(
         route="/about",
         controls=[
@@ -14,11 +13,11 @@ async def about_view(page: ft.Page, state: State) -> ft.View:
                 controls=[
                     ft.Icon(ft.Icons.RSS_FEED, size=60, color=ft.Colors.CYAN_400),
                     ft.Text("CousCous", theme_style=ft.TextThemeStyle.HEADLINE_MEDIUM),
-                    ft.Text("Versão 0.1.0"),
+                    ft.Text("Vers\u00e3o 0.1.0"),
                     ft.Divider(),
                     ft.Text(
-                        "CousCous é um leitor de feeds RSS "
-                        "construído com Python e Flet."
+                        "CousCous \u00e9 um leitor de feeds RSS "
+                        "constru\u00eddo com Python e Flet."
                     ),
                     ft.Text(
                         "Permite adicionar feeds RSS, visualizar artigos, "

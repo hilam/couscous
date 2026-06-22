@@ -10,8 +10,6 @@ from app.services.category_service import (
     get_category_tree,
     rename_category,
 )
-from app.state import State
-from database.service.database import get_db_session
 
 
 def _build_tree_controls(tree, on_rename, on_delete, level=0):
@@ -47,15 +45,18 @@ def _build_tree_controls(tree, on_rename, on_delete, level=0):
     return controls
 
 
-async def category_list_view(page: ft.Page, state: State) -> ft.View:
+async def category_list_view(ctx) -> ft.View:
+    page = ctx.page
+    state = ctx.state
+    session = ctx.session
     user_id: int = (state.user.id or 0) if state.user else 0
 
     tree_view = ft.Column(spacing=2, scroll=ft.ScrollMode.AUTO)
 
     async def refresh_tree():
         tree_view.controls.clear()
-        async with get_db_session() as session:
-            tree = await get_category_tree(session, user_id)
+        async with ctx.new_session() as s:
+            tree = await get_category_tree(s, user_id)
         if not tree:
             tree_view.controls.append(
                 ft.Container(
@@ -89,14 +90,14 @@ async def category_list_view(page: ft.Page, state: State) -> ft.View:
         page.update()
 
     async def _open_rename_dialog(node):
-        dlg = _build_rename_dialog(node, page, refresh_tree, user_id)
+        dlg = _build_rename_dialog(node, page, refresh_tree, ctx)
         page.show_dialog(dlg)
         page.update()
 
     def _delete_category_cb(node):
         msg = (
             f'Excluir "{node["name"]}"? '
-            "Filhos serão movidos para a raiz. Feeds ficarão sem categoria."
+            "Filhos ser\u00e3o movidos para a raiz. Feeds ficar\u00e3o sem categoria."
         )
         dlg = ConfirmDialog(
             title="Excluir categoria",
@@ -107,17 +108,47 @@ async def category_list_view(page: ft.Page, state: State) -> ft.View:
         page.update()
 
     async def _delete_confirmed(node):
-        async with get_db_session() as session:
-            await delete_category(session, user_id, node["id"])
+        async with ctx.new_session() as s:
+            await delete_category(s, user_id, node["id"])
         await refresh_tree()
 
     async def open_new_dialog(e):
-        create_dlg = _build_create_dialog(page, refresh_tree, user_id)
+        create_dlg = _build_create_dialog(page, refresh_tree, ctx)
         page.overlay.append(create_dlg)
         create_dlg.open = True
         page.update()
 
-    await refresh_tree()
+    initial_tree = await get_category_tree(session, user_id)
+    if not initial_tree:
+        tree_view.controls.append(
+            ft.Container(
+                content=ft.Column(
+                    controls=[
+                        ft.Icon(
+                            ft.Icons.FOLDER_OPEN, size=60, color=ft.Colors.GREY_400
+                        ),
+                        ft.Text(
+                            "Nenhuma categoria",
+                            theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
+                            color=ft.Colors.GREY,
+                        ),
+                        ft.Text(
+                            "Crie pastas para organizar seus feeds",
+                            color=ft.Colors.GREY_400,
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                ),
+                alignment=ft.Alignment.CENTER,
+                padding=ft.Padding.all(40),
+            )
+        )
+    else:
+        controls = _build_tree_controls(
+            initial_tree, _open_rename_dialog, _delete_category_cb
+        )
+        tree_view.controls.extend(controls)
 
     set_navbar(page)
     return ft.View(
@@ -139,13 +170,13 @@ async def category_list_view(page: ft.Page, state: State) -> ft.View:
     )
 
 
-def _build_create_dialog(page, refresh_cb, user_id):
+def _build_create_dialog(page, refresh_cb, ctx):
     name_field = ft.TextField(label="Nome da categoria", autofocus=True, expand=True)
     parent_dropdown = ft.Dropdown(label="Categoria pai", expand=True)
 
     async def _load_parent_dropdown():
-        async with get_db_session() as session:
-            tree = await get_category_tree(session, user_id)
+        async with ctx.new_session() as s:
+            tree = await get_category_tree(s, ctx.state.user.id)
         options = [ft.dropdown.Option("0", "Nenhuma (raiz)")]
         _flatten_tree_for_dropdown(tree, options, 0)
         parent_dropdown.options = options
@@ -162,9 +193,9 @@ def _build_create_dialog(page, refresh_cb, user_id):
         parent_id = int(raw) if raw and raw != "0" else None
         dlg.open = False
         dlg.update()
-        async with get_db_session() as session:
+        async with ctx.new_session() as s:
             try:
-                await create_category(session, user_id, name, parent_id)
+                await create_category(s, ctx.state.user.id, name, parent_id)
             except ValueError:
                 snack = ft.SnackBar(
                     content=ft.Text("Categoria j\u00e1 existe neste n\u00edvel")
@@ -195,7 +226,7 @@ def _build_create_dialog(page, refresh_cb, user_id):
     return dlg
 
 
-def _build_rename_dialog(node, page, refresh_cb, user_id):
+def _build_rename_dialog(node, page, refresh_cb, ctx):
     name_field = ft.TextField(
         label="Novo nome", value=node["name"], autofocus=True, expand=True
     )
@@ -206,9 +237,9 @@ def _build_rename_dialog(node, page, refresh_cb, user_id):
             return
         dlg.open = False
         dlg.update()
-        async with get_db_session() as session:
+        async with ctx.new_session() as s:
             try:
-                await rename_category(session, user_id, node["id"], new_name)
+                await rename_category(s, ctx.state.user.id, node["id"], new_name)
             except ValueError:
                 snack = ft.SnackBar(
                     content=ft.Text("Categoria j\u00e1 existe neste n\u00edvel")

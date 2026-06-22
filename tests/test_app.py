@@ -70,6 +70,7 @@ async def test_route_dispatch_login(mock_page):
         patch("app.app.register_view"),
         patch("app.app.about_view"),
         patch("app.app.home_view"),
+        patch("app.app.get_db_session"),
     ):
         await app_run(mock_page)
         event = MagicMock()
@@ -97,6 +98,10 @@ async def test_route_dispatch_feed_list_when_authenticated(mock_page):
 
         mock_feed_list_view = AsyncMock(return_value=view_mock)
 
+        mock_cm = AsyncMock()
+        mock_cm.__aenter__.return_value = AsyncMock()
+        mock_cm.__aexit__.return_value = None
+
         with (
             patch("app.app.feed_list_view", mock_feed_list_view),
             patch("app.app.login_view", AsyncMock()),
@@ -105,6 +110,7 @@ async def test_route_dispatch_feed_list_when_authenticated(mock_page):
             patch("app.app.register_view"),
             patch("app.app.about_view"),
             patch("app.app.home_view"),
+            patch("app.app.get_db_session", return_value=mock_cm),
         ):
             await app_run(mock_page)
             event = MagicMock()
@@ -129,6 +135,10 @@ async def test_route_dispatch_entry_list_sets_active_url(mock_page):
         view_mock = MagicMock()
         mock_entry_list_view = AsyncMock(return_value=view_mock)
 
+        mock_cm = AsyncMock()
+        mock_cm.__aenter__.return_value = AsyncMock()
+        mock_cm.__aexit__.return_value = None
+
         with (
             patch("app.app.entry_list_view", mock_entry_list_view),
             patch("app.app.login_view", AsyncMock()),
@@ -137,6 +147,7 @@ async def test_route_dispatch_entry_list_sets_active_url(mock_page):
             patch("app.app.register_view"),
             patch("app.app.about_view"),
             patch("app.app.home_view"),
+            patch("app.app.get_db_session", return_value=mock_cm),
         ):
             await app_run(mock_page)
             event = MagicMock()
@@ -161,6 +172,10 @@ async def test_route_dispatch_entry_view(mock_page):
         view_mock = MagicMock()
         mock_entry_view = AsyncMock(return_value=view_mock)
 
+        mock_cm = AsyncMock()
+        mock_cm.__aenter__.return_value = AsyncMock()
+        mock_cm.__aexit__.return_value = None
+
         with (
             patch("app.app.entry_view", mock_entry_view),
             patch("app.app.login_view", AsyncMock()),
@@ -169,12 +184,15 @@ async def test_route_dispatch_entry_view(mock_page):
             patch("app.app.register_view"),
             patch("app.app.about_view"),
             patch("app.app.home_view"),
+            patch("app.app.get_db_session", return_value=mock_cm),
         ):
             await app_run(mock_page)
             event = MagicMock()
             event.route = "/entry/42"
             await mock_page.on_route_change(event)
-            mock_entry_view.assert_awaited_once_with(mock_page, mock_state, 42)
+            mock_entry_view.assert_awaited_once()
+            args, _ = mock_entry_view.await_args
+            assert args[1] == 42
 
 
 @pytest.mark.asyncio
@@ -192,6 +210,7 @@ async def test_unauthenticated_redirects_to_login(mock_page):
         patch("app.app.register_view"),
         patch("app.app.about_view"),
         patch("app.app.home_view"),
+        patch("app.app.get_db_session"),
     ):
         await app_run(mock_page)
         event = MagicMock()
@@ -204,7 +223,10 @@ async def test_unauthenticated_redirects_to_login(mock_page):
 async def test_public_routes_allowed_without_auth(mock_page):
     mock_page.theme = MagicMock()
 
-    for public_route, view_name in [("/about", "about_view"), ("/register", "register_view")]:
+    for public_route, view_name in [
+        ("/about", "about_view"),
+        ("/register", "register_view"),
+    ]:
         page = MagicMock()
         page.session.store = MagicMock()
         page.views = []
@@ -234,6 +256,7 @@ async def test_public_routes_allowed_without_auth(mock_page):
             patch("app.app.register_view", view_patches["register_view"]),
             patch("app.app.about_view", view_patches["about_view"]),
             patch("app.app.home_view", view_patches["home_view"]),
+            patch("app.app.get_db_session"),
         ):
             await app_run(page)
             event = MagicMock()

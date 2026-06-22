@@ -4,12 +4,13 @@ import flet as ft
 
 from app.controls.oauth_buttons import get_oauth_buttons
 from app.services.user_service import login
-from app.state import State
-from database.service.database import get_db_session
 
 
-async def login_view(page: ft.Page, state: State) -> ft.View:
-    name_field = ft.TextField(label="Nome de usuário", autofocus=True)
+async def login_view(ctx) -> ft.View:
+    page = ctx.page
+    state = ctx.state
+
+    name_field = ft.TextField(label="Nome de usu\u00e1rio", autofocus=True)
     password_field = ft.TextField(label="Senha", password=True)
     error_text = ft.Text("", color=ft.Colors.RED, visible=False)
 
@@ -23,7 +24,7 @@ async def login_view(page: ft.Page, state: State) -> ft.View:
             page.update()
             return
 
-        async with get_db_session() as session:
+        async with ctx.new_session() as session:
             try:
                 user = await login(session, name, password)
 
@@ -31,7 +32,7 @@ async def login_view(page: ft.Page, state: State) -> ft.View:
                     state.user = user
                     await page.push_route("/feeds")
                 else:
-                    error_text.value = "Usuário não encontrado"
+                    error_text.value = "Usu\u00e1rio n\u00e3o encontrado"
                     error_text.visible = True
                     page.update()
             except ValueError as ex:

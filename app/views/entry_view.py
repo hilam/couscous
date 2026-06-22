@@ -6,13 +6,11 @@ from fletify import FletifyHTML
 
 from app.controls.nav_bar import set_navbar
 from app.services.entry_service import get_entry, mark_important, mark_read
-from app.state import State
-from database.service.database import get_db_session
 
 
 def _get_content_renderer(content: str) -> ft.Control:
     if not content:
-        return ft.Text("Sem conteúdo disponível.")
+        return ft.Text("Sem conte\u00fado dispon\u00edvel.")
 
     with contextlib.suppress(Exception):
         result = FletifyHTML(content).get_flet()
@@ -25,36 +23,37 @@ def _get_content_renderer(content: str) -> ft.Control:
     )
 
 
-async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
+async def entry_view(ctx, entry_id: int) -> ft.View:
+    page = ctx.page
+    state = ctx.state
+    session = ctx.session
     user_id: int = (state.user.id or 0) if state.user else 0
 
-    async with get_db_session() as session:
-        entry = await get_entry(session, entry_id)
+    entry = await get_entry(session, entry_id)
 
     if not entry:
         return ft.View(
             route=f"/entry/{entry_id}",
             controls=[
-                ft.AppBar(title=ft.Text("Artigo não encontrado")),
+                ft.AppBar(title=ft.Text("Artigo n\u00e3o encontrado")),
                 ft.Container(
-                    content=ft.Text("Artigo não encontrado"),
+                    content=ft.Text("Artigo n\u00e3o encontrado"),
                     alignment=ft.Alignment.CENTER,
                     padding=ft.Padding.all(40),
                 ),
             ],
         )
 
-    async with get_db_session() as session:
-        await mark_read(session, entry_id, user_id)
+    await mark_read(session, entry_id, user_id)
 
-    content = entry.content or entry.summary or "Sem conteúdo disponível."
+    content = entry.content or entry.summary or "Sem conte\u00fado dispon\u00edvel."
 
     async def handle_toggle_important(e):
-        async with get_db_session() as session:
-            entry_data = await get_entry(session, entry_id)
+        async with ctx.new_session() as s:
+            entry_data = await get_entry(s, entry_id)
             if entry_data:
                 new_val = not entry_data.important
-                await mark_important(session, entry_id, user_id, important=new_val)
+                await mark_important(s, entry_id, user_id, important=new_val)
                 e.control.icon = ft.Icons.STAR if new_val else ft.Icons.STAR_BORDER
                 e.control.update()
 

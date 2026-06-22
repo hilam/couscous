@@ -1,12 +1,12 @@
 import asyncio
 
 import flet as ft
+from sqlmodel import select
 
 from app.controls.article_card import ArticleCard
 from app.controls.nav_bar import set_navbar
 from app.services.entry_service import list_entries
-from app.state import State
-from database.service.database import get_db_session
+from database.models.couscous import Feed
 
 
 def _empty_state() -> ft.Container:
@@ -52,22 +52,18 @@ def _populate_entry_list(entry_list: ft.ListView, entries: list, page: ft.Page):
         entry_list.controls.append(_empty_state())
 
 
-async def entry_list_view(page: ft.Page, state: State) -> ft.View:
+async def entry_list_view(ctx) -> ft.View:
+    page = ctx.page
+    state = ctx.state
+    session = ctx.session
     feed_url = state.active_feed_url or ""
     user_id: int = (state.user.id or 0) if state.user else 0
 
-    async with get_db_session() as session:
-        from sqlmodel import select
-
-        from database.models.couscous import Feed
-
-        result = await session.execute(select(Feed).where(Feed.url == feed_url))
-        feed = result.scalar_one_or_none()
-
+    result = await session.execute(select(Feed).where(Feed.url == feed_url))
+    feed = result.scalar_one_or_none()
     feed_title = feed.title if feed and feed.title else feed_url
 
-    async with get_db_session() as session:
-        entries = await list_entries(session, feed_url, user_id=user_id)
+    entries = await list_entries(session, feed_url, user_id=user_id)
 
     entry_list = ft.ListView(spacing=8, padding=10, expand=True)
     show_unread = False
@@ -75,9 +71,9 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
 
     async def load_entries():
         nonlocal show_unread, show_important
-        async with get_db_session() as session:
+        async with ctx.new_session() as s:
             return await list_entries(
-                session,
+                s,
                 feed_url,
                 user_id=user_id,
                 unread_only=show_unread,
@@ -120,7 +116,7 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
             ft.Container(
                 content=ft.Row(
                     controls=[
-                        _filter_chip("Não lidos", toggle_unread),
+                        _filter_chip("N\u00e3o lidos", toggle_unread),
                         _filter_chip("Importantes", toggle_important),
                     ],
                     spacing=8,

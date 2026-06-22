@@ -4,12 +4,13 @@ import flet as ft
 
 from app.controls.oauth_buttons import get_oauth_buttons
 from app.services.user_service import register
-from app.state import State
-from database.service.database import get_db_session
 
 
-async def register_view(page: ft.Page, state: State) -> ft.View:
-    name_field = ft.TextField(label="Nome de usuário", autofocus=True)
+async def register_view(ctx) -> ft.View:
+    page = ctx.page
+    state = ctx.state
+
+    name_field = ft.TextField(label="Nome de usu\u00e1rio", autofocus=True)
     password_field = ft.TextField(label="Senha", password=True)
     error_text = ft.Text("", color=ft.Colors.RED, visible=False)
 
@@ -23,7 +24,7 @@ async def register_view(page: ft.Page, state: State) -> ft.View:
             page.update()
             return
 
-        async with get_db_session() as session:
+        async with ctx.new_session() as session:
             try:
                 user = await register(session, name, password)
 
@@ -31,7 +32,7 @@ async def register_view(page: ft.Page, state: State) -> ft.View:
                     state.user = user
                     await page.push_route("/feeds")
                 else:
-                    error_text.value = "Nome de usuário já existe"
+                    error_text.value = "Nome de usu\u00e1rio j\u00e1 existe"
                     error_text.visible = True
                     page.update()
             except ValueError as ex:
@@ -45,7 +46,7 @@ async def register_view(page: ft.Page, state: State) -> ft.View:
     name_field.on_submit = lambda e: asyncio.create_task(password_field.focus())
     password_field.on_submit = submit
     submit_btn = ft.FilledButton("Registrar", on_click=submit)
-    login_link = ft.TextButton("Já tenho conta", on_click=go_to_login)
+    login_link = ft.TextButton("J\u00e1 tenho conta", on_click=go_to_login)
 
     form_controls = [
         name_field,

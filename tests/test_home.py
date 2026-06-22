@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import flet as ft
 import pytest
 
+from app.context import PageContext
 from app.state import State
 from app.views.home_view import home_view
 
@@ -23,7 +24,8 @@ def _find_controls(control, control_type):
 async def test_home_view_route():
     page = MagicMock()
     state = State()
-    view = await home_view(page, state)
+    ctx = PageContext(page=page, state=state)
+    view = await home_view(ctx)
 
     assert view.route == "/"
 
@@ -32,7 +34,8 @@ async def test_home_view_route():
 async def test_home_view_contains_navigation_bar():
     page = MagicMock()
     state = State()
-    await home_view(page, state)
+    ctx = PageContext(page=page, state=state)
+    await home_view(ctx)
 
     assert page.navigation_bar is not None
 
@@ -41,7 +44,8 @@ async def test_home_view_contains_navigation_bar():
 async def test_home_view_contains_rss_feed_button():
     page = MagicMock()
     state = State()
-    view = await home_view(page, state)
+    ctx = PageContext(page=page, state=state)
+    view = await home_view(ctx)
 
     buttons = _find_controls(view, ft.FilledButton)
     assert any("Ver meus feeds" in str(getattr(b, "content", "")) for b in buttons)

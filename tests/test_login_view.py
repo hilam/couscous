@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import flet as ft
 import pytest
 
+from app.context import PageContext
 from app.state import State
 from app.views.login_view import login_view
 
@@ -11,7 +12,8 @@ from app.views.login_view import login_view
 async def test_login_view_route():
     page = MagicMock()
     state = State()
-    view = await login_view(page, state)
+    ctx = PageContext(page=page, state=state)
+    view = await login_view(ctx)
 
     assert view.route == "/login"
 
@@ -20,7 +22,8 @@ async def test_login_view_route():
 async def test_login_view_contains_username_password_fields():
     page = MagicMock()
     state = State()
-    view = await login_view(page, state)
+    ctx = PageContext(page=page, state=state)
+    view = await login_view(ctx)
 
     textfields = _find_controls(view, ft.TextField)
     assert len(textfields) >= 2
@@ -33,7 +36,8 @@ async def test_login_view_contains_username_password_fields():
 async def test_login_view_contains_login_button():
     page = MagicMock()
     state = State()
-    view = await login_view(page, state)
+    ctx = PageContext(page=page, state=state)
+    view = await login_view(ctx)
 
     buttons = _find_controls(view, ft.FilledButton)
     assert len(buttons) >= 1
@@ -44,7 +48,8 @@ async def test_login_view_contains_login_button():
 async def test_login_view_register_link():
     page = MagicMock()
     state = State()
-    view = await login_view(page, state)
+    ctx = PageContext(page=page, state=state)
+    view = await login_view(ctx)
 
     text_buttons = _find_controls(view, ft.TextButton)
     assert any("Criar conta" in str(getattr(b, "content", "")) for b in text_buttons)

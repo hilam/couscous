@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import flet as ft
 import pytest
 
+from app.context import PageContext
 from app.state import State
 from app.views.about_view import about_view
 
@@ -23,7 +24,8 @@ def _find_controls(control, control_type):
 async def test_about_view_route():
     page = MagicMock()
     state = State()
-    view = await about_view(page, state)
+    ctx = PageContext(page=page, state=state)
+    view = await about_view(ctx)
 
     assert view.route == "/about"
 
@@ -32,6 +34,7 @@ async def test_about_view_route():
 async def test_about_view_contains_navigation_bar():
     page = MagicMock()
     state = State()
-    await about_view(page, state)
+    ctx = PageContext(page=page, state=state)
+    await about_view(ctx)
 
     assert page.navigation_bar is not None

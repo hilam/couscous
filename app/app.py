@@ -1,5 +1,6 @@
 import flet as ft
 
+from app.context import PageContext
 from app.state import State
 from app.views.about_view import about_view
 from app.views.category_list_view import category_list_view
@@ -10,7 +11,7 @@ from app.views.home_view import home_view
 from app.views.login_view import login_view
 from app.views.oauth_callback_view import oauth_callback_view
 from app.views.register_view import register_view
-from database.service.database import init_async_db
+from database.service.database import get_db_session, init_async_db
 
 
 async def app_run(page: ft.Page):
@@ -37,25 +38,64 @@ async def app_run(page: ft.Page):
             "/oauth/callback"
         )
         if route == "/login" or (not state.user and not is_public):
-            v = await login_view(page, state)
+            ctx = PageContext(page=page, state=state, _session_factory=get_db_session)
+            v = await login_view(ctx)
         elif route in {"/feeds", "/"}:
-            v = await feed_list_view(page, state)
+            async with get_db_session() as session:
+                ctx = PageContext(
+                    page=page,
+                    state=state,
+                    session=session,
+                    _session_factory=get_db_session,
+                )
+                v = await feed_list_view(ctx)
         elif route.startswith("/feed/"):
             state.active_feed_url = route[len("/feed/") :]
-            v = await entry_list_view(page, state)
+            async with get_db_session() as session:
+                ctx = PageContext(
+                    page=page,
+                    state=state,
+                    session=session,
+                    _session_factory=get_db_session,
+                )
+                v = await entry_list_view(ctx)
         elif route.startswith("/entry/"):
             entry_id = int(route[len("/entry/") :])
-            v = await entry_view(page, state, entry_id)
+            async with get_db_session() as session:
+                ctx = PageContext(
+                    page=page,
+                    state=state,
+                    session=session,
+                    _session_factory=get_db_session,
+                )
+                v = await entry_view(ctx, entry_id)
         elif route.startswith("/oauth/callback"):
-            v = await oauth_callback_view(page, state)
+            async with get_db_session() as session:
+                ctx = PageContext(
+                    page=page,
+                    state=state,
+                    session=session,
+                    _session_factory=get_db_session,
+                )
+                v = await oauth_callback_view(ctx)
         elif route == "/register":
-            v = await register_view(page, state)
+            ctx = PageContext(page=page, state=state, _session_factory=get_db_session)
+            v = await register_view(ctx)
         elif route == "/categories":
-            v = await category_list_view(page, state)
+            async with get_db_session() as session:
+                ctx = PageContext(
+                    page=page,
+                    state=state,
+                    session=session,
+                    _session_factory=get_db_session,
+                )
+                v = await category_list_view(ctx)
         elif route == "/about":
-            v = await about_view(page, state)
+            ctx = PageContext(page=page, state=state)
+            v = await about_view(ctx)
         else:
-            v = await home_view(page, state)
+            ctx = PageContext(page=page, state=state)
+            v = await home_view(ctx)
 
         page.views.append(v)
         page.update()
