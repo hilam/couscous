@@ -92,8 +92,9 @@ class Category(SQLModel, table=True):
     )
 
 
-class FeedTag(SQLModel, table=True):
-    __tablename__ = "feed_tags"
+class EntryTag(SQLModel, table=True):
+    __tablename__ = "entry_tags"
 
-    feed: str = Field(primary_key=True, foreign_key="feeds.url")
+    entry_id: int = Field(primary_key=True, foreign_key="entries.id")
     tag: str = Field(primary_key=True)
+    user_id: int = Field(foreign_key="users.id", nullable=False)
