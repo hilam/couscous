@@ -1,15 +1,16 @@
 from sqlmodel import desc, select
 
-from database.models.couscous import Entry
+from database.models.couscous import Entry, EntryTag
 
 
-async def list_entries(
+async def list_entries(  # noqa: PLR0913
     session,
     feed_url: str,
     *,
     user_id: int | None = None,
     unread_only: bool = False,
     important_only: bool = False,
+    tag: str | None = None,
 ):
     query = select(Entry).where(Entry.feed == feed_url)
     if user_id is not None:
@@ -18,6 +19,15 @@ async def list_entries(
         query = query.where(Entry.read == 0)
     if important_only:
         query = query.where(Entry.important == 1)
+    if tag:
+        query = query.where(
+            Entry.id.in_(  # type: ignore[attr-defined,union-attr]
+                select(EntryTag.entry_id).where(
+                    EntryTag.tag == tag.strip().lower(),
+                    EntryTag.user_id == user_id,
+                )
+            )
+        )
     query = query.order_by(desc(Entry.published))
     result = await session.execute(query)
     return result.scalars().all()
