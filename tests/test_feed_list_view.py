@@ -60,6 +60,6 @@ async def test_feed_list_view_contains_navigation_bar():
 
     with patch("app.views.feed_list_view.list_feeds", AsyncMock(return_value=[])), \
          patch("app.views.feed_list_view.list_categories", AsyncMock(return_value=[])):
-        view = await feed_list_view(page, state)
+        await feed_list_view(page, state)
 
-    assert view.navigation_bar is not None
+    assert page.navigation_bar is not None

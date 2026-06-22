@@ -5,6 +5,7 @@ import flet as ft
 from app.controls.add_feed_dialog import AddFeedDialog
 from app.controls.confirm_dialog import ConfirmDialog
 from app.controls.feed_card import FeedCard
+from app.controls.nav_bar import set_navbar
 from app.services.category_service import list_categories
 from app.services.feed_service import add_feed, list_feeds, remove_feed
 from app.services.refresh_service import refresh_all_feeds, refresh_single_feed
@@ -176,24 +177,9 @@ async def feed_list_view(page: ft.Page, state: State) -> ft.View:
         _task_ref = asyncio.create_task(add_feed_dialog.load_categories())  # noqa: RUF006 - keep task alive
         page.update()
 
+    set_navbar(page)
     return ft.View(
         route="/feeds",
-        navigation_bar=ft.NavigationBar(
-            destinations=[
-                ft.NavigationBarDestination(icon=ft.Icons.HOME, label="In\u00edcio"),
-                ft.NavigationBarDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
-                ft.NavigationBarDestination(icon=ft.Icons.FOLDER, label="Categorias"),
-                ft.NavigationBarDestination(icon=ft.Icons.INFO, label="Sobre"),
-            ],
-            selected_index=1,
-            on_change=lambda e: asyncio.create_task(
-                page.push_route(
-                    ["/feeds", "/feeds", "/categories", "/about"][
-                        e.control.selected_index
-                    ]
-                )
-            ),
-        ),
         controls=[
             ft.AppBar(
                 title=ft.Text("Meus Feeds"),

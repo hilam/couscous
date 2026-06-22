@@ -2,28 +2,15 @@ import asyncio
 
 import flet as ft
 
+from app.controls.nav_bar import set_navbar
 from app.state import State
 
 
 async def home_view(page: ft.Page, state: State) -> ft.View:
+    set_navbar(page)
     return ft.View(
         route="/",
         scroll=ft.ScrollMode.AUTO,
-        navigation_bar=ft.NavigationBar(
-            destinations=[
-                ft.NavigationBarDestination(icon=ft.Icons.HOME, label="Início"),
-                ft.NavigationBarDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
-                ft.NavigationBarDestination(icon=ft.Icons.FOLDER, label="Categorias"),
-                ft.NavigationBarDestination(icon=ft.Icons.INFO, label="Sobre"),
-            ],
-            on_change=lambda e: asyncio.create_task(
-                page.push_route(
-                    ["/feeds", "/feeds", "/categories", "/about"][
-                        e.control.selected_index
-                    ]
-                )
-            ),
-        ),
         controls=[
             ft.Column(
                 alignment=ft.MainAxisAlignment.CENTER,

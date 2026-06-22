@@ -32,6 +32,6 @@ async def test_about_view_route():
 async def test_about_view_contains_navigation_bar():
     page = MagicMock()
     state = State()
-    view = await about_view(page, state)
+    await about_view(page, state)
 
-    assert view.navigation_bar is not None
+    assert page.navigation_bar is not None

@@ -3,6 +3,7 @@ import asyncio
 import flet as ft
 
 from app.controls.confirm_dialog import ConfirmDialog
+from app.controls.nav_bar import set_navbar
 from app.services.category_service import (
     create_category,
     delete_category,
@@ -118,24 +119,9 @@ async def category_list_view(page: ft.Page, state: State) -> ft.View:
 
     await refresh_tree()
 
+    set_navbar(page)
     return ft.View(
         route="/categories",
-        navigation_bar=ft.NavigationBar(
-            destinations=[
-                ft.NavigationBarDestination(icon=ft.Icons.HOME, label="In\u00edcio"),
-                ft.NavigationBarDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
-                ft.NavigationBarDestination(icon=ft.Icons.FOLDER, label="Categorias"),
-                ft.NavigationBarDestination(icon=ft.Icons.INFO, label="Sobre"),
-            ],
-            selected_index=2,
-            on_change=lambda e: asyncio.create_task(
-                page.push_route(
-                    ["/feeds", "/feeds", "/categories", "/about"][
-                        e.control.selected_index
-                    ]
-                )
-            ),
-        ),
         controls=[
             ft.AppBar(
                 title=ft.Text("Categorias"),

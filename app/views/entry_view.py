@@ -4,6 +4,7 @@ import contextlib
 import flet as ft
 from fletify import FletifyHTML
 
+from app.controls.nav_bar import set_navbar
 from app.services.entry_service import get_entry, mark_important, mark_read
 from app.state import State
 from database.service.database import get_db_session
@@ -57,24 +58,10 @@ async def entry_view(page: ft.Page, state: State, entry_id: int) -> ft.View:
                 e.control.icon = ft.Icons.STAR if new_val else ft.Icons.STAR_BORDER
                 e.control.update()
 
+    set_navbar(page)
     return ft.View(
         route=f"/entry/{entry_id}",
         scroll=ft.ScrollMode.AUTO,
-        navigation_bar=ft.NavigationBar(
-            destinations=[
-                ft.NavigationBarDestination(icon=ft.Icons.HOME, label="Início"),
-                ft.NavigationBarDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
-                ft.NavigationBarDestination(icon=ft.Icons.FOLDER, label="Categorias"),
-                ft.NavigationBarDestination(icon=ft.Icons.INFO, label="Sobre"),
-            ],
-            on_change=lambda e: asyncio.create_task(
-                page.push_route(
-                    ["/feeds", "/feeds", "/categories", "/about"][
-                        e.control.selected_index
-                    ]
-                )
-            ),
-        ),
         controls=[
             ft.AppBar(
                 leading=ft.IconButton(

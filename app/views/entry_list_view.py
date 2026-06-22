@@ -3,6 +3,7 @@ import asyncio
 import flet as ft
 
 from app.controls.article_card import ArticleCard
+from app.controls.nav_bar import set_navbar
 from app.services.entry_service import list_entries
 from app.state import State
 from database.service.database import get_db_session
@@ -100,24 +101,9 @@ async def entry_list_view(page: ft.Page, state: State) -> ft.View:
 
     _populate_entry_list(entry_list, entries, page)
 
+    set_navbar(page)
     return ft.View(
         route=f"/feed/{feed_url}",
-        navigation_bar=ft.NavigationBar(
-            destinations=[
-                ft.NavigationBarDestination(icon=ft.Icons.HOME, label="Início"),
-                ft.NavigationBarDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
-                ft.NavigationBarDestination(icon=ft.Icons.FOLDER, label="Categorias"),
-                ft.NavigationBarDestination(icon=ft.Icons.INFO, label="Sobre"),
-            ],
-            selected_index=1,
-            on_change=lambda e: asyncio.create_task(
-                page.push_route(
-                    ["/feeds", "/feeds", "/categories", "/about"][
-                        e.control.selected_index
-                    ]
-                )
-            ),
-        ),
         controls=[
             ft.AppBar(
                 leading=ft.IconButton(
