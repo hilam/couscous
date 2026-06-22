@@ -6,8 +6,7 @@
 cp .env.sample .env            # required — .env is gitignored
 docker compose up -d            # start PostgreSQL 16 (required)
 uv sync                         # install all dependencies (uv is the package manager)
-uv run python main.py           # run the Flet app (desktop) — creates DB tables on startup
-uv run flet run -w              # run in web browser on localhost:8550
+make run-web                    # run in web browser on localhost:8550
 uv run pytest                   # run all tests
 ruff format .                   # format code
 ruff check .                    # lint (config excludes tests/)
@@ -63,3 +62,21 @@ make lint-security              # security scan with bandit
 ## OpenSpec
 
 Structured changes live in `openspec/`. Skills in `.opencode/skills/openspec-*` handle the workflow. Use `/opsx-propose` for new change proposals, `/opsx-apply` to implement tasks.
+
+## Convenções de Commit
+- **Padrão:** [Conventional Commits](https://www.conventionalcommits.org/).
+- **Formato obrigatório:** `<tipo>[escopo opcional]: <descrição em minúsculas>`
+- **Tipos permitidos:**
+  - `feat`: Nova funcionalidade (frontend ou backend).
+  - `fix`: Correção de bug.
+  - `docs`: Alterações na documentação (ex: atualizar README ou AGENTS.md).
+  - `style`: Formatação, ponto e vírgula, etc. (sem mudança de lógica).
+  - `refactor`: Refatoração de código que não corrige bug nem adiciona feature.
+  - `perf`: Melhoria de performance.
+  - `test`: Adição ou correção de testes.
+  - `chore`: Atualização de dependências, build, tarefas de manutenção (ex: `uv sync`).
+- **Regras:**
+  - A descrição deve ser no imperativo (ex: "adiciona rota de login" em vez de "adicionado rota de login").
+  - Evite commits gigantes; divida as entregas em blocos lógicos.
+  - Exemplo válido: `feat(auth): implementa middleware de validacao JWT`
+  - Exemplo inválido: `atualizando coisas do banco`

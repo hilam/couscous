@@ -13,13 +13,13 @@ test:
 	uv run pytest
 
 lint:
-	ruff check .
+	uv run ruff check
 
 format:
-	ruff format .
+	uv run ruff format
 
 lint-fix:
-	ruff check --fix
+	uv run ruff check --fix
 
 typecheck:
 	uv run mypy
