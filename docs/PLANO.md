@@ -71,8 +71,9 @@ Baseado no `README.md`, 8 sprints de 1 dia (8h) cada, priorizados com dependênc
 |---|--------|-------|
 | 5.1 | Criar `app/views/explore_view.py` — navegação por categorias (drill-down: categoria → feeds → entries) | 3h |
 | 5.2 | Criar filtro lateral por tags no explore view | 1.5h |
-| 5.3 | Criar `app/services/search_service.py` com busca SQL full-text (tsvector/tsquery no PostgreSQL) sobre `title`, `summary`, `content` | 2h |
-| 5.4 | Criar barra de busca no app bar + `app/views/search_view.py` com resultados | 1.5h |
+| 5.3 | Adicionar coluna `search_vector tsvector` gerada automaticamente (generated column) + índice GIN no modelo `Entry` — migration SQL manual (SQLModel não gera tsvector) | 1h |
+| 5.4 | Criar `app/services/search_service.py` — função de busca com `ts_rank`, `ts_headline` e `tsquery` sobre `title`, `summary`, `content` | 1h |
+| 5.5 | Criar barra de busca no app bar + `app/views/search_view.py` com resultados | 1.5h |
 
 **Dependências:** Sprints 3 e 4.
 
@@ -83,7 +84,7 @@ Baseado no `README.md`, 8 sprints de 1 dia (8h) cada, priorizados com dependênc
 | # | Tarefa | Tempo |
 |---|--------|-------|
 | 6.1 | Adicionar `theme_mode` (light/dark/system) e `font_scale` ao modelo `User` | 0.5h |
-| 6.2 | Trocar `about_view` para settings com toggle de tema  | 1.5h |
+| 6.2 | Substituir `about_view` por `settings_view` com toggle de tema + botão "Sobre" que abre popup (conteúdo legacy do about_view) — rota `/about` vira Config; NavBar: [Início] [Feeds] [Categorias] [Config] | 1.5h |
 | 6.3 | Aplicar `page.theme_mode` dinamicamente e persistir no banco | 1h |
 | 6.4 | Incluir controle de ajuste de tamanho de texto (slider ou botões +/-) na settings | 2h |
 | 6.5 | Aplicar `font_scale` globalmente via `page.theme` | 1.5h |
@@ -100,7 +101,7 @@ Baseado no `README.md`, 8 sprints de 1 dia (8h) cada, priorizados com dependênc
 | 7.1 | Criar `app/services/cleanup_service.py` — função `purge_older_than(days)` para entries e estatísticas de uso | 2h |
 | 7.2 | Criar `app/controls/cleanup_dialog.py` com seleção de período (7, 30, 90, 365 dias) e confirmação | 2h |
 | 7.3 | Adicionar opção de limpeza automática ao adicionar feed (checkbox "manter apenas X dias") | 1.5h |
-| 7.4 | Implementar `page.set_clipboard()` para copiar link da notícia no `entry_view.py` | 0.5h |
+| 7.4 | Implementar cópia de link via `page.run_javascript("navigator.clipboard.writeText(...)")` no `entry_view.py` — `page.set_clipboard()` não funciona na web (política de segurança do browser) | 1h |
 | 7.5 | Adicionar botão "copiar link" com feedback visual (snackbar) no `entry_view.py` e `ArticleCard` | 1h |
 | 7.6 | Executar limpeza na inicialização (opcional, configurável) | 0.5h |
 

@@ -1,6 +1,6 @@
 # CousCous - Leitor de Feeds RSS
 
-Um leitor de feeds RSS/Atom com interface web/desktop construído com Flet e API FastAPI.
+Um leitor de feeds RSS/Atom com interface web/desktop construído com Flet.
 
 ## Funcionalidades
 
