@@ -22,7 +22,7 @@ async def init_async_db():
 
 
 @asynccontextmanager
-async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_db_session() -> AsyncGenerator[AsyncSession]:
     async_session = async_sessionmaker(
         engine, class_=AsyncSession, expire_on_commit=False
     )

@@ -24,7 +24,7 @@ class PageContext:
     )
 
     @asynccontextmanager
-    async def new_session(self) -> AsyncGenerator[AsyncSession, None]:
+    async def new_session(self) -> AsyncGenerator[AsyncSession]:
         _msg = "No session factory configured"
         if self._session_factory is None:
             raise RuntimeError(_msg)
