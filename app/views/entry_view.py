@@ -4,7 +4,6 @@ import contextlib
 import flet as ft
 from fletify import FletifyHTML
 
-from app.controls.nav_bar import set_navbar
 from app.controls.tag_chip import TagChip
 from app.services.entry_service import get_entry, mark_important, mark_read
 from app.services.tag_service import (
@@ -161,7 +160,6 @@ async def entry_view(ctx, entry_id: int) -> ft.View:  # noqa: C901, PLR0915
         dlg.open = True
         page.update()
 
-    set_navbar(page)
     return ft.View(
         route=f"/entry/{entry_id}",
         scroll=ft.ScrollMode.AUTO,

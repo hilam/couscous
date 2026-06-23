@@ -3,7 +3,6 @@ import asyncio
 import flet as ft
 
 from app.controls.confirm_dialog import ConfirmDialog
-from app.controls.nav_bar import set_navbar
 from app.services.category_service import (
     create_category,
     delete_category,
@@ -150,7 +149,6 @@ async def category_list_view(ctx) -> ft.View:
         )
         tree_view.controls.extend(controls)
 
-    set_navbar(page)
     return ft.View(
         route="/categories",
         controls=[

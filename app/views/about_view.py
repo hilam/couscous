@@ -1,10 +1,7 @@
 import flet as ft
 
-from app.controls.nav_bar import set_navbar
-
 
 async def about_view(ctx) -> ft.View:
-    set_navbar(ctx.page)
     return ft.View(
         route="/about",
         controls=[

@@ -5,7 +5,6 @@ import flet as ft
 from sqlmodel import select
 
 from app.controls.article_card import ArticleCard
-from app.controls.nav_bar import set_navbar
 from app.services.entry_service import list_entries
 from app.services.tag_service import get_distinct_tags_for_feed
 from database.models.couscous import EntryTag, Feed
@@ -153,7 +152,6 @@ async def entry_list_view(ctx) -> ft.View:
     tag_map = await _load_entry_tags(session, entries)
     _populate_entry_list(entry_list, entries, page, tag_map)
 
-    set_navbar(page)
     return ft.View(
         route=f"/feed/{feed_url}",
         controls=[

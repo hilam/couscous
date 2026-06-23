@@ -2,11 +2,8 @@ import asyncio
 
 import flet as ft
 
-from app.controls.nav_bar import set_navbar
-
 
 async def home_view(ctx) -> ft.View:
-    set_navbar(ctx.page)
     return ft.View(
         route="/",
         scroll=ft.ScrollMode.AUTO,
