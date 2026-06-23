@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import AsyncGenerator, Callable
     from contextlib import AbstractAsyncContextManager
 
     import flet as ft
@@ -24,7 +24,7 @@ class PageContext:
     )
 
     @asynccontextmanager
-    async def new_session(self) -> AbstractAsyncContextManager[AsyncSession]:
+    async def new_session(self) -> AsyncGenerator[AsyncSession, None]:
         _msg = "No session factory configured"
         if self._session_factory is None:
             raise RuntimeError(_msg)
