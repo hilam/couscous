@@ -70,7 +70,7 @@
 - [x] 9.3 Executar todos os testes (`uv run pytest -v`)
 - [x] 9.4 Executar verificação de tipos (`uv run mypy .`) — passou nos arquivos alterados
 - [x] 9.5 Executar varredura de segurança (`make lint-security`) — sem novos issues
-- [ ] 9.6 Validar manualmente no browser (`make run-web`):
+- [x] 9.6 Validar manualmente no browser (`make run-web`):
   - Abrir um artigo e adicionar tags
   - Verificar que tags aparecem nos ArticleCards
   - Filtrar por tag na lista de entries
