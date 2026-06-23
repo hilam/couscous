@@ -44,9 +44,9 @@ O sistema DEVE permitir ao usuário atribuir uma tag existente a uma entry.
 - **WHEN** o usuário tenta associar uma tag que já está atribuída à mesma entry
 - **THEN** o sistema ignora a operação (não cria duplicata)
 
-#### Scenario: Atribuir tag de outro usuário
-- **WHEN** o usuário tenta atribuir a uma entry uma tag que pertence a outro `user_id`
-- **THEN** o sistema rejeita a operação
+#### Scenario: Isolamento entre usuários — tags são namespacedas por user_id
+- **WHEN** dois usuários diferentes usam a mesma string de tag (ex: "python") em suas respectivas entries
+- **THEN** cada usuário vê apenas suas próprias tags; as operações de um usuário não afetam as tags do outro
 
 ### Requirement: Remover tag de uma entry
 O sistema DEVE permitir ao usuário remover uma tag de uma entry.

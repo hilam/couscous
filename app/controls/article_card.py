@@ -6,6 +6,9 @@ from database.models.couscous import Entry
 SUMMARY_MAX_LENGTH = 120
 
 
+MAX_VISIBLE_TAGS = 3
+
+
 class ArticleCard(ft.Card):
     def __init__(self, entry: Entry, on_click, tags: list[str] | None = None):
         super().__init__()
@@ -41,9 +44,21 @@ class ArticleCard(ft.Card):
                 ),
             )
         if tags:
+            visible_tags = tags[:MAX_VISIBLE_TAGS]
+            chips: list[ft.Control] = [TagChip(t) for t in visible_tags]
+            extra = len(tags) - MAX_VISIBLE_TAGS
+            if extra > 0:
+                chips.append(
+                    ft.Text(
+                        f"+{extra} mais",
+                        size=11,
+                        color=ft.Colors.GREY_500,
+                        italic=True,
+                    )
+                )
             subtitle_controls.append(
                 ft.Row(
-                    controls=[TagChip(t) for t in tags],
+                    controls=chips,
                     spacing=4,
                     wrap=True,
                 ),

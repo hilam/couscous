@@ -58,6 +58,9 @@ async def test_entry_view_route():
         patch("app.views.entry_view.get_entry", AsyncMock(return_value=entry)),
         patch("app.views.entry_view.mark_read", AsyncMock()),
         patch(
+            "app.views.entry_view.get_tags_for_entry", AsyncMock(return_value=[])
+        ),
+        patch(
             "app.views.entry_view._get_content_renderer",
             return_value=ft.Text("rendered"),
         ),
@@ -77,6 +80,9 @@ async def test_entry_view_displays_title():
     with (
         patch("app.views.entry_view.get_entry", AsyncMock(return_value=entry)),
         patch("app.views.entry_view.mark_read", AsyncMock()),
+        patch(
+            "app.views.entry_view.get_tags_for_entry", AsyncMock(return_value=[])
+        ),
         patch(
             "app.views.entry_view._get_content_renderer",
             return_value=ft.Text("rendered"),
@@ -99,6 +105,9 @@ async def test_entry_view_contains_star_button():
     with (
         patch("app.views.entry_view.get_entry", AsyncMock(return_value=entry)),
         patch("app.views.entry_view.mark_read", AsyncMock()),
+        patch(
+            "app.views.entry_view.get_tags_for_entry", AsyncMock(return_value=[])
+        ),
         patch(
             "app.views.entry_view._get_content_renderer",
             return_value=ft.Text("rendered"),
@@ -141,6 +150,9 @@ async def test_entry_view_contains_open_original_button():
     with (
         patch("app.views.entry_view.get_entry", AsyncMock(return_value=entry)),
         patch("app.views.entry_view.mark_read", AsyncMock()),
+        patch(
+            "app.views.entry_view.get_tags_for_entry", AsyncMock(return_value=[])
+        ),
         patch(
             "app.views.entry_view._get_content_renderer",
             return_value=ft.Text("rendered"),
