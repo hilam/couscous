@@ -24,7 +24,7 @@ lint-fix:
 typecheck:
 	uv run mypy
 
-check-all: lint typecheck test lint-security
+check-all: lint typecheck test security
 
 security:
 	uv run bandit -r app/ database/
