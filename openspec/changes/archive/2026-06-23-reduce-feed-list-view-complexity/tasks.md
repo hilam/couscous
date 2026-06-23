@@ -28,4 +28,4 @@
 ## 5. Gate Final
 
 - [x] 5.1 Executar `make check-all` e verificar que passa completo (lint + typecheck + test + security)
-- [ ] 5.2 Fazer commit final se necessário: `git commit -m "chore: verifica\u00e7\u00e3o final check-all"`
+- [x] 5.2 Fazer commit final se necessário: `git commit -m "chore: verifica\u00e7\u00e3o final check-all"`
