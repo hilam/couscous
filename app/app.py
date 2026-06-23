@@ -6,22 +6,15 @@ import flet as ft
 from app.context import PageContext
 from app.controls.nav_bar import set_navbar
 from app.state import State
-from app.views.about_view import about_view
-from app.views.category_list_view import category_list_view
-from app.views.entry_list_view import entry_list_view
-from app.views.entry_view import entry_view
-from app.views.feed_list_view import feed_list_view
 from app.views.home_view import home_view
 from app.views.login_view import login_view
-from app.views.oauth_callback_view import oauth_callback_view
-from app.views.register_view import register_view
 from database.service.database import get_db_session, init_async_db
 
 
 @dataclass
 class _Route:
     prefix: str
-    handler: Callable[..., Awaitable[ft.View]]
+    handler_name: str
     requires_session: bool
     is_public: bool = False
 
@@ -29,15 +22,20 @@ class _Route:
 # NOTE: order matters — specific prefixes (/feed/, /entry/) must come before
 # generic ones (/) so prefix-based matching is correct.
 _ROUTES: list[_Route] = [
-    _Route("/login", login_view, False, True),
-    _Route("/register", register_view, False, True),
-    _Route("/oauth/callback", oauth_callback_view, True, True),
-    _Route("/about", about_view, False, True),
-    _Route("/feeds", feed_list_view, True),
-    _Route("/feed/", entry_list_view, True),
-    _Route("/entry/", entry_view, True),
-    _Route("/categories", category_list_view, True),
-    _Route("/", feed_list_view, True),
+    _Route("/login", "login_view", requires_session=False, is_public=True),
+    _Route("/register", "register_view", requires_session=False, is_public=True),
+    _Route(
+        "/oauth/callback",
+        "oauth_callback_view",
+        requires_session=True,
+        is_public=True,
+    ),
+    _Route("/about", "about_view", requires_session=False, is_public=True),
+    _Route("/feeds", "feed_list_view", requires_session=True),
+    _Route("/feed/", "entry_list_view", requires_session=True),
+    _Route("/entry/", "entry_view", requires_session=True),
+    _Route("/categories", "category_list_view", requires_session=True),
+    _Route("/", "feed_list_view", requires_session=True),
 ]
 
 _FALLBACK_HANDLER = home_view
@@ -53,17 +51,19 @@ def _match_route(route: str) -> _Route | None:
     return None
 
 
-async def _invoke_handler(
-    route_def: _Route, route: str, ctx: PageContext
-) -> ft.View:
+def _resolve_handler(name: str) -> Callable[..., Awaitable[ft.View]]:
+    return globals()[name]
+
+
+async def _invoke_handler(route_def: _Route, route: str, ctx: PageContext) -> ft.View:
+    handler = _resolve_handler(route_def.handler_name)
     if route_def.prefix == "/feed/":
         ctx.state.active_feed_url = route[len("/feed/") :]
-        return await route_def.handler(ctx)
-    elif route_def.prefix == "/entry/":
+        return await handler(ctx)
+    if route_def.prefix == "/entry/":
         entry_id = int(route[len("/entry/") :])
-        return await route_def.handler(ctx, entry_id)  # type: ignore[call-arg]
-    else:
-        return await route_def.handler(ctx)
+        return await handler(ctx, entry_id)  # type: ignore[call-arg]
+    return await handler(ctx)
 
 
 async def _build_and_invoke(
@@ -78,9 +78,7 @@ async def _build_and_invoke(
                 _session_factory=get_db_session,
             )
             return await _invoke_handler(route_def, route, ctx)
-    ctx = PageContext(
-        page=page, state=state, _session_factory=get_db_session
-    )
+    ctx = PageContext(page=page, state=state, _session_factory=get_db_session)
     return await _invoke_handler(route_def, route, ctx)
 
 
@@ -109,9 +107,7 @@ async def app_run(page: ft.Page):
         if route == "/login" or (
             not state.user and (matched is None or not matched.is_public)
         ):
-            ctx = PageContext(
-                page=page, state=state, _session_factory=get_db_session
-            )
+            ctx = PageContext(page=page, state=state, _session_factory=get_db_session)
             v = await login_view(ctx)
         elif matched is not None:
             v = await _build_and_invoke(matched, route, page, state)
