@@ -1,5 +1,6 @@
 import flet as ft
 
+from app.controls.nav_bar import set_navbar
 from app.context import PageContext
 from app.state import State
 from app.views.about_view import about_view
@@ -98,6 +99,10 @@ async def app_run(page: ft.Page):
             v = await home_view(ctx)
 
         page.views.append(v)
+        if route != "/login" and route != "/register" and not route.startswith(
+            "/oauth/callback"
+        ):
+            set_navbar(page)
         page.update()
 
     page.on_route_change = on_route_change
