@@ -48,7 +48,7 @@ async def login_view(ctx) -> ft.View:
     submit_btn = ft.FilledButton("Entrar", on_click=submit)
     register_link = ft.TextButton("Criar conta", on_click=go_to_register)
 
-    form_controls = [
+    form_controls: list[ft.Control] = [
         name_field,
         password_field,
         error_text,
