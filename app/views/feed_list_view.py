@@ -100,6 +100,39 @@ async def _rebuild_feed_list(feed_list, confirm_delete, session, page, user_id: 
     return feeds
 
 
+async def _handle_feed_added(  # noqa: PLR0913
+    url: str,
+    category_id: int | None,
+    ctx,
+    page: ft.Page,
+    user_id: int,
+    feed_list: ft.ListView,
+    confirm_delete_cb,
+) -> None:
+    async with ctx.new_session() as s:
+        try:
+            feed = await add_feed(s, user_id, url, category_id)
+        except ValueError:
+            snack = ft.SnackBar(content=ft.Text("Feed j\u00e1 cadastrado"))
+            page.overlay.append(snack)
+            snack.open = True
+            page.update()
+            return
+
+        await refresh_single_feed(s, feed)
+
+        if feed.last_exception:
+            snack = ft.SnackBar(content=ft.Text(f"Erro: {feed.last_exception}"))
+            page.overlay.append(snack)
+            snack.open = True
+            page.update()
+            await _rebuild_feed_list(feed_list, confirm_delete_cb, s, page, user_id)
+            page.update()
+            return
+
+    await page.push_route(f"/feed/{url}")
+
+
 async def feed_list_view(ctx) -> ft.View:
     page = ctx.page
     state = ctx.state
@@ -122,29 +155,10 @@ async def feed_list_view(ctx) -> ft.View:
         state.loading = False
         page.update()
 
-    async def on_feed_added(url: str, category_id: int | None = None):
-        async with ctx.new_session() as s:
-            try:
-                feed = await add_feed(s, user_id, url, category_id)
-            except ValueError:
-                snack = ft.SnackBar(content=ft.Text("Feed j\u00e1 cadastrado"))
-                page.overlay.append(snack)
-                snack.open = True
-                page.update()
-                return
-
-            await refresh_single_feed(s, feed)
-
-            if feed.last_exception:
-                snack = ft.SnackBar(content=ft.Text(f"Erro: {feed.last_exception}"))
-                page.overlay.append(snack)
-                snack.open = True
-                page.update()
-                await _rebuild_feed_list(feed_list, confirm_delete, s, page, user_id)
-                page.update()
-                return
-
-        await page.push_route(f"/feed/{url}")
+    def on_feed_added(url, cid=None):
+        _task_ref = asyncio.create_task(  # noqa: RUF006 - kept alive by parent scope
+            _handle_feed_added(url, cid, ctx, page, user_id, feed_list, confirm_delete)
+        )
 
     def confirm_delete(feed_url: str):
         dlg: ft.AlertDialog = ConfirmDialog(
