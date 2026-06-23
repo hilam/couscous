@@ -22,16 +22,16 @@
 
 ## 5. Validação e Qualidade
 
-- [ ] 5.1 Executar linting com Ruff: `make lint-fix && make format`
-- [ ] 5.2 Fazer commit de correções de estilo se houver: `git commit -m "style: aplica ruff apos correcoes de tipagem"`
-- [ ] 5.3 Executar type-check: `make typecheck` — deve reportar **zero erros**
-- [ ] 5.4 Executar testes automatizados: `make test`
-- [ ] 5.5 Executar `make check-all` — deve passar todos os estágios (lint, typecheck, test, security)
-- [ ] 5.6 Verificar manualmente no QA plan:
-  - [ ] 5.6.1 Mypy sem erros em `database/service/database.py`
-  - [ ] 5.6.2 Mypy sem erros em `app/context.py`
-  - [ ] 5.6.3 Mypy sem erros em `app/app.py`
-  - [ ] 5.6.4 Mypy sem erros em `app/controls/oauth_buttons.py`
-  - [ ] 5.6.5 Mypy sem erros em `app/views/login_view.py`
-  - [ ] 5.6.6 Mypy sem erros em `app/views/register_view.py`
-- [ ] 5.7 Fazer commit final se houver ajustes: `git commit -m "test(types): valida correcao de erros mypy com QA"`
+- [x] 5.1 Executar linting com Ruff: `make lint-fix && make format`
+- [x] 5.2 Fazer commit de correções de estilo se houver: `git commit -m "style: aplica ruff apos correcoes de tipagem"`
+- [x] 5.3 Executar type-check: `make typecheck` — deve reportar **zero erros**
+- [x] 5.4 Executar testes automatizados: `make test` — 147 pass, 6 falhas pré-existentes em test_app.py (não relacionadas)
+- [x] 5.5 Executar `make check-all` — typecheck e security passam; lint tem 1 erro pré-existente (PLR0915 em feed_list_view.py)
+- [x] 5.6 Verificar manualmente no QA plan:
+  - [x] 5.6.1 Mypy sem erros em `database/service/database.py`
+  - [x] 5.6.2 Mypy sem erros em `app/context.py`
+  - [x] 5.6.3 Mypy sem erros em `app/app.py`
+  - [x] 5.6.4 Mypy sem erros em `app/controls/oauth_buttons.py`
+  - [x] 5.6.5 Mypy sem erros em `app/views/login_view.py`
+  - [x] 5.6.6 Mypy sem erros em `app/views/register_view.py`
+- [x] 5.7 Fazer commit final se houver ajustes: `git commit -m "test(types): valida correcao de erros mypy com QA"`
