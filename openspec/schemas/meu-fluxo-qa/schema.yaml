@@ -8,7 +8,6 @@ artifacts:
       template: proposal.md
       instruction: >
           Create the proposal document that establishes WHY this change is needed.
-          Use skill `grill-with-docs` as context.
 
           Sections:
 
@@ -368,6 +367,6 @@ apply:
         - tasks
     tracks: tasks.md
     instruction: |
-        Use skill test-first development.
+        Must use tdd skill.
         Read context files, work through pending tasks, mark complete as you go.
         Pause if you hit blockers or need clarification.

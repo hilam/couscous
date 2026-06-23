@@ -1,4 +1,4 @@
-.PHONY: install run run-web test lint format format-check typecheck check-all lint-security db-up db-down db-shell clean
+.PHONY: install run run-web test lint format format-check typecheck check-all security db-up db-down db-shell clean
 
 install:
 	uv sync
@@ -26,7 +26,7 @@ typecheck:
 
 check-all: lint typecheck test lint-security
 
-lint-security:
+security:
 	uv run bandit -r app/ database/
 
 db-up:

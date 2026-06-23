@@ -19,13 +19,8 @@ context: |
 
 rules:
     proposal:
-        - "Use a skill 'grill-with-docs' para esclarecer dúvidas no contexto"
-    # specs:
-    #   - "Escrever em Português do Brasil (PT-BR)"
-    #   - "Detalhar mudanças de banco de dados (Alembic) e assinaturas de rotas FastAPI"
+        - DEVE usar a skill grill-with-docs
     design:
-        - "Use a skill 'domain-modeling como auxiliar"
+        - DEVE usar a skill domain-modeling
     tasks:
-        - "Incluir etapas de execução de QA"
-    # qa-plan:
-    #   - "Escrever em Português do Brasil (PT-BR)"
+        - DEVE incluir etapas de execução de QA
