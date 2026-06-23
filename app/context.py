@@ -19,9 +19,9 @@ class PageContext:
     page: ft.Page
     state: State
     session: AsyncSession | None = None
-    _session_factory: (
-        Callable[[], AbstractAsyncContextManager[AsyncSession]] | None
-    ) = None
+    _session_factory: Callable[[], AbstractAsyncContextManager[AsyncSession]] | None = (
+        None
+    )
 
     @asynccontextmanager
     async def new_session(self) -> AbstractAsyncContextManager[AsyncSession]:

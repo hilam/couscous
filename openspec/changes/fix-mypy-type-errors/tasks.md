@@ -1,24 +1,24 @@
 ## 1. Git Setup e Planejamento
 
-- [ ] 1.1 Criar branch de correção: `git checkout -b fix/mypy-type-errors`
-- [ ] 1.2 Fazer commit dos artefatos de planejamento: `git add openspec/changes/fix-mypy-type-errors/ && git commit -m "docs(planning): gera artefatos de planejamento para fix mypy type errors"`
+- [x] 1.1 Criar branch de correção: `git checkout -b fix/mypy-type-errors`
+- [x] 1.2 Fazer commit dos artefatos de planejamento: `git add openspec/changes/fix-mypy-type-errors/ && git commit -m "docs(planning): gera artefatos de planejamento para fix mypy type errors"`
 
 ## 2. Causa 1 — AsyncGenerator → AbstractAsyncContextManager (5 erros)
 
-- [ ] 2.1 Corrigir tipo de retorno de `get_db_session()` em `database/service/database.py:25`: `AsyncGenerator[AsyncSession]` → `AbstractAsyncContextManager[AsyncSession]`
-- [ ] 2.2 Corrigir tipo de `_session_factory` em `app/context.py:21`: `Callable[[], AsyncGenerator[AsyncSession]]` → `Callable[[], AbstractAsyncContextManager[AsyncSession]]`
-- [ ] 2.3 Fazer commit: `git add database/service/database.py app/context.py && git commit -m "fix(types): corrige AsyncGenerator para AbstractAsyncContextManager em get_db_session e PageContext"`
+- [x] 2.1 Corrigir tipo de retorno de `get_db_session()` em `database/service/database.py:25`: `AsyncGenerator[AsyncSession]` → `AbstractAsyncContextManager[AsyncSession]`
+- [x] 2.2 Corrigir tipo de `_session_factory` em `app/context.py:21`: `Callable[[], AsyncGenerator[AsyncSession]]` → `Callable[[], AbstractAsyncContextManager[AsyncSession]]`
+- [x] 2.3 Fazer commit: `git add database/service/database.py app/context.py && git commit -m "fix(types): corrige AsyncGenerator para AbstractAsyncContextManager em get_db_session e PageContext"`
 
 ## 3. Causa 2 — OAuth async handler (1 erro + bug funcional)
 
-- [ ] 3.1 Tornar `_oauth_click` async e awaitar `page.launch_url(uri)` em `app/controls/oauth_buttons.py`
-- [ ] 3.2 Fazer commit: `git add app/controls/oauth_buttons.py && git commit -m "fix(oauth): torna _oauth_click async e awaita page.launch_url"`
+- [x] 3.1 Tornar `_oauth_click` async e awaitar `page.launch_url(uri)` em `app/controls/oauth_buttons.py`
+- [x] 3.2 Fazer commit: `git add app/controls/oauth_buttons.py && git commit -m "fix(oauth): torna _oauth_click async e awaita page.launch_url"`
 
 ## 4. Causa 3 — Variância de list[Control] (4 erros)
 
-- [ ] 4.1 Adicionar anotação explícita `form_controls: list[ft.Control] = [...]` em `app/views/login_view.py:51`
-- [ ] 4.2 Adicionar anotação explícita `form_controls: list[ft.Control] = [...]` em `app/views/register_view.py:51`
-- [ ] 4.3 Fazer commit: `git add app/views/login_view.py app/views/register_view.py && git commit -m "fix(types): anota form_controls como list[ft.Control] nos views de login e registro"`
+- [x] 4.1 Adicionar anotação explícita `form_controls: list[ft.Control] = [...]` em `app/views/login_view.py:51`
+- [x] 4.2 Adicionar anotação explícita `form_controls: list[ft.Control] = [...]` em `app/views/register_view.py:51`
+- [x] 4.3 Fazer commit: `git add app/views/login_view.py app/views/register_view.py && git commit -m "fix(types): anota form_controls como list[ft.Control] nos views de login e registro"`
 
 ## 5. Validação e Qualidade
 
