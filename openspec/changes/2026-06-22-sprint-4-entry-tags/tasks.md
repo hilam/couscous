@@ -67,7 +67,7 @@
 
 - [x] 9.1 Executar lint e formatação com Ruff (`ruff check . && ruff format .`)
 - [x] 9.2 Fazer commit de correções de estilo se houver (`git commit -m "style: aplica ruff format e correcoes de lint"`)
-- [ ] 9.3 Executar todos os testes (`uv run pytest -v`)
+- [x] 9.3 Executar todos os testes (`uv run pytest -v`)
 - [x] 9.4 Executar verificação de tipos (`uv run mypy .`) — passou nos arquivos alterados
 - [x] 9.5 Executar varredura de segurança (`make lint-security`) — sem novos issues
 - [ ] 9.6 Validar manualmente no browser (`make run-web`):

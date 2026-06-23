@@ -95,6 +95,8 @@ class Category(SQLModel, table=True):
 class EntryTag(SQLModel, table=True):
     __tablename__ = "entry_tags"
 
-    entry_id: int = Field(primary_key=True, foreign_key="entries.id", ondelete="CASCADE")
+    entry_id: int = Field(
+        primary_key=True, foreign_key="entries.id", ondelete="CASCADE"
+    )
     tag: str = Field(primary_key=True)
     user_id: int = Field(foreign_key="users.id", nullable=False)
