@@ -63,4 +63,4 @@
 - [x] 9.2 Executar `make typecheck` — verificar zero erros
 - [x] 9.3 Executar `make test` — verificar que todos os testes passam
 - [x] 9.4 Executar `make security` — verificar zero issues
-- [ ] 9.5 Fazer commit final de ajustes (`chore: ajustes finais de lint e typecheck`)
+- [x] 9.5 Fazer commit final de ajustes (`chore: ajustes finais de lint e typecheck`)
