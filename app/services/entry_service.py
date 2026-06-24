@@ -1,5 +1,6 @@
 from sqlmodel import desc, select
 
+from app.services.category_service import _collect_descendant_ids
 from database.models.couscous import Entry, EntryTag, Feed
 
 
@@ -10,17 +11,26 @@ async def list_recent(  # noqa: PLR0913
     category_id: int | None = None,
     tags: list[str] | None = None,
     limit: int = 50,
+    include_subcategories: bool = False,
 ):
     """List recent entries across all feeds for a user.
 
     Supports optional category and tag filters.
+    When include_subcategories is True, entries from descendant categories
+    are also included.
     """
     query = select(Entry).where(Entry.user_id == user_id)
 
     if category_id is not None:
-        feed_ids = select(Feed.url).where(
-            Feed.user_id == user_id, Feed.category_id == category_id
-        )
+        if include_subcategories:
+            cat_ids = await _collect_descendant_ids(session, user_id, category_id)
+            feed_ids = select(Feed.url).where(
+                Feed.user_id == user_id, Feed.category_id.in_(cat_ids)  # type: ignore[attr-defined]
+            )
+        else:
+            feed_ids = select(Feed.url).where(
+                Feed.user_id == user_id, Feed.category_id == category_id
+            )
         query = query.where(Entry.feed.in_(feed_ids))  # type: ignore[attr-defined]
 
     if tags:
