@@ -18,8 +18,6 @@ context: |
     4. COMMITS DE CÓDIGO: Durante a implementação, todo código escrito deve ser "comitado" usando os prefixos corretos (feat:, fix:, test:, refactor:, chore:).
 
 rules:
-    proposal:
-        - DEVE usar a skill grill-with-docs
     design:
         - DEVE usar a skill domain-modeling
     tasks:
