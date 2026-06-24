@@ -65,7 +65,7 @@ fix = false
 line-length = 88
 indent-width = 4
 src = ["."]
-extend-exclude = ["tests"]
+extend-exclude = ["tests", "alembic"]
 
 [tool.ruff.format]
 preview = true
