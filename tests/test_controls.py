@@ -103,7 +103,7 @@ class TestAddFeedDialog:
         assert dlg.title == "Adicionar Feed"
         assert dlg.url_field.label == "URL do Feed RSS"
         assert dlg.category_dropdown.label == "Categoria (opcional)"
-        assert len(dlg.actions) == 2
+        assert len(dlg.actions) == 3
 
     @pytest.mark.asyncio
     async def test_submit_with_valid_url(self):
@@ -139,6 +139,57 @@ class TestAddFeedDialog:
         dlg.url_field.value = "   "
 
         dlg._submit(None)
+
+        callback.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_submit_another_with_valid_url(self):
+        callback = AsyncMock()
+        dlg = AddFeedDialog(
+            on_submit=lambda url, cid=None: None,
+            on_submit_another=callback,
+            user_id=0,
+        )
+        dlg.url_field.value = "https://example.com/feed.xml"
+        dlg.category_dropdown.value = ""
+
+        with patch.object(dlg, "update"), patch.object(
+            dlg.url_field, "update"
+        ), patch.object(dlg.url_field, "focus"):
+            await dlg._submit_another(None)
+
+        callback.assert_called_once_with("https://example.com/feed.xml", None)
+        assert dlg.url_field.value == ""
+
+    @pytest.mark.asyncio
+    async def test_submit_another_duplicate_keeps_url(self):
+        callback = AsyncMock(return_value=False)
+        dlg = AddFeedDialog(
+            on_submit=lambda url, cid=None: None,
+            on_submit_another=callback,
+            user_id=0,
+        )
+        dlg.url_field.value = "https://example.com/feed.xml"
+        dlg.category_dropdown.value = ""
+
+        with patch.object(dlg, "update"):
+            await dlg._submit_another(None)
+
+        callback.assert_called_once_with("https://example.com/feed.xml", None)
+        assert dlg.url_field.value == "https://example.com/feed.xml"
+
+    @pytest.mark.asyncio
+    async def test_submit_another_empty_url(self):
+        callback = AsyncMock()
+        dlg = AddFeedDialog(
+            on_submit=lambda url, cid=None: None,
+            on_submit_another=callback,
+            user_id=0,
+        )
+        dlg.url_field.value = "   "
+
+        with patch.object(dlg, "update"):
+            await dlg._submit_another(None)
 
         callback.assert_not_called()
 

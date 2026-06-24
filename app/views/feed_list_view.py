@@ -133,6 +133,43 @@ async def _handle_feed_added(  # noqa: PLR0913
     await page.push_route(f"/feed/{url}")
 
 
+async def _handle_feed_add_another(  # noqa: PLR0913
+    url: str,
+    category_id: int | None,
+    ctx,
+    page: ft.Page,
+    user_id: int,
+    feed_list: ft.ListView,
+    confirm_delete_cb,
+    state,
+) -> bool:
+    async with ctx.new_session() as s:
+        try:
+            feed = await add_feed(s, user_id, url, category_id)
+        except ValueError:
+            snack = ft.SnackBar(content=ft.Text("Feed j\u00e1 cadastrado"))
+            page.overlay.append(snack)
+            snack.open = True
+            page.update()
+            return False
+
+        state.loading = True
+        page.update()
+
+        await refresh_single_feed(s, feed)
+
+        if feed.last_exception:
+            snack = ft.SnackBar(content=ft.Text(f"Erro: {feed.last_exception}"))
+            page.overlay.append(snack)
+            snack.open = True
+
+        await _rebuild_feed_list(feed_list, confirm_delete_cb, s, page, user_id)
+
+        state.loading = False
+        page.update()
+        return True
+
+
 async def feed_list_view(ctx) -> ft.View:
     page = ctx.page
     state = ctx.state
@@ -160,6 +197,11 @@ async def feed_list_view(ctx) -> ft.View:
             _handle_feed_added(url, cid, ctx, page, user_id, feed_list, confirm_delete)
         )
 
+    async def on_feed_add_another(url, cid=None):
+        return await _handle_feed_add_another(
+            url, cid, ctx, page, user_id, feed_list, confirm_delete, state
+        )
+
     def confirm_delete(feed_url: str):
         dlg: ft.AlertDialog = ConfirmDialog(
             title="Remover feed",
@@ -180,7 +222,11 @@ async def feed_list_view(ctx) -> ft.View:
     init_controls = _build_group_controls(feeds, categories, confirm_delete, page)
     feed_list.controls.extend(init_controls if feeds else [_empty_state()])
 
-    add_feed_dialog = AddFeedDialog(on_submit=on_feed_added, user_id=user_id)
+    add_feed_dialog = AddFeedDialog(
+        on_submit=on_feed_added,
+        on_submit_another=on_feed_add_another,
+        user_id=user_id,
+    )
 
     def open_add_dialog(e):
         page.overlay.append(add_feed_dialog)

@@ -15,9 +15,10 @@ def _flatten_tree_for_dropdown(tree, options, level):
 
 
 class AddFeedDialog(ft.AlertDialog):
-    def __init__(self, on_submit, user_id: int):
+    def __init__(self, on_submit, user_id: int, on_submit_another=None):
         super().__init__()
         self.on_submit = on_submit
+        self.on_submit_another = on_submit_another
         self.user_id = user_id
 
         self.url_field = ft.TextField(
@@ -32,6 +33,10 @@ class AddFeedDialog(ft.AlertDialog):
             expand=True,
         )
 
+        self.url_field.on_submit = lambda e: asyncio.create_task(
+            self.category_dropdown.focus()
+        )
+
         self.title = "Adicionar Feed"
         self.content = ft.Column(
             controls=[self.url_field, self.category_dropdown],
@@ -41,6 +46,7 @@ class AddFeedDialog(ft.AlertDialog):
         )
         self.actions = [
             ft.TextButton("Cancelar", on_click=self._cancel),
+            ft.FilledButton("Adicionar outro", on_click=self._submit_another),
             ft.FilledButton("Adicionar", on_click=self._submit),
         ]
         self.actions_alignment = ft.MainAxisAlignment.END
@@ -60,10 +66,16 @@ class AddFeedDialog(ft.AlertDialog):
         self.category_dropdown.value = ""
         self.update()
 
-    def _submit(self, e):
+    def _do_submit(self):
         url = self.url_field.value.strip()
+        if not url:
+            return None, None
         cat_val = self.category_dropdown.value
         category_id = int(cat_val) if cat_val and cat_val != "" else None
+        return url, category_id
+
+    def _submit(self, e):
+        url, category_id = self._do_submit()
         if url:
             self.open = False
             self.url_field.value = ""
@@ -71,3 +83,15 @@ class AddFeedDialog(ft.AlertDialog):
             self.update()
             if self.on_submit:
                 self._task = asyncio.ensure_future(self.on_submit(url, category_id))
+
+    async def _submit_another(self, e):
+        url, category_id = self._do_submit()
+        if not url:
+            return
+        if self.on_submit_another:
+            success = await self.on_submit_another(url, category_id)
+            if success:
+                self.url_field.value = ""
+                self.url_field.update()
+                await self.url_field.focus()
+        self.update()
