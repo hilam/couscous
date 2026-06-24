@@ -39,6 +39,7 @@ def _empty_state(message: str = "Nenhum artigo encontrado") -> ft.Container:
 def _build_article_card(
     entry: Entry, page: ft.Page, tags: list[str] | None = None
 ) -> ArticleCard:
+    print(f"[DEBUG] _build_article_card: entry_id={entry.id}, title={entry.title}")
     return ArticleCard(
         entry=entry,
         tags=tags,

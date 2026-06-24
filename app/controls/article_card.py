@@ -85,5 +85,6 @@ class ArticleCard(ft.Card):
         )
 
     def _click(self):
+        print(f"[DEBUG] ArticleCard._click: entry_id={self.entry.id}, on_click={self.on_click}")
         if self.on_click:
             self.on_click(None)
