@@ -63,7 +63,7 @@ async def _load_entry_tags(session, entries: list[Entry]) -> dict[int, list[str]
     return tag_map
 
 
-def _build_category_tree(tree, on_select, selected_id):
+def _build_category_tree(tree, on_select, selected_id, expanded_ids):
     controls: list[ft.Control] = []
 
     recentes = ft.ListTile(
@@ -78,9 +78,34 @@ def _build_category_tree(tree, on_select, selected_id):
 
     def add_nodes(nodes, depth=0):
         for node in nodes:
+            has_children = bool(node.get("children"))
+
+            if has_children:
+                expanded = node["id"] in expanded_ids
+                leading: ft.Control = ft.Icon(
+                    ft.Icons.EXPAND_MORE if expanded else ft.Icons.CHEVRON_RIGHT,
+                    size=18,
+                )
+            else:
+                leading = ft.Icon(ft.Icons.FOLDER, size=18)
+
+            trailing: ft.Control | None = None
+            if node.get("unread_count", 0) > 0:
+                trailing = ft.Container(
+                    content=ft.Text(
+                        str(node["unread_count"]),
+                        size=11,
+                        color=ft.Colors.WHITE,
+                    ),
+                    bgcolor=ft.Colors.CYAN_600,
+                    border_radius=ft.border_radius.all(10),
+                    padding=ft.Padding(left=6, right=6, top=2, bottom=2),
+                )
+
             tile = ft.ListTile(
-                leading=ft.Icon(ft.Icons.FOLDER, size=18),
+                leading=leading,
                 title=ft.Text(node["name"], size=14),
+                trailing=trailing,
                 selected=selected_id == node["id"],
                 dense=True,
                 on_click=lambda _, nid=node["id"]: on_select(nid),
@@ -89,7 +114,7 @@ def _build_category_tree(tree, on_select, selected_id):
                 left=8 + depth * 16, top=0, right=8, bottom=0
             )
             controls.append(tile)
-            if node.get("children"):
+            if has_children and node["id"] in expanded_ids:
                 add_nodes(node["children"], depth + 1)
 
     if tree:
@@ -144,10 +169,21 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
     user_id: int = (state.user.id or 0) if state.user else 0
 
     selected_category_id: int | None = None
+    expanded_ids: set[int] = set()
     selected_tags: set[str] = set()
     is_searching = False
 
     tree = await get_category_tree(session, user_id)
+
+    def _find_node(nodes, target_id: int):
+        for node in nodes:
+            if node["id"] == target_id:
+                return node
+            if node.get("children"):
+                found = _find_node(node["children"], target_id)
+                if found:
+                    return found
+        return None
     tag_counts = await get_distinct_tags_with_counts(session, user_id)
 
     entries = await list_recent(session, user_id, limit=50)
@@ -224,7 +260,9 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
         if is_mobile:
             return None
         return ft.Container(
-            content=_build_category_tree(tree, select_category, selected_category_id),
+            content=_build_category_tree(
+                tree, select_category, selected_category_id, expanded_ids
+            ),
             width=TREE_WIDTH,
             bgcolor=ft.Colors.GREY_50,
             border=ft.Border(right=ft.border.BorderSide(1, ft.Colors.GREY_200)),
@@ -243,9 +281,12 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
         def add_nodes(nodes, depth=0):
             for node in nodes:
                 prefix = "  " * depth
+                text = f"{prefix}{node['name']}"
+                if node.get("unread_count", 0) > 0:
+                    text += f" ({node['unread_count']})"
                 items.append(
                     ft.PopupMenuItem(  # type: ignore[call-arg]
-                        text=f"{prefix}📂 {node['name']}",
+                        text=text,
                         on_click=lambda _, nid=node["id"]: select_category(nid),
                     )
                 )
@@ -274,6 +315,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
                     category_id=selected_category_id,
                     tags=list(selected_tags) if selected_tags else None,
                     limit=50,
+                    include_subcategories=True,
                 )
                 tm = await _load_entry_tags(s, fresh)
             _populate_entry_list(fresh, tm)
@@ -283,10 +325,35 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
 
     def select_category(cat_id: int | None):
         nonlocal selected_category_id, is_searching
-        selected_category_id = cat_id
-        is_searching = False
-        search_field.value = ""
-        asyncio.create_task(refresh_entries())  # noqa: RUF006
+
+        if cat_id is None:
+            selected_category_id = None
+            is_searching = False
+            search_field.value = ""
+            asyncio.create_task(refresh_entries())  # noqa: RUF006
+            return
+
+        node = _find_node(tree, cat_id)
+        if node is None:
+            return
+
+        has_children = bool(node.get("children"))
+        has_feeds = node.get("total_feed_count", 0) > 0
+
+        if has_children:
+            if cat_id in expanded_ids:
+                expanded_ids.discard(cat_id)
+            else:
+                expanded_ids.add(cat_id)
+
+        if has_feeds:
+            selected_category_id = cat_id
+            is_searching = False
+            search_field.value = ""
+            asyncio.create_task(refresh_entries())  # noqa: RUF006
+
+        body_row.controls = _build_body_controls()
+        page.update()
 
     async def _do_search():
         nonlocal is_searching
