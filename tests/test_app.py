@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.app import app_run
+from app.app import _match_route, app_run
 
 
 @pytest.fixture
@@ -103,21 +103,17 @@ async def test_route_dispatch_feed_list_when_authenticated(mock_page):
         mock_cm.__aexit__.return_value = None
 
         with (
-            patch("app.app.feed_list_view", mock_feed_list_view),
             patch("app.app.login_view", AsyncMock()),
-            patch("app.app.entry_list_view"),
-            patch("app.app.entry_view"),
-            patch("app.app.register_view"),
-            patch("app.app.about_view"),
-            patch("app.app.home_view"),
             patch("app.app.get_db_session", return_value=mock_cm),
         ):
             await app_run(mock_page)
-            event = MagicMock()
-            event.route = "/feeds"
-            await mock_page.on_route_change(event)
-            mock_feed_list_view.assert_awaited_once()
-            assert view_mock in mock_page.views
+            feeds_route = _match_route("/feeds")
+            with patch.object(feeds_route, "handler", mock_feed_list_view):
+                event = MagicMock()
+                event.route = "/feeds"
+                await mock_page.on_route_change(event)
+                mock_feed_list_view.assert_awaited_once()
+                assert view_mock in mock_page.views
 
 
 @pytest.mark.asyncio
@@ -140,21 +136,17 @@ async def test_route_dispatch_entry_list_sets_active_url(mock_page):
         mock_cm.__aexit__.return_value = None
 
         with (
-            patch("app.app.entry_list_view", mock_entry_list_view),
             patch("app.app.login_view", AsyncMock()),
-            patch("app.app.feed_list_view"),
-            patch("app.app.entry_view"),
-            patch("app.app.register_view"),
-            patch("app.app.about_view"),
-            patch("app.app.home_view"),
             patch("app.app.get_db_session", return_value=mock_cm),
         ):
             await app_run(mock_page)
-            event = MagicMock()
-            event.route = "/feed/https://example.com/rss"
-            await mock_page.on_route_change(event)
-            assert mock_state.active_feed_url == "https://example.com/rss"
-            mock_entry_list_view.assert_awaited_once()
+            entry_list_route = _match_route("/feed/test")
+            with patch.object(entry_list_route, "handler", mock_entry_list_view):
+                event = MagicMock()
+                event.route = "/feed/https://example.com/rss"
+                await mock_page.on_route_change(event)
+                assert mock_state.active_feed_url == "https://example.com/rss"
+                mock_entry_list_view.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -177,22 +169,18 @@ async def test_route_dispatch_entry_view(mock_page):
         mock_cm.__aexit__.return_value = None
 
         with (
-            patch("app.app.entry_view", mock_entry_view),
             patch("app.app.login_view", AsyncMock()),
-            patch("app.app.feed_list_view"),
-            patch("app.app.entry_list_view"),
-            patch("app.app.register_view"),
-            patch("app.app.about_view"),
-            patch("app.app.home_view"),
             patch("app.app.get_db_session", return_value=mock_cm),
         ):
             await app_run(mock_page)
-            event = MagicMock()
-            event.route = "/entry/42"
-            await mock_page.on_route_change(event)
-            mock_entry_view.assert_awaited_once()
-            args, _ = mock_entry_view.await_args
-            assert args[1] == 42
+            entry_route = _match_route("/entry/1")
+            with patch.object(entry_route, "handler", mock_entry_view):
+                event = MagicMock()
+                event.route = "/entry/42"
+                await mock_page.on_route_change(event)
+                mock_entry_view.assert_awaited_once()
+                args, _ = mock_entry_view.await_args
+                assert args[1] == 42
 
 
 @pytest.mark.asyncio
@@ -223,7 +211,7 @@ async def test_unauthenticated_redirects_to_login(mock_page):
 async def test_public_routes_allowed_without_auth(mock_page):
     mock_page.theme = MagicMock()
 
-    for public_route, view_name in [
+    for public_route, _ in [
         ("/about", "about_view"),
         ("/register", "register_view"),
     ]:
@@ -235,32 +223,16 @@ async def test_public_routes_allowed_without_auth(mock_page):
         view_mock = MagicMock()
         mock_view_func = AsyncMock(return_value=view_mock)
 
-        view_patches = {
-            "login_view": AsyncMock(),
-            "feed_list_view": AsyncMock(),
-            "entry_list_view": AsyncMock(),
-            "entry_view": AsyncMock(),
-            "register_view": AsyncMock(),
-            "about_view": AsyncMock(),
-            "home_view": AsyncMock(),
-        }
-        view_patches[view_name] = mock_view_func
-
         with (
             patch("app.app.init_async_db", AsyncMock()),
-            patch(f"app.app.{view_name}", mock_view_func),
-            patch("app.app.login_view", view_patches["login_view"]),
-            patch("app.app.feed_list_view", view_patches["feed_list_view"]),
-            patch("app.app.entry_list_view", view_patches["entry_list_view"]),
-            patch("app.app.entry_view", view_patches["entry_view"]),
-            patch("app.app.register_view", view_patches["register_view"]),
-            patch("app.app.about_view", view_patches["about_view"]),
-            patch("app.app.home_view", view_patches["home_view"]),
+            patch("app.app.login_view", AsyncMock()),
             patch("app.app.get_db_session"),
         ):
             await app_run(page)
-            event = MagicMock()
-            event.route = public_route
-            await page.on_route_change(event)
-            mock_view_func.assert_awaited_once()
-            assert view_mock in page.views
+            matched = _match_route(public_route)
+            with patch.object(matched, "handler", mock_view_func):
+                event = MagicMock()
+                event.route = public_route
+                await page.on_route_change(event)
+                mock_view_func.assert_awaited_once()
+                assert view_mock in page.views

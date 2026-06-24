@@ -179,9 +179,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
         width=TAGS_DRAWER_WIDTH,
         visible=False,
         bgcolor=ft.Colors.GREY_50,
-        border=ft.Border(
-            left=ft.border.BorderSide(1, ft.Colors.GREY_200)
-        ),
+        border=ft.Border(left=ft.border.BorderSide(1, ft.Colors.GREY_200)),
     )
 
     is_mobile = (page.width or 9999) < MOBILE_BREAKPOINT
@@ -229,9 +227,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
             content=_build_category_tree(tree, select_category, selected_category_id),
             width=TREE_WIDTH,
             bgcolor=ft.Colors.GREY_50,
-            border=ft.Border(
-                right=ft.border.BorderSide(1, ft.Colors.GREY_200)
-            ),
+            border=ft.Border(right=ft.border.BorderSide(1, ft.Colors.GREY_200)),
         )
 
     def _build_mobile_menu():
@@ -315,9 +311,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
             _populate_entry_list(results, tm)
             page.update()
         except Exception as exc:
-            page.open(
-                ft.SnackBar(content=ft.Text(f"Erro na busca: {exc}"))
-            )
+            page.open(ft.SnackBar(content=ft.Text(f"Erro na busca: {exc}")))
 
     def toggle_tag(tag: str):
         if tag in selected_tags:
