@@ -2,6 +2,7 @@ import os
 
 import pytest
 import pytest_asyncio
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
 
@@ -11,6 +12,31 @@ user = os.getenv("COUSCOUS_DATABASE_USER", "couscous")
 password = os.getenv("COUSCOUS_DATABASE_PASS", "couscous")
 
 DB_URL = f"postgresql+asyncpg://{user}:{password}@{host}:{port}/couscous_test"
+
+
+async def _add_search_vector_column(conn):
+    """Add search_vector generated column (managed by PostgreSQL, not SQLModel)."""
+    await conn.execute(text("""
+        ALTER TABLE entries ADD COLUMN IF NOT EXISTS search_vector tsvector
+          GENERATED ALWAYS AS (
+            to_tsvector('simple',
+              regexp_replace(
+                coalesce(title, '') || ' ' ||
+                coalesce(summary, '') || ' ' ||
+                coalesce(content, ''),
+                '<[^>]+>', '', 'g'
+              )
+            )
+          ) STORED;
+    """))
+    await conn.execute(text("""
+        CREATE INDEX IF NOT EXISTS idx_entries_search_vector_test
+        ON entries USING GIN (search_vector);
+    """))
+    await conn.execute(text("""
+        CREATE INDEX IF NOT EXISTS idx_entries_user_published_test
+        ON entries (user_id, published DESC);
+    """))
 
 
 @pytest.fixture
@@ -28,6 +54,8 @@ async def db_session():
     engine = create_async_engine(DB_URL, echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
+    async with engine.begin() as conn:
+        await _add_search_vector_column(conn)
     async_session = async_sessionmaker(
         engine, class_=AsyncSession, expire_on_commit=False
     )

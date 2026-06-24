@@ -1,6 +1,39 @@
 from sqlmodel import desc, select
 
-from database.models.couscous import Entry, EntryTag
+from database.models.couscous import Entry, EntryTag, Feed
+
+
+async def list_recent(  # noqa: PLR0913
+    session,
+    user_id: int,
+    *,
+    category_id: int | None = None,
+    tags: list[str] | None = None,
+    limit: int = 50,
+):
+    """List recent entries across all feeds for a user, with optional category and tag filters."""
+    query = select(Entry).where(Entry.user_id == user_id)
+
+    if category_id is not None:
+        feed_ids = select(Feed.url).where(
+            Feed.user_id == user_id, Feed.category_id == category_id
+        )
+        query = query.where(Entry.feed.in_(feed_ids))
+
+    if tags:
+        for tag in tags:
+            query = query.where(
+                Entry.id.in_(  # type: ignore[attr-defined,union-attr]
+                    select(EntryTag.entry_id).where(
+                        EntryTag.tag == tag.strip().lower(),
+                        EntryTag.user_id == user_id,
+                    )
+                )
+            )
+
+    query = query.order_by(desc(Entry.published)).limit(limit)
+    result = await session.execute(query)
+    return result.scalars().all()
 
 
 async def list_entries(  # noqa: PLR0913

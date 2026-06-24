@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from sqlmodel import select
 
 from database.models.couscous import Entry, EntryTag
@@ -63,6 +64,18 @@ async def remove_tag(session, entry_id: int, tag: str, user_id: int) -> None:
     if entry_tag:
         await session.delete(entry_tag)
         await session.commit()
+
+
+async def get_distinct_tags_with_counts(
+    session, user_id: int
+) -> list[tuple[str, int]]:
+    result = await session.execute(
+        select(EntryTag.tag, func.count(EntryTag.entry_id))
+        .where(EntryTag.user_id == user_id)
+        .group_by(EntryTag.tag)
+        .order_by(EntryTag.tag)
+    )
+    return [(row[0], row[1]) for row in result.all()]
 
 
 async def delete_tag(session, tag: str, user_id: int) -> None:

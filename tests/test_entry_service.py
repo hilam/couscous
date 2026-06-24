@@ -5,10 +5,13 @@ import pytest
 from app.services.entry_service import (
     list_entries,
     get_entry,
+    list_recent,
     mark_read,
     mark_important,
     get_unread_count,
 )
+from app.services.category_service import create_category
+from app.services.feed_service import update_feed_category
 from app.services.tag_service import assign_tag
 from app.services.user_service import register
 from database.models.couscous import Feed, Entry
@@ -236,3 +239,91 @@ async def test_list_entries_tag_no_match(db_session):
         db_session, "https://example.com/rss", user_id=user.id, tag="rust"
     )
     assert result == []
+
+
+@pytest.mark.asyncio
+async def test_list_recent_all_feeds(db_session):
+    user = await _make_user(db_session)
+    _, e1 = await _create_feed_and_entry(db_session, user.id)
+    _, e2 = await _create_feed_and_entry(
+        db_session, user.id, url="https://example.com/rss2"
+    )
+
+    recent = await list_recent(db_session, user.id)
+    assert len(recent) == 2
+
+
+@pytest.mark.asyncio
+async def test_list_recent_empty(db_session):
+    user = await _make_user(db_session)
+    recent = await list_recent(db_session, user.id)
+    assert recent == []
+
+
+@pytest.mark.asyncio
+async def test_list_recent_by_category(db_session):
+    user = await _make_user(db_session)
+    _, e1 = await _create_feed_and_entry(db_session, user.id)
+    _, e2 = await _create_feed_and_entry(
+        db_session, user.id, url="https://example.com/rss2"
+    )
+
+    cat = await create_category(db_session, user.id, "Tech")
+    await update_feed_category(db_session, user.id, "https://example.com/rss", cat.id)
+
+    recent = await list_recent(db_session, user.id, category_id=cat.id)
+    assert len(recent) == 1
+    assert recent[0].id == e1.id
+
+
+@pytest.mark.asyncio
+async def test_list_recent_by_tag(db_session):
+    user = await _make_user(db_session)
+    _, e1 = await _create_feed_and_entry(db_session, user.id)
+    _, e2 = await _create_feed_and_entry(
+        db_session, user.id, url="https://example.com/rss2"
+    )
+
+    assert e1.id is not None
+    await assign_tag(db_session, e1.id, "python", user.id)
+
+    recent = await list_recent(db_session, user.id, tags=["python"])
+    assert len(recent) == 1
+    assert recent[0].id == e1.id
+
+
+@pytest.mark.asyncio
+async def test_list_recent_by_category_and_tag(db_session):
+    user = await _make_user(db_session)
+    _, e1 = await _create_feed_and_entry(db_session, user.id)
+    _, e2 = await _create_feed_and_entry(
+        db_session, user.id, url="https://example.com/rss2"
+    )
+    _, e3 = await _create_feed_and_entry(
+        db_session, user.id, url="https://example.com/rss3"
+    )
+
+    cat = await create_category(db_session, user.id, "Tech")
+    await update_feed_category(db_session, user.id, "https://example.com/rss", cat.id)
+
+    assert e1.id is not None
+    assert e2.id is not None
+    assert e3.id is not None
+    await assign_tag(db_session, e1.id, "python", user.id)
+    await assign_tag(db_session, e2.id, "python", user.id)
+
+    recent = await list_recent(db_session, user.id, category_id=cat.id, tags=["python"])
+    assert len(recent) == 1
+    assert recent[0].id == e1.id
+
+
+@pytest.mark.asyncio
+async def test_list_recent_limit(db_session):
+    user = await _make_user(db_session)
+    for i in range(5):
+        await _create_feed_and_entry(
+            db_session, user.id, url=f"https://example.com/rss{i}"
+        )
+
+    recent = await list_recent(db_session, user.id, limit=3)
+    assert len(recent) == 3

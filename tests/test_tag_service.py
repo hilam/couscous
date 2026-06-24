@@ -7,6 +7,7 @@ from app.services.tag_service import (
     delete_tag,
     get_distinct_tags,
     get_distinct_tags_for_feed,
+    get_distinct_tags_with_counts,
     get_tags_for_entry,
     remove_tag,
 )
@@ -223,3 +224,27 @@ async def test_get_distinct_tags_for_feed_empty(db_session):
         db_session, "https://example.com/feed1", user.id
     )
     assert tags == []
+
+
+@pytest.mark.asyncio
+async def test_get_distinct_tags_with_counts(db_session):
+    user = await make_user(db_session)
+    entry1 = await _make_feed_and_entry(db_session, user.id)
+    entry2 = await _make_feed_and_entry(
+        db_session, user.id, url="https://example.com/rss2"
+    )
+
+    await assign_tag(db_session, entry1.id, "python", user.id)
+    await assign_tag(db_session, entry1.id, "django", user.id)
+    await assign_tag(db_session, entry2.id, "python", user.id)
+
+    counts = await get_distinct_tags_with_counts(db_session, user.id)
+    assert set(counts) == {("django", 1), ("python", 2)}
+
+
+@pytest.mark.asyncio
+async def test_get_distinct_tags_with_counts_empty(db_session):
+    user = await make_user(db_session)
+
+    counts = await get_distinct_tags_with_counts(db_session, user.id)
+    assert counts == []
