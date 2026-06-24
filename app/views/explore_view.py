@@ -269,8 +269,6 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
             controls.append(tag_drawer_container)
         return controls
 
-    body_row.controls = _build_body_controls()
-
     async def refresh_entries():
         async with ctx.new_session() as s:
             fresh = await list_recent(
@@ -370,6 +368,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
 
     _update_tag_badge()
     _refresh_drawer_content()
+    body_row.controls = _build_body_controls()
 
     return ft.View(
         route="/",
