@@ -168,7 +168,7 @@ async def category_list_view(ctx) -> ft.View:
     )
 
 
-def _build_create_dialog(page, refresh_cb, ctx):
+def _build_create_dialog(page, refresh_cb, ctx):  # noqa: C901
     name_field = ft.TextField(label="Nome da categoria", autofocus=True, expand=True)
     parent_dropdown = ft.Dropdown(label="Categoria pai", expand=True)
 
@@ -183,14 +183,12 @@ def _build_create_dialog(page, refresh_cb, ctx):
 
     _task_ref = asyncio.create_task(_load_parent_dropdown())  # noqa: RUF006 - keep task alive
 
-    async def _submit(e):
+    async def _do_create():
         name = name_field.value.strip()
         if not name:
-            return
+            return False
         raw = parent_dropdown.value
         parent_id = int(raw) if raw and raw != "0" else None
-        dlg.open = False
-        dlg.update()
         async with ctx.new_session() as s:
             try:
                 await create_category(s, ctx.state.user.id, name, parent_id)
@@ -201,8 +199,28 @@ def _build_create_dialog(page, refresh_cb, ctx):
                 page.overlay.append(snack)
                 snack.open = True
                 page.update()
-                return
+                return False
+            else:
+                return True
+
+    async def _submit_and_close(e):
+        dlg.open = False
+        dlg.update()
+        if await _do_create():
+            await refresh_cb()
+
+    async def _submit_and_continue(e):
+        if not await _do_create():
+            return
+        name_field.value = ""
+        name_field.update()
+        await _load_parent_dropdown()
         await refresh_cb()
+        await name_field.focus_async()  # type: ignore[attr-defined]
+
+    name_field.on_submit = lambda e: asyncio.create_task(
+        parent_dropdown.focus_async()  # type: ignore[attr-defined]
+    )
 
     def _cancel(e):
         dlg.open = False
@@ -217,7 +235,8 @@ def _build_create_dialog(page, refresh_cb, ctx):
         ),
         actions=[
             ft.TextButton("Cancelar", on_click=_cancel),
-            ft.FilledButton("Criar", on_click=_submit),
+            ft.FilledButton("Criar outro", on_click=_submit_and_continue),
+            ft.FilledButton("Criar", on_click=_submit_and_close),
         ],
         actions_alignment=ft.MainAxisAlignment.END,
     )
