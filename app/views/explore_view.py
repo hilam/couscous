@@ -39,7 +39,6 @@ def _empty_state(message: str = "Nenhum artigo encontrado") -> ft.Container:
 def _build_article_card(
     entry: Entry, page: ft.Page, tags: list[str] | None = None
 ) -> ArticleCard:
-    print(f"[DEBUG] _build_article_card: entry_id={entry.id}, title={entry.title}")
     return ArticleCard(
         entry=entry,
         tags=tags,
@@ -261,13 +260,24 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
     def _build_tree_panel():
         if is_mobile:
             return None
-        return ft.Container(
+        container = ft.Container(
             content=_build_category_tree(
                 tree, select_category, selected_category_id, expanded_ids
             ),
             width=TREE_WIDTH,
             bgcolor=ft.Colors.GREY_50,
             border=ft.Border(right=ft.border.BorderSide(1, ft.Colors.GREY_200)),
+        )
+        tree_panel_ref[0] = container
+        return container
+
+    tree_panel_ref: list[ft.Container | None] = [None]
+
+    def _refresh_tree_panel():
+        if is_mobile or tree_panel_ref[0] is None:
+            return
+        tree_panel_ref[0].content = _build_category_tree(
+            tree, select_category, selected_category_id, expanded_ids
         )
 
     def _build_mobile_menu():
@@ -333,6 +343,8 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
             is_searching = False
             search_field.value = ""
             asyncio.create_task(refresh_entries())  # noqa: RUF006
+            _refresh_tree_panel()
+            page.update()
             return
 
         node = _find_node(tree, cat_id)
@@ -354,7 +366,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
             search_field.value = ""
             asyncio.create_task(refresh_entries())  # noqa: RUF006
 
-        body_row.controls = _build_body_controls()
+        _refresh_tree_panel()
         page.update()
 
     async def _do_search():
