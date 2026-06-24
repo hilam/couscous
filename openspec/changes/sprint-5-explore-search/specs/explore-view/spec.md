@@ -75,6 +75,10 @@ O sistema DEVE organizar o explore view em três zonas: árvore de categorias (e
 - **WHEN** a largura da tela é maior ou igual a 600px
 - **THEN** as três colunas são exibidas lado a lado como `Row` com larguras fixas para as laterais e `expand` para a central
 
-#### Scenario: Layout em mobile
+#### Scenario: Layout em mobile — árvore de categorias como PopupMenuButton
 - **WHEN** a largura da tela é menor que 600px
-- **THEN** a árvore de categorias é substituída por um menu expansível no topo ou esquerda colapsável, e o drawer de tags abre como `ModalBottomSheet`
+- **THEN** a árvore de categorias lateral NÃO é renderizada. Em seu lugar, um `ft.PopupMenuButton` com ícone de menu aparece no AppBar, exibindo as categorias como itens de menu hierárquicos (com indentação para filhos). Ao selecionar uma categoria, o menu fecha e a coluna central filtra as entradas conforme a seleção.
+
+#### Scenario: Layout em mobile — drawer de tags como ModalBottomSheet
+- **WHEN** a largura da tela é menor que 600px
+- **THEN** o drawer de tags abre como `ft.ModalBottomSheet` em vez de um painel lateral fixo

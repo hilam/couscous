@@ -78,11 +78,17 @@
 - **WHEN** o explore view é renderizado
 - **THEN** o botão de tags no AppBar está visível sem badge, e o drawer exibe "Nenhuma tag"
 
-### Test: EDGE - Drawer em mobile (< 600px)
+### Test: EDGE - Drawer em mobile abre como ModalBottomSheet
 **Traces**: `specs/explore-view/spec.md` → Requirement: Layout de 3 colunas
 - **GIVEN** a largura da tela é 400px
 - **WHEN** o usuário toca no botão de tags
-- **THEN** o drawer abre como `ModalBottomSheet` em vez de painel lateral
+- **THEN** o drawer abre como `ft.ModalBottomSheet` em vez de painel lateral
+
+### Test: EDGE - Árvore de categorias vira PopupMenuButton em mobile
+**Traces**: `specs/explore-view/spec.md` → Requirement: Layout de 3 colunas
+- **GIVEN** a largura da tela é 400px e o usuário possui categorias "Tech" e "News"
+- **WHEN** o explore view é renderizado
+- **THEN** a árvore lateral NÃO aparece; o AppBar exibe um ícone de menu que ao ser tocado abre um `PopupMenuButton` com "Tech" e "News" como itens, com "Recentes" como primeira opção
 
 ### Test: Layout desktop com 3 colunas
 **Traces**: `specs/explore-view/spec.md` → Requirement: Layout de 3 colunas
@@ -195,6 +201,4 @@
 - **Search service ↔ Entry service**: `search_entries()` e `list_recent()` compartilham o padrão de filtro por `user_id` + categoria + tag
 - **Migration ↔ init_async_db()**: A coluna `search_vector` é criada via migration. Se `init_async_db()` usar `create_all`, a coluna NÃO será criada (SQLModel não a conhece). A migration é obrigatória.
 
-## Review Notes
 
-- **AMBIGUOUS**: `specs/explore-view/spec.md` → Scenario: Layout em mobile — "menu expansível no topo ou esquerda colapsável" é vago. Sugiro especificar: em mobile, a árvore vira um `ft.PopupMenuButton` com ícone de menu no AppBar, que exibe as categorias como itens de menu.
