@@ -6,6 +6,7 @@
 cp .env.sample .env            # required — .env is gitignored
 make db-up                     # start PostgreSQL 16 (required)
 make install                   # uv sync — install dependencies
+make db-migrate-up             # apply database migrations (required, first time only)
 make run-web                   # run in web browser on localhost:8550
 make test                      # run all tests (pytest)
 make format                    # format code (ruff)
@@ -35,6 +36,10 @@ make check-all                 # lint + typecheck + test + security (CI gate)
 | `make db-down` | `docker compose down --remove-orphans` |
 | `make db-clean` | `docker compose down --volumes --remove-orphans` |
 | `make db-shell` | psql shell into couscous database |
+| `make db-migrate-create` | Generate new migration (`name="..."` required) |
+| `make db-migrate-up` | Apply pending migrations |
+| `make db-migrate-down` | Revert last migration |
+| `make db-migrate-status` | Show current migration state |
 | `make clean` | remove `__pycache__`, `.pyc`, `.pytest_cache`, `reports/` |
 
 ## Project architecture
@@ -97,6 +102,19 @@ Order matters: specific prefixes (`/feed/`, `/entry/`) must appear before generi
 - Run all tests: `make test`
 - Run a single test: `uv run pytest tests/test_feed_service.py::test_add_feed`
 - Tests connect to `couscous_test` database (hardcoded in conftest), not `couscous`.
+
+## Database migrations
+
+Migrations are managed with [Alembic](https://alembic.sqlalchemy.org/). They are applied manually — not auto-run on startup.
+
+**Fresh install**: Run `make db-migrate-up` once after `make db-up` to create all tables.
+
+**Schema change**: After modifying models in `database/models/couscous.py`:
+1. `make db-migrate-create name="descricao-da-mudanca"` — auto-generates a new migration
+2. Review the generated file in `alembic/versions/`
+3. `make db-migrate-up` — applies the migration
+
+**Startup**: `init_async_db()` uses `create_all` (idempotent via `CREATE TABLE IF NOT EXISTS`) as a safety net. It never drops data. Tests use a separate `couscous_test` database with `create_all`/`drop_all` per session.
 
 ## Gotchas
 
