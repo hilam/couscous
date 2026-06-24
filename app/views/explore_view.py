@@ -202,9 +202,6 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
                 )
             )
 
-    _update_tag_badge()
-    _refresh_drawer_content()
-
     body_row = ft.Row(spacing=0, expand=True)
 
     def _populate_entry_list(entries_to_show, tag_map_data):
@@ -370,6 +367,9 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
         page.open(sheet)
 
     mobile_menu = _build_mobile_menu()
+
+    _update_tag_badge()
+    _refresh_drawer_content()
 
     return ft.View(
         route="/",
