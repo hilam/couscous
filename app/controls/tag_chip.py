@@ -21,7 +21,7 @@ class TagChip(ft.Container):
                     height=16,
                     padding=ft.Padding.all(0),
                     style=ft.ButtonStyle(
-                        color=ft.Colors.WHITE70,
+                        color=ft.Colors.WHITE_70,
                         padding=ft.Padding.all(0),
                     ),
                     on_click=lambda e: on_delete(tag),

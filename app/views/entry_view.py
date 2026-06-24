@@ -14,6 +14,10 @@ from app.services.tag_service import (
 )
 
 
+async def _open_original_url(e: ft.ControlEvent):
+    await ft.UrlLauncher().launch_url(e.control.data)
+
+
 def _get_content_renderer(content: str) -> ft.Control:
     if not content:
         return ft.Text("Sem conte\u00fado dispon\u00edvel.")
@@ -224,12 +228,13 @@ async def entry_view(ctx, entry_id: int) -> ft.View:  # noqa: C901, PLR0915
                         ft.Divider(),
                         _get_content_renderer(content),
                         ft.Container(
-                            content=ft.FilledButton(
-                                "Ver original",
-                                icon=ft.Icons.OPEN_IN_NEW,
-                                on_click=lambda _: ft.UrlLauncher().launch_url(
-                                    entry.link or ""
-                                ),
+                            content=(
+                                ft.FilledButton(
+                                    "Ver original",
+                                    icon=ft.Icons.OPEN_IN_NEW,
+                                    data=entry.link or "",
+                                    on_click=_open_original_url,  # type: ignore[arg-type]
+                                )
                             )
                             if entry.link
                             else None,
