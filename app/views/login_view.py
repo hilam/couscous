@@ -30,7 +30,7 @@ async def login_view(ctx) -> ft.View:
 
                 if user:
                     state.user = user
-                    await page.push_route("/feeds")
+                    await page.push_route("/")
                 else:
                     error_text.value = "Usu\u00e1rio n\u00e3o encontrado"
                     error_text.visible = True

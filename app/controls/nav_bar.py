@@ -19,7 +19,7 @@ _ROUTE_INDICES: dict[str, int] = {
     "/about": 3,
 }
 
-_INDEX_ROUTES = ["/feeds", "/feeds", "/categories", "/about"]
+_INDEX_ROUTES = ["/", "/feeds", "/categories", "/about"]
 
 
 def set_navbar(page: ft.Page) -> None:

@@ -10,6 +10,7 @@ from app.views.about_view import about_view  # noqa: F401
 from app.views.category_list_view import category_list_view  # noqa: F401
 from app.views.entry_list_view import entry_list_view  # noqa: F401
 from app.views.entry_view import entry_view  # noqa: F401
+from app.views.explore_view import explore_view  # noqa: F401
 from app.views.feed_list_view import feed_list_view  # noqa: F401
 from app.views.home_view import home_view
 from app.views.login_view import login_view
@@ -42,7 +43,7 @@ _ROUTES: list[_Route] = [
     _Route("/feed/", "entry_list_view", requires_session=True),
     _Route("/entry/", "entry_view", requires_session=True),
     _Route("/categories", "category_list_view", requires_session=True),
-    _Route("/", "feed_list_view", requires_session=True),
+    _Route("/", "explore_view", requires_session=True),
 ]
 
 _FALLBACK_HANDLER = home_view

@@ -3,7 +3,7 @@ from urllib.parse import parse_qs, urlparse
 import flet as ft
 
 from app.services import oauth_service, user_service
-from app.views.feed_list_view import feed_list_view
+from app.views.explore_view import explore_view
 
 
 async def oauth_callback_view(ctx) -> ft.View:
@@ -30,7 +30,7 @@ async def oauth_callback_view(ctx) -> ft.View:
     )
     ctx.state.user = user
 
-    return await feed_list_view(ctx)
+    return await explore_view(ctx)
 
 
 async def _error_view(page: ft.Page, message: str) -> ft.View:

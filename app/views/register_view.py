@@ -30,7 +30,7 @@ async def register_view(ctx) -> ft.View:
 
                 if user:
                     state.user = user
-                    await page.push_route("/feeds")
+                    await page.push_route("/")
                 else:
                     error_text.value = "Nome de usu\u00e1rio j\u00e1 existe"
                     error_text.visible = True

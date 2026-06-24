@@ -1,0 +1,71 @@
+import pytest
+
+from app.app import _ROUTES, _match_route
+from app.controls.nav_bar import _INDEX_ROUTES
+
+
+class TestRouteTable:
+    def test_root_route_is_explore_view(self):
+        route = _match_route("/")
+        assert route is not None
+        assert route.handler_name == "explore_view"
+
+    def test_feeds_route_is_feed_list_view(self):
+        route = _match_route("/feeds")
+        assert route is not None
+        assert route.handler_name == "feed_list_view"
+
+    def test_feed_detail_route_is_entry_list_view(self):
+        route = _match_route("/feed/https://example.com/rss")
+        assert route is not None
+        assert route.handler_name == "entry_list_view"
+
+    def test_entry_detail_route_is_entry_view(self):
+        route = _match_route("/entry/42")
+        assert route is not None
+        assert route.handler_name == "entry_view"
+
+    def test_categories_route_is_category_list_view(self):
+        route = _match_route("/categories")
+        assert route is not None
+        assert route.handler_name == "category_list_view"
+
+    def test_login_route_is_login_view(self):
+        route = _match_route("/login")
+        assert route is not None
+        assert route.handler_name == "login_view"
+
+    def test_root_requires_session(self):
+        route = _match_route("/")
+        assert route is not None
+        assert route.requires_session is True
+
+    def test_feeds_requires_session(self):
+        route = _match_route("/feeds")
+        assert route is not None
+        assert route.requires_session is True
+
+
+class TestNavBar:
+    def test_index_zero_is_root(self):
+        assert _INDEX_ROUTES[0] == "/"
+
+    def test_index_one_is_feeds(self):
+        assert _INDEX_ROUTES[1] == "/feeds"
+
+    def test_index_two_is_categories(self):
+        assert _INDEX_ROUTES[2] == "/categories"
+
+    def test_index_three_is_about(self):
+        assert _INDEX_ROUTES[3] == "/about"
+
+
+class TestRouteOrder:
+    def test_specific_routes_before_generic(self):
+        """Ensure /feed/ and /entry/ come before / in the route table."""
+        route_prefixes = [r.prefix for r in _ROUTES]
+        feed_index = route_prefixes.index("/feed/")
+        entry_index = route_prefixes.index("/entry/")
+        root_index = route_prefixes.index("/")
+        assert feed_index < root_index, "/feed/ must come before /"
+        assert entry_index < root_index, "/entry/ must come before /"
