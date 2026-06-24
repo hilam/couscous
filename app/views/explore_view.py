@@ -270,34 +270,31 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
         return controls
 
     async def refresh_entries():
-        async with ctx.new_session() as s:
-            fresh = await list_recent(
-                s,
-                user_id,
-                category_id=selected_category_id,
-                tags=list(selected_tags) if selected_tags else None,
-                limit=50,
-            )
-            tm = await _load_entry_tags(s, fresh)
-        _populate_entry_list(fresh, tm)
-        page.update()
+        try:
+            async with ctx.new_session() as s:
+                fresh = await list_recent(
+                    s,
+                    user_id,
+                    category_id=selected_category_id,
+                    tags=list(selected_tags) if selected_tags else None,
+                    limit=50,
+                )
+                tm = await _load_entry_tags(s, fresh)
+            _populate_entry_list(fresh, tm)
+            page.update()
+        except Exception as exc:
+            page.open(ft.SnackBar(content=ft.Text(f"Erro: {exc}")))
 
     def select_category(cat_id: int | None):
         nonlocal selected_category_id, is_searching
         selected_category_id = cat_id
         is_searching = False
         search_field.value = ""
-        page.show_snack_bar(
-            ft.SnackBar(content=ft.Text(f"Categoria: {cat_id}"), duration=1500)
-        )
         asyncio.create_task(refresh_entries())  # noqa: RUF006
 
     async def _do_search():
         nonlocal is_searching
         query = search_field.value.strip()
-        page.show_snack_bar(
-            ft.SnackBar(content=ft.Text(f"Busca: '{query}'"), duration=2000)
-        )
         if not query:
             is_searching = False
             await refresh_entries()
@@ -318,7 +315,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
             _populate_entry_list(results, tm)
             page.update()
         except Exception as exc:
-            page.show_snack_bar(
+            page.open(
                 ft.SnackBar(content=ft.Text(f"Erro na busca: {exc}"))
             )
 
