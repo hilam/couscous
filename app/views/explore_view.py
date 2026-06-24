@@ -287,29 +287,40 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
         selected_category_id = cat_id
         is_searching = False
         search_field.value = ""
+        page.show_snack_bar(
+            ft.SnackBar(content=ft.Text(f"Categoria: {cat_id}"), duration=1500)
+        )
         asyncio.create_task(refresh_entries())  # noqa: RUF006
 
     async def _do_search():
         nonlocal is_searching
         query = search_field.value.strip()
+        page.show_snack_bar(
+            ft.SnackBar(content=ft.Text(f"Busca: '{query}'"), duration=2000)
+        )
         if not query:
             is_searching = False
             await refresh_entries()
             return
         is_searching = True
-        tag_filter = next(iter(selected_tags)) if len(selected_tags) == 1 else None
-        async with ctx.new_session() as s:
-            results = await search_entries(
-                s,
-                query,
-                user_id,
-                category_id=selected_category_id,
-                tag=tag_filter,
-                limit=50,
+        try:
+            tag_filter = next(iter(selected_tags)) if len(selected_tags) == 1 else None
+            async with ctx.new_session() as s:
+                results = await search_entries(
+                    s,
+                    query,
+                    user_id,
+                    category_id=selected_category_id,
+                    tag=tag_filter,
+                    limit=50,
+                )
+                tm = await _load_entry_tags(s, results)
+            _populate_entry_list(results, tm)
+            page.update()
+        except Exception as exc:
+            page.show_snack_bar(
+                ft.SnackBar(content=ft.Text(f"Erro na busca: {exc}"))
             )
-            tm = await _load_entry_tags(s, results)
-        _populate_entry_list(results, tm)
-        page.update()
 
     def toggle_tag(tag: str):
         if tag in selected_tags:
