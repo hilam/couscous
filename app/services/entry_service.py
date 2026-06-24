@@ -25,7 +25,8 @@ async def list_recent(  # noqa: PLR0913
         if include_subcategories:
             cat_ids = await _collect_descendant_ids(session, user_id, category_id)
             feed_ids = select(Feed.url).where(
-                Feed.user_id == user_id, Feed.category_id.in_(cat_ids)  # type: ignore[attr-defined]
+                Feed.user_id == user_id,
+                Feed.category_id.in_(cat_ids),  # type: ignore[union-attr]
             )
         else:
             feed_ids = select(Feed.url).where(

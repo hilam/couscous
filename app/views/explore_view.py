@@ -98,7 +98,7 @@ def _build_category_tree(tree, on_select, selected_id, expanded_ids):
                         color=ft.Colors.WHITE,
                     ),
                     bgcolor=ft.Colors.CYAN_600,
-                    border_radius=ft.border_radius.all(10),
+                    border_radius=10,
                     padding=ft.Padding(left=6, right=6, top=2, bottom=2),
                 )
 
@@ -184,6 +184,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
                 if found:
                     return found
         return None
+
     tag_counts = await get_distinct_tags_with_counts(session, user_id)
 
     entries = await list_recent(session, user_id, limit=50)

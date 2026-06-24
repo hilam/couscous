@@ -38,19 +38,23 @@ async def get_category_tree(session, user_id: int):
     cats = await list_categories(session, user_id)
 
     feed_counts_result = await session.execute(
-        select(Feed.category_id, func.count(Feed.url))
-        .where(Feed.user_id == user_id, Feed.category_id.isnot(None))
-        .group_by(Feed.category_id)
+        select(Feed.category_id, func.count(Feed.url))  # type: ignore[arg-type]
+        .where(Feed.user_id == user_id, Feed.category_id.isnot(None))  # type: ignore[union-attr]
+        .group_by(Feed.category_id)  # type: ignore[arg-type]
     )
     feed_counts: dict[int, int] = {
         row[0]: row[1] for row in feed_counts_result if row[0] is not None
     }
 
     unread_result = await session.execute(
-        select(Feed.category_id, func.count(Entry.id))
-        .join(Entry, Entry.feed == Feed.url)
-        .where(Feed.user_id == user_id, Entry.read == 0, Feed.category_id.isnot(None))
-        .group_by(Feed.category_id)
+        select(Feed.category_id, func.count(Entry.id))  # type: ignore[arg-type]
+        .join(Entry, Entry.feed == Feed.url)  # type: ignore[arg-type]
+        .where(
+            Feed.user_id == user_id,
+            Entry.read == 0,
+            Feed.category_id.isnot(None),  # type: ignore[union-attr]
+        )
+        .group_by(Feed.category_id)  # type: ignore[arg-type]
     )
     unread_counts: dict[int, int] = {
         row[0]: row[1] for row in unread_result if row[0] is not None
@@ -96,10 +100,10 @@ async def get_category_tree(session, user_id: int):
 
 async def _collect_descendant_ids(session, user_id: int, category_id: int) -> list[int]:
     cats = (
-        await session.execute(
-            select(Category).where(Category.user_id == user_id)
-        )
-    ).scalars().all()
+        (await session.execute(select(Category).where(Category.user_id == user_id)))
+        .scalars()
+        .all()
+    )
 
     children_map: dict[int | None, list[int]] = {}
     for c in cats:
