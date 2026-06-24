@@ -38,7 +38,7 @@ async def search_entries(  # noqa: PLR0913
 
     where_clause = " AND ".join(conditions)
 
-    sql = text(  # nosec B608
+    sql = text(
         "SELECT e.id, e.feed, e.user_id, e.title, e.link, e.updated, e.author, "
         "e.published, e.summary, e.content, e.enclosures, e.original_feed, "
         "e.data_hash, e.data_hash_changed, e.read, e.read_modified, "
@@ -51,7 +51,7 @@ async def search_entries(  # noqa: PLR0913
         "FROM entries e "
         "LEFT JOIN feeds f ON e.feed = f.url, "
         "plainto_tsquery('simple', :query) AS q "
-        "WHERE " + where_clause + " "
+        "WHERE " + where_clause + " "  # nosec B608
         "ORDER BY rank DESC "
         "LIMIT :limit"
     )

@@ -29,7 +29,7 @@
 - [x] 4.5 Implementar barra de busca no AppBar — ao digitar, substitui coluna central por resultados de `search_entries`
 - [x] 4.6 Implementar layout responsivo: `page.width < 600` → árvore vira `PopupMenuButton`, drawer vira `ModalBottomSheet`
 - [x] 4.7 Implementar integração: tocar numa entrada navega para `/entry/{id}`; filtros de busca + categoria + tag combinam-se com AND
-- [ ] 4.8 Fazer commit da explore view (`git add app/views/explore_view.py && git commit -m "feat(ui): cria explore view com drill-down, tags drawer e busca"`)
+- [x] 4.8 Fazer commit da explore view (`git add app/views/explore_view.py && git commit -m "feat(ui): cria explore view com drill-down, tags drawer e busca"`)
 
 ## 5. Integração — Rotas e Navegação
 
@@ -46,5 +46,5 @@
 - [x] 6.3 Executar type checking com mypy (`make typecheck`) — `app/views/explore_view.py` e `app/services/search_service.py` devem passar
 - [x] 6.4 Executar security scan (`make security`) — verificar que `sqlalchemy.text()` com interpolação de parâmetros não tem injection
 - [x] 6.5 Executar todos os testes (`make test`) e verificar que passam
-- [ ] 6.6 Fazer commit de correções de estilo se houver (`git add . && git commit -m "style: aplica ruff format, lint e mypy no sprint 5"`)
-- [ ] 6.7 Executar `make check-all` para validação completa (lint + typecheck + test + security)
+- [x] 6.6 Fazer commit de correções de estilo se houver (`git add . && git commit -m "style: aplica ruff format, lint e mypy no sprint 5"`)
+- [x] 6.7 Executar `make check-all` para validação completa (lint + typecheck + test + security)
