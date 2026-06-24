@@ -23,7 +23,8 @@ def _empty_state(message: str = "Nenhum artigo encontrado") -> ft.Container:
             controls=[
                 ft.Icon(ft.Icons.ARTICLE, size=60, color=ft.Colors.GREY_400),
                 ft.Text(
-                    message, theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
+                    message,
+                    theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
                     color=ft.Colors.GREY,
                 ),
             ],
@@ -35,13 +36,14 @@ def _empty_state(message: str = "Nenhum artigo encontrado") -> ft.Container:
     )
 
 
-def _build_article_card(entry: Entry, page: ft.Page,
-                         tags: list[str] | None = None) -> ArticleCard:
+def _build_article_card(
+    entry: Entry, page: ft.Page, tags: list[str] | None = None
+) -> ArticleCard:
     return ArticleCard(
         entry=entry,
         tags=tags,
-        on_click=lambda _, eid=entry.id: (
-            asyncio.create_task(page.push_route(f"/entry/{eid}"))
+        on_click=lambda _, eid=entry.id: asyncio.create_task(
+            page.push_route(f"/entry/{eid}")
         ),
     )
 
@@ -61,8 +63,7 @@ async def _load_entry_tags(session, entries: list[Entry]) -> dict[int, list[str]
     return tag_map
 
 
-def _build_category_tree(tree: list[dict],
-                          on_select, selected_id: int | None) -> ft.ListView:
+def _build_category_tree(tree, on_select, selected_id):
     controls: list[ft.Control] = []
 
     recentes = ft.ListTile(
@@ -75,7 +76,7 @@ def _build_category_tree(tree: list[dict],
     controls.append(recentes)
     controls.append(ft.Divider(height=1))
 
-    def add_nodes(nodes: list[dict], depth: int = 0):
+    def add_nodes(nodes, depth=0):
         for node in nodes:
             tile = ft.ListTile(
                 leading=ft.Icon(ft.Icons.FOLDER, size=18),
@@ -84,7 +85,9 @@ def _build_category_tree(tree: list[dict],
                 dense=True,
                 on_click=lambda _, nid=node["id"]: on_select(nid),
             )
-            tile.padding = ft.Padding(left=8 + depth * 16, top=0, right=8, bottom=0)
+            tile.padding = ft.Padding(  # type: ignore[attr-defined]
+                left=8 + depth * 16, top=0, right=8, bottom=0
+            )
             controls.append(tile)
             if node.get("children"):
                 add_nodes(node["children"], depth + 1)
@@ -102,20 +105,18 @@ def _build_category_tree(tree: list[dict],
     return ft.ListView(controls=controls, spacing=2, padding=ft.Padding.all(4))
 
 
-def _build_tag_drawer_content(tags: list[tuple[str, int]],
-                               selected_tags: set[str],
-                               on_toggle_tag,
-                               on_clear) -> list[ft.Control]:
+def _build_tag_drawer_content(tags, selected_tags, on_toggle_tag, on_clear):
     rows: list[ft.Control] = []
     for tag, count in tags:
-        is_selected = tag in selected_tags
+        selected = tag in selected_tags
         rows.append(
             ft.ListTile(
                 leading=ft.Icon(
-                    ft.Icons.CHECK_BOX if is_selected
+                    ft.Icons.CHECK_BOX
+                    if selected
                     else ft.Icons.CHECK_BOX_OUTLINE_BLANK,
                     size=18,
-                    color=ft.Colors.CYAN_600 if is_selected else ft.Colors.GREY,
+                    color=ft.Colors.CYAN_600 if selected else ft.Colors.GREY,
                 ),
                 title=ft.Text(f"#{tag} ({count})", size=13),
                 dense=True,
@@ -127,7 +128,8 @@ def _build_tag_drawer_content(tags: list[tuple[str, int]],
         rows.append(ft.Divider(height=1))
         rows.append(
             ft.TextButton(
-                "Limpar filtros", icon=ft.Icons.CLOSE,
+                "Limpar filtros",
+                icon=ft.Icons.CLOSE,
                 on_click=lambda _: on_clear(),
                 style=ft.ButtonStyle(color=ft.Colors.GREY_600),
             )
@@ -135,7 +137,7 @@ def _build_tag_drawer_content(tags: list[tuple[str, int]],
     return rows
 
 
-async def explore_view(ctx) -> ft.View:
+async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
     page = ctx.page
     state = ctx.state
     session = ctx.session
@@ -152,23 +154,6 @@ async def explore_view(ctx) -> ft.View:
     tag_map = await _load_entry_tags(session, entries)
 
     entry_list = ft.ListView(spacing=8, padding=10, expand=True)
-
-    def populate_entry_list(entries_to_show, tag_map_data):
-        entry_list.controls.clear()
-        for entry in entries_to_show:
-            tags = tag_map_data.get(entry.id, []) if entry.id else None
-            entry_list.controls.append(_build_article_card(entry, page, tags))
-        if not entries_to_show:
-            if is_searching:
-                entry_list.controls.append(
-                    _empty_state(f"Nenhum resultado encontrado para '{search_field.value}'")
-                )
-            elif selected_category_id:
-                entry_list.controls.append(_empty_state("Nenhum artigo nesta categoria"))
-            else:
-                entry_list.controls.append(_empty_state())
-
-    populate_entry_list(entries, tag_map)
 
     search_field = ft.TextField(
         hint_text="Pesquisar...",
@@ -187,7 +172,6 @@ async def explore_view(ctx) -> ft.View:
     )
 
     tag_badge = ft.Text("", size=12)
-
     drawer_col = ft.Column(scroll=ft.ScrollMode.AUTO, spacing=2)
 
     tag_drawer_container = ft.Container(
@@ -195,16 +179,15 @@ async def explore_view(ctx) -> ft.View:
         width=TAGS_DRAWER_WIDTH,
         visible=False,
         bgcolor=ft.Colors.GREY_50,
-        border=ft.border.only(left=ft.border.BorderSide(1, ft.Colors.GREY_200)),
+        border=ft.border.only(  # type: ignore[attr-defined]
+            left=ft.border.BorderSide(1, ft.Colors.GREY_200)
+        ),
     )
 
-    is_mobile = page.width < MOBILE_BREAKPOINT if page.width else False
+    is_mobile = (page.width or 9999) < MOBILE_BREAKPOINT
 
     def _update_tag_badge():
-        if selected_tags:
-            tag_badge.value = f"{len(selected_tags)}"
-        else:
-            tag_badge.value = ""
+        tag_badge.value = str(len(selected_tags)) if selected_tags else ""
 
     def _refresh_drawer_content():
         drawer_col.controls.clear()
@@ -214,7 +197,9 @@ async def explore_view(ctx) -> ft.View:
             )
         else:
             drawer_col.controls.extend(
-                _build_tag_drawer_content(tag_counts, selected_tags, toggle_tag, clear_tags)
+                _build_tag_drawer_content(
+                    tag_counts, selected_tags, toggle_tag, clear_tags
+                )
             )
 
     _update_tag_badge()
@@ -222,40 +207,64 @@ async def explore_view(ctx) -> ft.View:
 
     body_row = ft.Row(spacing=0, expand=True)
 
-    def build_tree_panel():
+    def _populate_entry_list(entries_to_show, tag_map_data):
+        entry_list.controls.clear()
+        for entry in entries_to_show:
+            t = tag_map_data.get(entry.id, []) if entry.id else None
+            entry_list.controls.append(_build_article_card(entry, page, t))
+        if not entries_to_show:
+            if is_searching:
+                msg = f"Nenhum resultado para '{search_field.value}'"
+                entry_list.controls.append(_empty_state(msg))
+            elif selected_category_id:
+                entry_list.controls.append(
+                    _empty_state("Nenhum artigo nesta categoria")
+                )
+            else:
+                entry_list.controls.append(_empty_state())
+
+    _populate_entry_list(entries, tag_map)
+
+    def _build_tree_panel():
         if is_mobile:
             return None
         return ft.Container(
             content=_build_category_tree(tree, select_category, selected_category_id),
             width=TREE_WIDTH,
             bgcolor=ft.Colors.GREY_50,
-            border=ft.border.only(right=ft.border.BorderSide(1, ft.Colors.GREY_200)),
+            border=ft.border.only(  # type: ignore[attr-defined]
+                right=ft.border.BorderSide(1, ft.Colors.GREY_200)
+            ),
         )
 
-    def build_mobile_menu_button():
+    def _build_mobile_menu():
         if not is_mobile:
             return None
         items = [
-            ft.PopupMenuItem(text=RECENTES_LABEL, on_click=lambda _: select_category(None))
-        ]
-        for node in tree:
-            _add_tree_popup_items(items, node, 0)
-        return ft.PopupMenuButton(icon=ft.Icons.MENU, items=items)
-
-    def _add_tree_popup_items(items: list, node: dict, depth: int):
-        prefix = "  " * depth
-        items.append(
-            ft.PopupMenuItem(
-                text=f"{prefix}📂 {node['name']}",
-                on_click=lambda _, nid=node["id"]: select_category(nid),
+            ft.PopupMenuItem(  # type: ignore[call-arg]
+                text=RECENTES_LABEL,
+                on_click=lambda _: select_category(None),
             )
-        )
-        for child in node.get("children", []):
-            _add_tree_popup_items(items, child, depth + 1)
+        ]
+
+        def add_nodes(nodes, depth=0):
+            for node in nodes:
+                prefix = "  " * depth
+                items.append(
+                    ft.PopupMenuItem(  # type: ignore[call-arg]
+                        text=f"{prefix}📂 {node['name']}",
+                        on_click=lambda _, nid=node["id"]: select_category(nid),
+                    )
+                )
+                if node.get("children"):
+                    add_nodes(node["children"], depth + 1)
+
+        add_nodes(tree)
+        return ft.PopupMenuButton(icon=ft.Icons.MENU, items=items)
 
     def _build_body_controls():
         controls: list[ft.Control] = []
-        tree_panel = build_tree_panel()
+        tree_panel = _build_tree_panel()
         if tree_panel:
             controls.append(tree_panel)
         controls.append(ft.Container(content=entry_list, expand=True))
@@ -268,13 +277,14 @@ async def explore_view(ctx) -> ft.View:
     async def refresh_entries():
         async with ctx.new_session() as s:
             fresh = await list_recent(
-                s, user_id,
+                s,
+                user_id,
                 category_id=selected_category_id,
                 tags=list(selected_tags) if selected_tags else None,
                 limit=50,
             )
             tm = await _load_entry_tags(s, fresh)
-        populate_entry_list(fresh, tm)
+        _populate_entry_list(fresh, tm)
         page.update()
 
     def select_category(cat_id: int | None):
@@ -282,7 +292,7 @@ async def explore_view(ctx) -> ft.View:
         selected_category_id = cat_id
         is_searching = False
         search_field.value = ""
-        asyncio.create_task(refresh_entries())
+        asyncio.create_task(refresh_entries())  # noqa: RUF006
 
     async def _do_search():
         nonlocal is_searching
@@ -292,16 +302,18 @@ async def explore_view(ctx) -> ft.View:
             await refresh_entries()
             return
         is_searching = True
-        tag_filter = list(selected_tags)[0] if len(selected_tags) == 1 else None
+        tag_filter = next(iter(selected_tags)) if len(selected_tags) == 1 else None
         async with ctx.new_session() as s:
             results = await search_entries(
-                s, query, user_id,
+                s,
+                query,
+                user_id,
                 category_id=selected_category_id,
                 tag=tag_filter,
                 limit=50,
             )
             tm = await _load_entry_tags(s, results)
-        populate_entry_list(results, tm)
+        _populate_entry_list(results, tm)
         page.update()
 
     def toggle_tag(tag: str):
@@ -315,7 +327,7 @@ async def explore_view(ctx) -> ft.View:
             tag_drawer_container.visible = False
             body_row.controls = _build_body_controls()
             page.close_bottom_sheet()
-        asyncio.create_task(refresh_entries())
+        asyncio.create_task(refresh_entries())  # noqa: RUF006
 
     def clear_tags():
         selected_tags.clear()
@@ -323,7 +335,7 @@ async def explore_view(ctx) -> ft.View:
         _refresh_drawer_content()
         tag_drawer_container.visible = False
         body_row.controls = _build_body_controls()
-        asyncio.create_task(refresh_entries())
+        asyncio.create_task(refresh_entries())  # noqa: RUF006
 
     def toggle_tags_drawer():
         if is_mobile:
@@ -340,21 +352,26 @@ async def explore_view(ctx) -> ft.View:
             sheet_controls.append(ft.Text("Nenhuma tag", size=14, color=ft.Colors.GREY))
         else:
             sheet_controls.extend(
-                _build_tag_drawer_content(tag_counts, selected_tags, toggle_tag, clear_tags)
+                _build_tag_drawer_content(
+                    tag_counts, selected_tags, toggle_tag, clear_tags
+                )
             )
         sheet = ft.BottomSheet(
             content=ft.Container(
-                content=ft.Column(controls=sheet_controls, scroll=ft.ScrollMode.AUTO,
-                                   spacing=2),
+                content=ft.Column(
+                    controls=sheet_controls,
+                    scroll=ft.ScrollMode.AUTO,
+                    spacing=2,
+                ),
                 padding=ft.Padding.all(16),
             ),
             open=True,
         )
         page.open(sheet)
 
-    mobile_menu = build_mobile_menu_button()
+    mobile_menu = _build_mobile_menu()
 
-    view = ft.View(
+    return ft.View(
         route="/",
         controls=[
             ft.AppBar(
@@ -373,4 +390,3 @@ async def explore_view(ctx) -> ft.View:
             body_row,
         ],
     )
-    return view

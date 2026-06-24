@@ -66,11 +66,9 @@ async def remove_tag(session, entry_id: int, tag: str, user_id: int) -> None:
         await session.commit()
 
 
-async def get_distinct_tags_with_counts(
-    session, user_id: int
-) -> list[tuple[str, int]]:
+async def get_distinct_tags_with_counts(session, user_id: int) -> list[tuple[str, int]]:
     result = await session.execute(
-        select(EntryTag.tag, func.count(EntryTag.entry_id))
+        select(EntryTag.tag, func.count(EntryTag.entry_id))  # type: ignore[arg-type]
         .where(EntryTag.user_id == user_id)
         .group_by(EntryTag.tag)
         .order_by(EntryTag.tag)

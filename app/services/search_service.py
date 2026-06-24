@@ -28,27 +28,33 @@ async def search_entries(  # noqa: PLR0913
         params["category_id"] = category_id
 
     if tag is not None and tag.strip():
-        conditions.append("EXISTS (SELECT 1 FROM entry_tags et WHERE et.entry_id = e.id AND et.tag = :tag)")
+        conditions.append(
+            "EXISTS ("
+            "SELECT 1 FROM entry_tags et "
+            "WHERE et.entry_id = e.id AND et.tag = :tag"
+            ")"
+        )
         params["tag"] = tag.strip().lower()
 
     where_clause = " AND ".join(conditions)
 
-    sql = text(f"""
-        SELECT e.id, e.feed, e.user_id, e.title, e.link, e.updated, e.author,
-               e.published, e.summary, e.content, e.enclosures, e.original_feed,
-               e.data_hash, e.data_hash_changed, e.read, e.read_modified,
-               e.important, e.important_modified, e.added_by, e.last_updated,
-               e.first_updated, e.first_updated_epoch, e.feed_order,
-               ts_rank(e.search_vector, q) AS rank,
-               ts_headline('simple', coalesce(e.summary, e.content, ''), q,
-                           'MaxWords=40, MinWords=20, StartSel=<b>, StopSel=</b>') AS snippet
-        FROM entries e
-        LEFT JOIN feeds f ON e.feed = f.url,
-             plainto_tsquery('simple', :query) AS q
-        WHERE {where_clause}
-        ORDER BY rank DESC
-        LIMIT :limit
-    """)
+    sql = text(  # nosec B608
+        "SELECT e.id, e.feed, e.user_id, e.title, e.link, e.updated, e.author, "
+        "e.published, e.summary, e.content, e.enclosures, e.original_feed, "
+        "e.data_hash, e.data_hash_changed, e.read, e.read_modified, "
+        "e.important, e.important_modified, e.added_by, e.last_updated, "
+        "e.first_updated, e.first_updated_epoch, e.feed_order, "
+        "ts_rank(e.search_vector, q) AS rank, "
+        "ts_headline('simple', coalesce(e.summary, e.content, ''), "
+        "q, 'MaxWords=40, MinWords=20, StartSel=<b>, StopSel=</b>'"
+        ") AS snippet "
+        "FROM entries e "
+        "LEFT JOIN feeds f ON e.feed = f.url, "
+        "plainto_tsquery('simple', :query) AS q "
+        "WHERE " + where_clause + " "
+        "ORDER BY rank DESC "
+        "LIMIT :limit"
+    )
 
     result = await session.execute(sql, params)
     rows = result.fetchall()

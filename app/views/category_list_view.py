@@ -218,9 +218,7 @@ def _build_create_dialog(page, refresh_cb, ctx):  # noqa: C901
         await refresh_cb()
         await name_field.focus()
 
-    name_field.on_submit = lambda e: asyncio.create_task(
-        parent_dropdown.focus()
-    )
+    name_field.on_submit = lambda e: asyncio.create_task(parent_dropdown.focus())
 
     def _cancel(e):
         dlg.open = False

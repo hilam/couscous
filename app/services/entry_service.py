@@ -11,14 +11,17 @@ async def list_recent(  # noqa: PLR0913
     tags: list[str] | None = None,
     limit: int = 50,
 ):
-    """List recent entries across all feeds for a user, with optional category and tag filters."""
+    """List recent entries across all feeds for a user.
+
+    Supports optional category and tag filters.
+    """
     query = select(Entry).where(Entry.user_id == user_id)
 
     if category_id is not None:
         feed_ids = select(Feed.url).where(
             Feed.user_id == user_id, Feed.category_id == category_id
         )
-        query = query.where(Entry.feed.in_(feed_ids))
+        query = query.where(Entry.feed.in_(feed_ids))  # type: ignore[attr-defined]
 
     if tags:
         for tag in tags:
