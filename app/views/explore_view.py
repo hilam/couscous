@@ -179,7 +179,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
         width=TAGS_DRAWER_WIDTH,
         visible=False,
         bgcolor=ft.Colors.GREY_50,
-        border=ft.border.only(  # type: ignore[attr-defined]
+        border=ft.Border(
             left=ft.border.BorderSide(1, ft.Colors.GREY_200)
         ),
     )
@@ -232,7 +232,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
             content=_build_category_tree(tree, select_category, selected_category_id),
             width=TREE_WIDTH,
             bgcolor=ft.Colors.GREY_50,
-            border=ft.border.only(  # type: ignore[attr-defined]
+            border=ft.Border(
                 right=ft.border.BorderSide(1, ft.Colors.GREY_200)
             ),
         )
