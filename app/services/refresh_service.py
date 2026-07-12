@@ -4,18 +4,13 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from time import mktime
-from typing import TYPE_CHECKING
 
 import feedparser
 import httpx
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from database.models.couscous import Entry, Feed
-
-if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @dataclass
@@ -62,9 +57,8 @@ async def refresh_all_feeds(
     semaphore = asyncio.Semaphore(5)
 
     async def _refresh_one(feed: Feed) -> None:
-        async with semaphore:
-            async with AsyncSession(bind=session.bind) as feed_session:
-                await refresh_single_feed(feed_session, feed, client=client)
+        async with semaphore, AsyncSession(bind=session.bind) as feed_session:
+            await refresh_single_feed(feed_session, feed, client=client)
 
     try:
         await asyncio.gather(*(_refresh_one(f) for f in feeds))
