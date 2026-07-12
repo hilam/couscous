@@ -6,7 +6,7 @@ install:
 run:
 	uv run python main.py
 
-run-web:
+run-web: db-up db-migrate-up
 	uv run flet run -w -p 8550
 
 test:
@@ -24,7 +24,7 @@ lint-fix:
 typecheck:
 	uv run mypy
 
-check-all: lint typecheck test security
+check-all: db-up lint typecheck test security
 
 security:
 	uv run bandit -r app/ database/
