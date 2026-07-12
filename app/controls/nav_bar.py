@@ -6,7 +6,7 @@ _DESTINATIONS = [
     ft.NavigationBarDestination(icon=ft.Icons.HOME, label="In\u00edcio"),
     ft.NavigationBarDestination(icon=ft.Icons.RSS_FEED, label="Feeds"),
     ft.NavigationBarDestination(icon=ft.Icons.FOLDER, label="Categorias"),
-    ft.NavigationBarDestination(icon=ft.Icons.INFO, label="Sobre"),
+    ft.NavigationBarDestination(icon=ft.Icons.SETTINGS, label="Config"),
 ]
 
 _ROUTE_INDICES: dict[str, int] = {
