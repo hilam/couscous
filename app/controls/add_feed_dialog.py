@@ -75,7 +75,7 @@ class AddFeedDialog(ft.AlertDialog):
             self.category_dropdown.value = ""
             self.update()
             if self.on_submit:
-                self._task = asyncio.ensure_future(self.on_submit(url, category_id))
+                self._task = asyncio.create_task(self.on_submit(url, category_id))
 
     async def _submit_another(self, e):
         url, category_id = self._do_submit()

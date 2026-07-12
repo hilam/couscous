@@ -51,7 +51,7 @@ async def _error_view(page: ft.Page, message: str) -> ft.View:
                     ft.Text(message, text_align=ft.TextAlign.CENTER),
                     ft.FilledButton(
                         "Voltar ao login",
-                        on_click=lambda _: page.go("/login"),
+                        on_click=lambda _: page.push_route("/login"),
                     ),
                 ],
                 spacing=16,

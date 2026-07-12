@@ -23,4 +23,4 @@ class ConfirmDialog(ft.AlertDialog):
         self.open = False
         self.update()
         if self.on_confirm:
-            self._task = asyncio.ensure_future(self.on_confirm(e))
+            self._task = asyncio.create_task(self.on_confirm(e))

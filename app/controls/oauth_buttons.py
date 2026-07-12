@@ -6,7 +6,7 @@ from app.services import oauth_service
 async def _oauth_click(page: ft.Page, error_text: ft.Text, provider: str):
     try:
         uri, _state = oauth_service.get_authorization_url(page, provider)
-        await page.launch_url(uri)
+        await ft.UrlLauncher().launch_url(uri)
     except ValueError as ex:
         error_text.value = str(ex)
         error_text.visible = True
