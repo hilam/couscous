@@ -175,9 +175,6 @@ async def category_list_view(ctx) -> ft.View:
     )
 
 
-
-
-
 def _flatten_tree_for_dropdown(tree, options, level):
     for node in tree:
         prefix = "  " * level + "\u2514 " if level > 0 else ""

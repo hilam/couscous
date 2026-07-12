@@ -108,9 +108,7 @@ class CreateCategoryDialog(ft.AlertDialog):
         from app.views.category_list_view import _flatten_tree_for_dropdown
 
         async with self._ctx.open_session() as s:
-            cats, _, _ = await get_categories_with_counts(
-                s, self._ctx.state.user.id
-            )
+            cats, _, _ = await get_categories_with_counts(s, self._ctx.state.user.id)
 
         tree = build_category_tree(cats) if cats else []
         options = [ft.dropdown.Option("0", "Nenhuma (raiz)")]
@@ -131,13 +129,9 @@ class CreateCategoryDialog(ft.AlertDialog):
         parent_id = int(raw) if raw and raw != "0" else None
         async with self._ctx.open_session() as s:
             try:
-                await create_category(
-                    s, self._ctx.state.user.id, name, parent_id
-                )
+                await create_category(s, self._ctx.state.user.id, name, parent_id)
             except ValueError:
-                snack = ft.SnackBar(
-                    content=ft.Text("Categoria já existe neste nível")
-                )
+                snack = ft.SnackBar(content=ft.Text("Categoria já existe neste nível"))
                 self._page.overlay.append(snack)
                 snack.open = True
                 self._page.update()
