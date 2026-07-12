@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sqlalchemy import func
 from sqlmodel import select
 
@@ -63,6 +65,65 @@ async def get_categories_with_counts(
     }
 
     return cats, feed_counts, unread_counts
+
+
+def build_category_tree(
+    cats: list[Category],
+    feed_counts: dict[int, int] | None = None,
+    unread_counts: dict[int, int] | None = None,
+) -> list[dict]:
+    """Build a nested category tree from flat category data.
+
+    Returns a list of root-level dicts, each with keys:
+    id, name, parent_id, children, feed_count, total_feed_count, unread_count.
+
+    total_feed_count includes feeds from descendant categories (rollup).
+    unread_count includes unread entries from descendant categories (rollup).
+    """
+    fc = feed_counts or {}
+    ur = unread_counts or {}
+
+    cat_map: dict[int, dict] = {}
+    for c in cats:
+        cid = c.id
+        if cid is None:
+            continue
+        cat_map[cid] = {
+            "id": cid,
+            "name": c.name,
+            "parent_id": c.parent_id,
+            "children": [],
+            "feed_count": fc.get(cid, 0),
+            "total_feed_count": 0,
+            "unread_count": 0,
+        }
+
+    tree: list[dict] = []
+    for c in cats:
+        cid = c.id
+        if cid is None:
+            continue
+        node = cat_map[cid]
+        if c.parent_id and c.parent_id in cat_map:
+            cat_map[c.parent_id]["children"].append(node)
+        else:
+            tree.append(node)
+
+    def _rollup(node: dict) -> tuple[int, int]:
+        fc_node = node["feed_count"]
+        ur_node = ur.get(node["id"], 0)
+        for child in node["children"]:
+            child_fc, child_ur = _rollup(child)
+            fc_node += child_fc
+            ur_node += child_ur
+        node["total_feed_count"] = fc_node
+        node["unread_count"] = ur_node
+        return fc_node, ur_node
+
+    for root in tree:
+        _rollup(root)
+
+    return tree
 
 
 async def _collect_descendant_ids(session, user_id: int, category_id: int) -> list[int]:
