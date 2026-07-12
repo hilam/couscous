@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+import flet as ft
 from sqlmodel import select, update as sqlmodel_update
 
 from database.models.couscous import User
@@ -37,3 +38,31 @@ async def save_settings(
         stmt = sqlmodel_update(User).where(User.id == user_id).values(**values)
         await session.execute(stmt)
         await session.commit()
+
+
+def apply_settings_to_page(page: ft.Page, theme_mode: str, font_scale: float) -> None:
+    """Apply theme_mode and font_scale to a Flet page."""
+    page.theme_mode = getattr(ft.ThemeMode, theme_mode.upper())
+
+    t = page.theme or ft.Theme()
+    tt = t.text_theme or ft.TextTheme()
+    _STYLE_ATTRS = [
+        "display_large", "display_medium", "display_small",
+        "headline_large", "headline_medium", "headline_small",
+        "title_large", "title_medium", "title_small",
+        "body_large", "body_medium", "body_small",
+        "label_large", "label_medium", "label_small",
+    ]
+    for attr in _STYLE_ATTRS:
+        style = getattr(tt, attr, None)
+        if style is not None and style.size is not None:
+            kwargs = {}
+            for f in ft.TextStyle.__dataclass_fields__:
+                v = getattr(style, f, None)
+                if v is not None:
+                    kwargs[f] = v
+            kwargs["size"] = round(style.size * font_scale, 1)
+            setattr(tt, attr, ft.TextStyle(**kwargs))
+    t.text_theme = tt
+    page.theme = t
+    page.update()

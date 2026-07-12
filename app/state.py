@@ -11,3 +11,5 @@ class State:
         self.user: User | None = None
         self.active_feed_url: str | None = None
         self.loading: bool = False
+        self.theme_mode: str = "light"
+        self.font_scale: float = 1.0

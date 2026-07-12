@@ -3,6 +3,7 @@ import asyncio
 import flet as ft
 
 from app.controls.oauth_buttons import get_oauth_buttons
+from app.services.settings_service import apply_settings_to_page
 from app.services.user_service import register
 
 
@@ -30,6 +31,7 @@ async def register_view(ctx) -> ft.View:
 
                 if user:
                     state.user = user
+                    apply_settings_to_page(page, state.theme_mode, state.font_scale)
                     await page.push_route("/")
                 else:
                     error_text.value = "Nome de usu\u00e1rio j\u00e1 existe"

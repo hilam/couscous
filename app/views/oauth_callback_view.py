@@ -3,6 +3,7 @@ from urllib.parse import parse_qs, urlparse
 import flet as ft
 
 from app.services import oauth_service, user_service
+from app.services.settings_service import apply_settings_to_page, get_settings
 from app.views.explore_view import explore_view
 
 
@@ -29,6 +30,10 @@ async def oauth_callback_view(ctx) -> ft.View:
         name=user_info["name"],
     )
     ctx.state.user = user
+    settings = await get_settings(ctx.session, user.id)
+    ctx.state.theme_mode = settings.theme_mode
+    ctx.state.font_scale = settings.font_scale
+    apply_settings_to_page(page, settings.theme_mode, settings.font_scale)
 
     return await explore_view(ctx)
 
