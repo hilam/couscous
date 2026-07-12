@@ -4,6 +4,7 @@ import flet as ft
 
 from app.controls.confirm_dialog import ConfirmDialog
 from app.services.category_service import (
+    build_category_tree,
     create_category,
     delete_category,
     get_categories_with_counts,
@@ -58,7 +59,7 @@ async def category_list_view(ctx) -> ft.View:
             cats, feed_counts, unread_counts = await get_categories_with_counts(
                 s, user_id
             )
-            tree = _build_tree(cats, feed_counts, unread_counts)
+            tree = build_category_tree(cats, feed_counts, unread_counts)
         if not tree:
             tree_view.controls.append(
                 ft.Container(
@@ -123,7 +124,7 @@ async def category_list_view(ctx) -> ft.View:
     cats, feed_counts, unread_counts = await get_categories_with_counts(
         session, user_id
     )
-    initial_tree = _build_tree(cats, feed_counts, unread_counts) if cats else []
+    initial_tree = build_category_tree(cats, feed_counts, unread_counts) if cats else []
     if not initial_tree:
         tree_view.controls.append(
             ft.Container(
@@ -183,7 +184,7 @@ def _build_create_dialog(page, refresh_cb, ctx):  # noqa: C901
             cats, _, _ = await get_categories_with_counts(s, ctx.state.user.id)
         options = [ft.dropdown.Option("0", "Nenhuma (raiz)")]
         _flatten_tree_for_dropdown(
-            _build_tree(cats, {}, {}) if cats else [], options, 0
+            build_category_tree(cats, {}, {}) if cats else [], options, 0
         )
         parent_dropdown.options = options
         parent_dropdown.value = "0"
@@ -293,44 +294,7 @@ def _build_rename_dialog(node, page, refresh_cb, ctx):
     return dlg
 
 
-def _build_tree(
-    cats: list, feed_counts: dict[int, int], unread_counts: dict[int, int]
-) -> list[dict]:
-    cat_map: dict[int, dict] = {}
-    for c in cats:
-        cat_map[c.id] = {
-            "id": c.id,
-            "name": c.name,
-            "parent_id": c.parent_id,
-            "children": [],
-            "feed_count": feed_counts.get(c.id, 0),
-            "total_feed_count": 0,
-            "unread_count": 0,
-        }
 
-    tree: list[dict] = []
-    for c in cats:
-        node = cat_map[c.id]
-        if c.parent_id and c.parent_id in cat_map:
-            cat_map[c.parent_id]["children"].append(node)
-        else:
-            tree.append(node)
-
-    def _rollup(node: dict) -> tuple[int, int]:
-        fc = node["feed_count"]
-        ur = unread_counts.get(node["id"], 0)
-        for child in node["children"]:
-            child_fc, child_ur = _rollup(child)
-            fc += child_fc
-            ur += child_ur
-        node["total_feed_count"] = fc
-        node["unread_count"] = ur
-        return fc, ur
-
-    for root in tree:
-        _rollup(root)
-
-    return tree
 
 
 def _flatten_tree_for_dropdown(tree, options, level):
