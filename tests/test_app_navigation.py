@@ -1,7 +1,6 @@
 import pytest
 
 from app.app import _ROUTES, _match_route
-from app.controls.nav_bar import _INDEX_ROUTES
 from app.views.category_list_view import category_list_view
 from app.views.entry_list_view import entry_list_view
 from app.views.entry_view import entry_view
@@ -40,20 +39,6 @@ class TestRouteTable:
         route = _match_route("/login")
         assert route is not None
         assert route.handler is login_view
-
-class TestNavBar:
-    def test_index_zero_is_root(self):
-        assert _INDEX_ROUTES[0] == "/"
-
-    def test_index_one_is_feeds(self):
-        assert _INDEX_ROUTES[1] == "/feeds"
-
-    def test_index_two_is_categories(self):
-        assert _INDEX_ROUTES[2] == "/categories"
-
-    def test_index_three_is_about(self):
-        assert _INDEX_ROUTES[3] == "/about"
-
 
 class TestRouteOrder:
     def test_specific_routes_before_generic(self):

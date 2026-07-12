@@ -1,10 +1,12 @@
 import os
+from collections.abc import AsyncGenerator
 
 import pytest
 import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
+from unittest.mock import AsyncMock, MagicMock
 
 host = os.getenv("COUSCOUS_DATABASE_HOST", "localhost")
 port = os.getenv("COUSCOUS_DATABASE_PORT", "5432")
@@ -39,12 +41,49 @@ async def _add_search_vector_column(conn):
     """))
 
 
-from unittest.mock import AsyncMock, MagicMock
+# --- session-scoped: create tables once, drop once at the end ---
+
+
+@pytest_asyncio.fixture(scope="session")
+async def _db_tables():
+    """Create all tables once for the entire test session."""
+    engine = create_async_engine(DB_URL, echo=False)
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
+    async with engine.begin() as conn:
+        await _add_search_vector_column(conn)
+    yield
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.drop_all)
+    await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def db_session(_db_tables) -> AsyncGenerator[AsyncSession]:
+    """Function-scoped: each test gets its own engine + session.
+
+    Tables already exist (created once by _db_tables).
+    Cleans up by deleting all rows between tests — no DDL overhead.
+    """
+    engine = create_async_engine(DB_URL, echo=False)
+    async_session = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
+    async with async_session() as session:
+        yield session
+        # Clean up: delete all rows from all tables (fast, no DDL).
+        for table in reversed(SQLModel.metadata.sorted_tables):
+            await session.execute(table.delete())
+        await session.commit()
+    await engine.dispose()
+
+
+# --- mock fixtures (no DB) ---
 
 
 @pytest.fixture
 def page_context():
-    """Fixture que cria um PageContext com session e _session_factory mockados."""
+    """PageContext com session e _session_factory mockados."""
     from app.context import PageContext
     from app.state import State
 
@@ -53,13 +92,12 @@ def page_context():
     session = AsyncMock()
     session_factory = MagicMock()
 
-    ctx = PageContext(
+    return PageContext(
         page=page,
         state=state,
         session=session,
         _session_factory=session_factory,
     )
-    return ctx
 
 
 @pytest.fixture
@@ -70,20 +108,3 @@ def mock_oauth_config(monkeypatch):
     monkeypatch.setattr(oauth_svc, "GOOGLE_CLIENT_SECRET", "test-google-secret")
     monkeypatch.setattr(oauth_svc, "GITHUB_CLIENT_ID", "test-github-id")
     monkeypatch.setattr(oauth_svc, "GITHUB_CLIENT_SECRET", "test-github-secret")
-
-
-@pytest_asyncio.fixture
-async def db_session():
-    engine = create_async_engine(DB_URL, echo=False)
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
-    async with engine.begin() as conn:
-        await _add_search_vector_column(conn)
-    async_session = async_sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
-    async with async_session() as session:
-        yield session
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.drop_all)
-    await engine.dispose()

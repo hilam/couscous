@@ -13,49 +13,20 @@ from app.services.entry_service import (
 from app.services.category_service import create_category
 from app.services.feed_service import update_feed_category
 from app.services.tag_service import assign_tag
-from app.services.user_service import register
-from database.models.couscous import Feed, Entry
-
-
-async def _make_user(db_session):
-    user = await register(db_session, "testuser", "pass")
-    assert user.id is not None
-    return user
-
-
-async def _create_feed_and_entry(db_session, user_id, url="https://example.com/rss"):
-    feed = Feed(url=url, user_id=user_id)
-    db_session.add(feed)
-    await db_session.commit()
-
-    entry = Entry(
-        feed=url,
-        user_id=user_id,
-        title="Test Article",
-        link="https://example.com/article1",
-        published=datetime.now(),
-        last_updated=datetime.now(),
-        first_updated=datetime.now(),
-        first_updated_epoch=datetime.now(),
-        added_by="test",
-        feed_order=0,
-    )
-    db_session.add(entry)
-    await db_session.commit()
-    return feed, entry
+from tests.test_factory import make_user, create_feed_and_entry
 
 
 @pytest.mark.asyncio
 async def test_list_entries_empty(db_session):
-    user = await _make_user(db_session)
+    user = await make_user(db_session)
     entries = await list_entries(db_session, "https://example.com/rss", user_id=user.id)
     assert entries == []
 
 
 @pytest.mark.asyncio
 async def test_list_entries(db_session):
-    user = await _make_user(db_session)
-    await _create_feed_and_entry(db_session, user.id)
+    user = await make_user(db_session)
+    await create_feed_and_entry(db_session, user.id)
 
     entries = await list_entries(db_session, "https://example.com/rss", user_id=user.id)
     assert len(entries) == 1
@@ -64,8 +35,8 @@ async def test_list_entries(db_session):
 
 @pytest.mark.asyncio
 async def test_get_entry(db_session):
-    user = await _make_user(db_session)
-    _, entry = await _create_feed_and_entry(db_session, user.id)
+    user = await make_user(db_session)
+    _, entry = await create_feed_and_entry(db_session, user.id)
 
     assert entry.id is not None
     found = await get_entry(db_session, entry.id)
@@ -75,8 +46,8 @@ async def test_get_entry(db_session):
 
 @pytest.mark.asyncio
 async def test_mark_read(db_session):
-    user = await _make_user(db_session)
-    _, entry = await _create_feed_and_entry(db_session, user.id)
+    user = await make_user(db_session)
+    _, entry = await create_feed_and_entry(db_session, user.id)
 
     assert entry.id is not None
     await mark_read(db_session, entry.id, user.id)
@@ -86,8 +57,8 @@ async def test_mark_read(db_session):
 
 @pytest.mark.asyncio
 async def test_mark_important(db_session):
-    user = await _make_user(db_session)
-    _, entry = await _create_feed_and_entry(db_session, user.id)
+    user = await make_user(db_session)
+    _, entry = await create_feed_and_entry(db_session, user.id)
 
     assert entry.id is not None
     await mark_important(db_session, entry.id, user.id)
@@ -97,9 +68,9 @@ async def test_mark_important(db_session):
 
 @pytest.mark.asyncio
 async def test_list_entries_unread_only(db_session):
-    user = await _make_user(db_session)
-    _, e1 = await _create_feed_and_entry(db_session, user.id)
-    await _create_feed_and_entry(db_session, user.id, url="https://example.com/rss2")
+    user = await make_user(db_session)
+    _, e1 = await create_feed_and_entry(db_session, user.id)
+    await create_feed_and_entry(db_session, user.id, url="https://example.com/rss2")
 
     assert e1.id is not None
     await mark_read(db_session, e1.id, user.id)
@@ -117,9 +88,9 @@ async def test_list_entries_unread_only(db_session):
 
 @pytest.mark.asyncio
 async def test_list_entries_important_only(db_session):
-    user = await _make_user(db_session)
-    _, e1 = await _create_feed_and_entry(db_session, user.id)
-    await _create_feed_and_entry(db_session, user.id, url="https://example.com/rss2")
+    user = await make_user(db_session)
+    _, e1 = await create_feed_and_entry(db_session, user.id)
+    await create_feed_and_entry(db_session, user.id, url="https://example.com/rss2")
 
     assert e1.id is not None
     await mark_important(db_session, e1.id, user.id)
@@ -132,9 +103,9 @@ async def test_list_entries_important_only(db_session):
 
 @pytest.mark.asyncio
 async def test_get_unread_count(db_session):
-    user = await _make_user(db_session)
-    _, e1 = await _create_feed_and_entry(db_session, user.id)
-    await _create_feed_and_entry(db_session, user.id, url="https://example.com/rss2")
+    user = await make_user(db_session)
+    _, e1 = await create_feed_and_entry(db_session, user.id)
+    await create_feed_and_entry(db_session, user.id, url="https://example.com/rss2")
 
     count = await get_unread_count(db_session, user.id)
     assert count == 2
@@ -148,9 +119,9 @@ async def test_get_unread_count(db_session):
 
 @pytest.mark.asyncio
 async def test_list_entries_tag_filter(db_session):
-    user = await _make_user(db_session)
-    _, e1 = await _create_feed_and_entry(db_session, user.id)
-    _, e2 = await _create_feed_and_entry(
+    user = await make_user(db_session)
+    _, e1 = await create_feed_and_entry(db_session, user.id)
+    _, e2 = await create_feed_and_entry(
         db_session, user.id, url="https://example.com/rss2"
     )
 
@@ -168,9 +139,9 @@ async def test_list_entries_tag_filter(db_session):
 
 @pytest.mark.asyncio
 async def test_list_entries_tag_none_shows_all(db_session):
-    user = await _make_user(db_session)
-    e1_fe, e1 = await _create_feed_and_entry(db_session, user.id)
-    _, e2 = await _create_feed_and_entry(
+    user = await make_user(db_session)
+    e1_fe, e1 = await create_feed_and_entry(db_session, user.id)
+    _, e2 = await create_feed_and_entry(
         db_session, user.id, url="https://example.com/rss2"
     )
 
@@ -186,9 +157,9 @@ async def test_list_entries_tag_none_shows_all(db_session):
 
 @pytest.mark.asyncio
 async def test_list_entries_tag_with_other_filters(db_session):
-    user = await _make_user(db_session)
-    _, e1 = await _create_feed_and_entry(db_session, user.id)
-    _, e2 = await _create_feed_and_entry(
+    user = await make_user(db_session)
+    _, e1 = await create_feed_and_entry(db_session, user.id)
+    _, e2 = await create_feed_and_entry(
         db_session, user.id, url="https://example.com/rss2"
     )
 
@@ -232,8 +203,8 @@ async def test_list_entries_tag_with_other_filters(db_session):
 
 @pytest.mark.asyncio
 async def test_list_entries_tag_no_match(db_session):
-    user = await _make_user(db_session)
-    await _create_feed_and_entry(db_session, user.id)
+    user = await make_user(db_session)
+    await create_feed_and_entry(db_session, user.id)
 
     result = await list_entries(
         db_session, "https://example.com/rss", user_id=user.id, tag="rust"
@@ -243,9 +214,9 @@ async def test_list_entries_tag_no_match(db_session):
 
 @pytest.mark.asyncio
 async def test_list_recent_all_feeds(db_session):
-    user = await _make_user(db_session)
-    _, e1 = await _create_feed_and_entry(db_session, user.id)
-    _, e2 = await _create_feed_and_entry(
+    user = await make_user(db_session)
+    _, e1 = await create_feed_and_entry(db_session, user.id)
+    _, e2 = await create_feed_and_entry(
         db_session, user.id, url="https://example.com/rss2"
     )
 
@@ -255,16 +226,16 @@ async def test_list_recent_all_feeds(db_session):
 
 @pytest.mark.asyncio
 async def test_list_recent_empty(db_session):
-    user = await _make_user(db_session)
+    user = await make_user(db_session)
     recent = await list_recent(db_session, user.id)
     assert recent == []
 
 
 @pytest.mark.asyncio
 async def test_list_recent_by_category(db_session):
-    user = await _make_user(db_session)
-    _, e1 = await _create_feed_and_entry(db_session, user.id)
-    _, e2 = await _create_feed_and_entry(
+    user = await make_user(db_session)
+    _, e1 = await create_feed_and_entry(db_session, user.id)
+    _, e2 = await create_feed_and_entry(
         db_session, user.id, url="https://example.com/rss2"
     )
 
@@ -278,9 +249,9 @@ async def test_list_recent_by_category(db_session):
 
 @pytest.mark.asyncio
 async def test_list_recent_by_tag(db_session):
-    user = await _make_user(db_session)
-    _, e1 = await _create_feed_and_entry(db_session, user.id)
-    _, e2 = await _create_feed_and_entry(
+    user = await make_user(db_session)
+    _, e1 = await create_feed_and_entry(db_session, user.id)
+    _, e2 = await create_feed_and_entry(
         db_session, user.id, url="https://example.com/rss2"
     )
 
@@ -294,12 +265,12 @@ async def test_list_recent_by_tag(db_session):
 
 @pytest.mark.asyncio
 async def test_list_recent_by_category_and_tag(db_session):
-    user = await _make_user(db_session)
-    _, e1 = await _create_feed_and_entry(db_session, user.id)
-    _, e2 = await _create_feed_and_entry(
+    user = await make_user(db_session)
+    _, e1 = await create_feed_and_entry(db_session, user.id)
+    _, e2 = await create_feed_and_entry(
         db_session, user.id, url="https://example.com/rss2"
     )
-    _, e3 = await _create_feed_and_entry(
+    _, e3 = await create_feed_and_entry(
         db_session, user.id, url="https://example.com/rss3"
     )
 
@@ -319,9 +290,9 @@ async def test_list_recent_by_category_and_tag(db_session):
 
 @pytest.mark.asyncio
 async def test_list_recent_limit(db_session):
-    user = await _make_user(db_session)
+    user = await make_user(db_session)
     for i in range(5):
-        await _create_feed_and_entry(
+        await create_feed_and_entry(
             db_session, user.id, url=f"https://example.com/rss{i}"
         )
 

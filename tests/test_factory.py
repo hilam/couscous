@@ -130,3 +130,10 @@ async def make_entry(session, feed_url="https://example.com/rss", user_id=1, **o
     session.add(entry)
     await session.commit()
     return entry
+
+
+async def create_feed_and_entry(session, user_id, url="https://example.com/rss", **overrides):
+    """Create a feed + entry in one call. Returns (feed, entry)."""
+    feed = await make_feed(session, url, user_id)
+    entry = await make_entry(session, feed_url=url, user_id=user_id, **overrides)
+    return feed, entry

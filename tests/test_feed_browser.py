@@ -1,6 +1,4 @@
 """Testes para feed_browser.py — operações do ExploreState."""
-from datetime import datetime, timezone
-
 import pytest
 
 from app.services.category_service import create_category
@@ -14,26 +12,7 @@ from app.services.feed_browser import (
 )
 from app.services.feed_service import update_feed_category
 from app.services.tag_service import assign_tag
-from tests.test_factory import make_entry, make_feed, make_user
-
-
-async def _make_user(db_session):
-    return await make_user(db_session, "testuser", "pass")
-
-
-async def _create_feed_and_entry(db_session, user_id, url="https://example.com/rss", **overrides):
-    feed = await make_feed(db_session, url, user_id)
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
-    kwargs = dict(
-        feed_url=url,
-        user_id=user_id,
-        title="Test Article",
-        link="https://example.com/article1",
-        published=now,
-    )
-    kwargs.update(overrides)
-    entry = await make_entry(db_session, **kwargs)
-    return feed, entry
+from tests.test_factory import make_user, create_feed_and_entry
 
 
 # ── load() ─────────────────────────────────────────────────────────────────
@@ -41,7 +20,7 @@ async def _create_feed_and_entry(db_session, user_id, url="https://example.com/r
 
 @pytest.mark.asyncio
 async def test_load_empty(db_session):
-    user = await _make_user(db_session)
+    user = await make_user(db_session)
     state = await load(db_session, user.id)
     assert state.entries == []
     assert state.tree == []
@@ -53,9 +32,9 @@ async def test_load_empty(db_session):
 
 @pytest.mark.asyncio
 async def test_load_with_entries(db_session):
-    user = await _make_user(db_session)
-    await _create_feed_and_entry(db_session, user.id, "https://example.com/rss1")
-    await _create_feed_and_entry(db_session, user.id, "https://example.com/rss2")
+    user = await make_user(db_session)
+    await create_feed_and_entry(db_session, user.id, "https://example.com/rss1")
+    await create_feed_and_entry(db_session, user.id, "https://example.com/rss2")
 
     state = await load(db_session, user.id)
     assert len(state.entries) == 2
@@ -64,12 +43,12 @@ async def test_load_with_entries(db_session):
 
 @pytest.mark.asyncio
 async def test_load_with_categories(db_session):
-    user = await _make_user(db_session)
+    user = await make_user(db_session)
     parent = await create_category(db_session, user.id, "Pais")
     child = await create_category(db_session, user.id, "Filha", parent_id=parent.id)
 
-    feed1, _ = await _create_feed_and_entry(db_session, user.id, "https://example.com/rss1")
-    feed2, _ = await _create_feed_and_entry(db_session, user.id, "https://example.com/rss2")
+    feed1, _ = await create_feed_and_entry(db_session, user.id, "https://example.com/rss1")
+    feed2, _ = await create_feed_and_entry(db_session, user.id, "https://example.com/rss2")
     await update_feed_category(db_session, user.id, feed1.url, parent.id)
     await update_feed_category(db_session, user.id, feed2.url, child.id)
 
@@ -86,12 +65,12 @@ async def test_load_with_categories(db_session):
 
 @pytest.mark.asyncio
 async def test_select_category_filters_entries(db_session):
-    user = await _make_user(db_session)
+    user = await make_user(db_session)
     cat_a = await create_category(db_session, user.id, "CatA")
     cat_b = await create_category(db_session, user.id, "CatB")
 
-    feed_a, _ = await _create_feed_and_entry(db_session, user.id, "https://example.com/a")
-    feed_b, _ = await _create_feed_and_entry(db_session, user.id, "https://example.com/b")
+    feed_a, _ = await create_feed_and_entry(db_session, user.id, "https://example.com/a")
+    feed_b, _ = await create_feed_and_entry(db_session, user.id, "https://example.com/b")
     await update_feed_category(db_session, user.id, feed_a.url, cat_a.id)
     await update_feed_category(db_session, user.id, feed_b.url, cat_b.id)
 
@@ -105,12 +84,12 @@ async def test_select_category_filters_entries(db_session):
 
 @pytest.mark.asyncio
 async def test_select_category_with_subcategories(db_session):
-    user = await _make_user(db_session)
+    user = await make_user(db_session)
     parent = await create_category(db_session, user.id, "Parent")
     child = await create_category(db_session, user.id, "Child", parent_id=parent.id)
 
-    feed_p, _ = await _create_feed_and_entry(db_session, user.id, "https://example.com/p")
-    feed_c, _ = await _create_feed_and_entry(db_session, user.id, "https://example.com/c")
+    feed_p, _ = await create_feed_and_entry(db_session, user.id, "https://example.com/p")
+    feed_c, _ = await create_feed_and_entry(db_session, user.id, "https://example.com/c")
     await update_feed_category(db_session, user.id, feed_p.url, parent.id)
     await update_feed_category(db_session, user.id, feed_c.url, child.id)
 
@@ -121,11 +100,11 @@ async def test_select_category_with_subcategories(db_session):
 
 @pytest.mark.asyncio
 async def test_select_category_expands_and_collapses(db_session):
-    user = await _make_user(db_session)
+    user = await make_user(db_session)
     parent = await create_category(db_session, user.id, "Parent")
     child = await create_category(db_session, user.id, "Child", parent_id=parent.id)
 
-    feed, _ = await _create_feed_and_entry(db_session, user.id, "https://example.com/p")
+    feed, _ = await create_feed_and_entry(db_session, user.id, "https://example.com/p")
     await update_feed_category(db_session, user.id, feed.url, child.id)
 
     state = await load(db_session, user.id)
@@ -141,8 +120,8 @@ async def test_select_category_expands_and_collapses(db_session):
 
 @pytest.mark.asyncio
 async def test_toggle_tag_adds_and_removes(db_session):
-    user = await _make_user(db_session)
-    feed, entry = await _create_feed_and_entry(db_session, user.id)
+    user = await make_user(db_session)
+    feed, entry = await create_feed_and_entry(db_session, user.id)
     await assign_tag(db_session, entry.id, "python", user.id)
 
     state = await load(db_session, user.id)
@@ -157,9 +136,9 @@ async def test_toggle_tag_adds_and_removes(db_session):
 
 @pytest.mark.asyncio
 async def test_toggle_tag_filters_entries(db_session):
-    user = await _make_user(db_session)
-    feed1, entry1 = await _create_feed_and_entry(db_session, user.id, "https://example.com/1")
-    feed2, entry2 = await _create_feed_and_entry(db_session, user.id, "https://example.com/2")
+    user = await make_user(db_session)
+    feed1, entry1 = await create_feed_and_entry(db_session, user.id, "https://example.com/1")
+    feed2, entry2 = await create_feed_and_entry(db_session, user.id, "https://example.com/2")
     await assign_tag(db_session, entry1.id, "python", user.id)
 
     state = await load(db_session, user.id)
@@ -171,8 +150,8 @@ async def test_toggle_tag_filters_entries(db_session):
 
 @pytest.mark.asyncio
 async def test_clear_tags_removes_all(db_session):
-    user = await _make_user(db_session)
-    feed, entry = await _create_feed_and_entry(db_session, user.id)
+    user = await make_user(db_session)
+    feed, entry = await create_feed_and_entry(db_session, user.id)
     await assign_tag(db_session, entry.id, "python", user.id)
 
     state = await load(db_session, user.id)
@@ -189,15 +168,15 @@ async def test_clear_tags_removes_all(db_session):
 
 @pytest.mark.asyncio
 async def test_search_finds_entries(db_session):
-    user = await _make_user(db_session)
-    await _create_feed_and_entry(
+    user = await make_user(db_session)
+    await create_feed_and_entry(
         db_session,
         user.id,
         url="https://example.com/ml",
         title="Machine learning basics",
         link="https://example.com/ml",
     )
-    await _create_feed_and_entry(
+    await create_feed_and_entry(
         db_session,
         user.id,
         url="https://example.com/cooking",
@@ -214,8 +193,8 @@ async def test_search_finds_entries(db_session):
 
 @pytest.mark.asyncio
 async def test_search_empty_query_clears(db_session):
-    user = await _make_user(db_session)
-    feed, entry = await _create_feed_and_entry(db_session, user.id)
+    user = await make_user(db_session)
+    feed, entry = await create_feed_and_entry(db_session, user.id)
 
     state = await load(db_session, user.id)
     state = await search(db_session, state, "machine", user.id)

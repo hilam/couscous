@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 import pytest
 
 from app.services.tag_service import (
@@ -11,36 +9,13 @@ from app.services.tag_service import (
     get_tags_for_entry,
     remove_tag,
 )
-from database.models.couscous import Entry, Feed
-from tests.test_factory import make_user
-
-
-async def _make_feed_and_entry(db_session, user_id, url="https://example.com/rss"):
-    feed = Feed(url=url, user_id=user_id)
-    db_session.add(feed)
-    await db_session.commit()
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
-    entry = Entry(
-        feed=url,
-        user_id=user_id,
-        title="Test Article",
-        link="https://example.com/a1",
-        published=now,
-        last_updated=now,
-        first_updated=now,
-        first_updated_epoch=now,
-        added_by="test",
-        feed_order=0,
-    )
-    db_session.add(entry)
-    await db_session.commit()
-    return entry
+from tests.test_factory import make_user, create_feed_and_entry
 
 
 @pytest.mark.asyncio
 async def test_assign_tag(db_session):
     user = await make_user(db_session)
-    entry = await _make_feed_and_entry(db_session, user.id)
+    _, entry = await create_feed_and_entry(db_session, user.id)
 
     await assign_tag(db_session, entry.id, "python", user.id)
 
@@ -51,7 +26,7 @@ async def test_assign_tag(db_session):
 @pytest.mark.asyncio
 async def test_assign_tag_duplicate_ignored(db_session):
     user = await make_user(db_session)
-    entry = await _make_feed_and_entry(db_session, user.id)
+    _, entry = await create_feed_and_entry(db_session, user.id)
 
     await assign_tag(db_session, entry.id, "python", user.id)
     await assign_tag(db_session, entry.id, "python", user.id)
@@ -63,7 +38,7 @@ async def test_assign_tag_duplicate_ignored(db_session):
 @pytest.mark.asyncio
 async def test_assign_tag_trims_and_lowercases(db_session):
     user = await make_user(db_session)
-    entry = await _make_feed_and_entry(db_session, user.id)
+    _, entry = await create_feed_and_entry(db_session, user.id)
 
     await assign_tag(db_session, entry.id, "  Python  ", user.id)
 
@@ -74,7 +49,7 @@ async def test_assign_tag_trims_and_lowercases(db_session):
 @pytest.mark.asyncio
 async def test_assign_tag_empty_ignored(db_session):
     user = await make_user(db_session)
-    entry = await _make_feed_and_entry(db_session, user.id)
+    _, entry = await create_feed_and_entry(db_session, user.id)
 
     await assign_tag(db_session, entry.id, "   ", user.id)
 
@@ -85,7 +60,7 @@ async def test_assign_tag_empty_ignored(db_session):
 @pytest.mark.asyncio
 async def test_remove_tag(db_session):
     user = await make_user(db_session)
-    entry = await _make_feed_and_entry(db_session, user.id)
+    _, entry = await create_feed_and_entry(db_session, user.id)
 
     await assign_tag(db_session, entry.id, "python", user.id)
     await remove_tag(db_session, entry.id, "python", user.id)
@@ -97,7 +72,7 @@ async def test_remove_tag(db_session):
 @pytest.mark.asyncio
 async def test_remove_nonexistent_tag_no_error(db_session):
     user = await make_user(db_session)
-    entry = await _make_feed_and_entry(db_session, user.id)
+    _, entry = await create_feed_and_entry(db_session, user.id)
 
     await remove_tag(db_session, entry.id, "python", user.id)
 
@@ -108,7 +83,7 @@ async def test_remove_nonexistent_tag_no_error(db_session):
 @pytest.mark.asyncio
 async def test_get_tags_for_entry_multiple(db_session):
     user = await make_user(db_session)
-    entry = await _make_feed_and_entry(db_session, user.id)
+    _, entry = await create_feed_and_entry(db_session, user.id)
 
     await assign_tag(db_session, entry.id, "python", user.id)
     await assign_tag(db_session, entry.id, "django", user.id)
@@ -121,7 +96,7 @@ async def test_get_tags_for_entry_multiple(db_session):
 @pytest.mark.asyncio
 async def test_get_tags_for_entry_empty(db_session):
     user = await make_user(db_session)
-    entry = await _make_feed_and_entry(db_session, user.id)
+    _, entry = await create_feed_and_entry(db_session, user.id)
 
     tags = await get_tags_for_entry(db_session, entry.id)
     assert tags == []
@@ -130,8 +105,8 @@ async def test_get_tags_for_entry_empty(db_session):
 @pytest.mark.asyncio
 async def test_get_distinct_tags(db_session):
     user = await make_user(db_session)
-    entry1 = await _make_feed_and_entry(db_session, user.id)
-    entry2 = await _make_feed_and_entry(
+    _, entry1 = await create_feed_and_entry(db_session, user.id)
+    _, entry2 = await create_feed_and_entry(
         db_session, user.id, url="https://example.com/rss2"
     )
 
@@ -154,8 +129,8 @@ async def test_get_distinct_tags_empty(db_session):
 @pytest.mark.asyncio
 async def test_delete_tag(db_session):
     user = await make_user(db_session)
-    entry1 = await _make_feed_and_entry(db_session, user.id)
-    entry2 = await _make_feed_and_entry(
+    _, entry1 = await create_feed_and_entry(db_session, user.id)
+    _, entry2 = await create_feed_and_entry(
         db_session, user.id, url="https://example.com/rss2"
     )
 
@@ -175,8 +150,8 @@ async def test_user_isolation(db_session):
     user1 = await make_user(db_session, "user1", "pass1")
     user2 = await make_user(db_session, "user2", "pass2")
 
-    entry1 = await _make_feed_and_entry(db_session, user1.id)
-    entry2 = await _make_feed_and_entry(
+    _, entry1 = await create_feed_and_entry(db_session, user1.id)
+    _, entry2 = await create_feed_and_entry(
         db_session, user2.id, url="https://example.com/rss2"
     )
 
@@ -198,8 +173,8 @@ async def test_user_isolation(db_session):
 @pytest.mark.asyncio
 async def test_get_distinct_tags_for_feed(db_session):
     user = await make_user(db_session)
-    entry1 = await _make_feed_and_entry(db_session, user.id, url="https://example.com/feed1")
-    entry2 = await _make_feed_and_entry(db_session, user.id, url="https://example.com/feed2")
+    _, entry1 = await create_feed_and_entry(db_session, user.id, url="https://example.com/feed1")
+    _, entry2 = await create_feed_and_entry(db_session, user.id, url="https://example.com/feed2")
 
     await assign_tag(db_session, entry1.id, "python", user.id)
     await assign_tag(db_session, entry1.id, "django", user.id)
@@ -218,7 +193,7 @@ async def test_get_distinct_tags_for_feed(db_session):
 @pytest.mark.asyncio
 async def test_get_distinct_tags_for_feed_empty(db_session):
     user = await make_user(db_session)
-    await _make_feed_and_entry(db_session, user.id, url="https://example.com/feed1")
+    _, entry = await create_feed_and_entry(db_session, user.id, url="https://example.com/feed1")
 
     tags = await get_distinct_tags_for_feed(
         db_session, "https://example.com/feed1", user.id
@@ -229,8 +204,8 @@ async def test_get_distinct_tags_for_feed_empty(db_session):
 @pytest.mark.asyncio
 async def test_get_distinct_tags_with_counts(db_session):
     user = await make_user(db_session)
-    entry1 = await _make_feed_and_entry(db_session, user.id)
-    entry2 = await _make_feed_and_entry(
+    _, entry1 = await create_feed_and_entry(db_session, user.id)
+    _, entry2 = await create_feed_and_entry(
         db_session, user.id, url="https://example.com/rss2"
     )
 
