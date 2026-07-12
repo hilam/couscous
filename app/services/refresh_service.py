@@ -10,6 +10,8 @@ import feedparser
 import httpx
 from sqlmodel import select
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from database.models.couscous import Entry, Feed
 
 if TYPE_CHECKING:
@@ -40,11 +42,35 @@ async def refresh_all_feeds(
     user_id: int,
     client: httpx.AsyncClient | None = None,
 ) -> None:
+    """Refresh all feeds for a user in parallel with concurrency limit.
+
+    Each feed gets its own database session to avoid concurrent commits
+    on the same AsyncSession.
+    """
     result = await session.execute(select(Feed).where(Feed.user_id == user_id))
     feeds = result.scalars().all()
 
-    for feed in feeds:
-        await refresh_single_feed(session, feed, client=client)
+    if not feeds:
+        return
+
+    close_client = False
+    if client is None:
+        client = httpx.AsyncClient(timeout=30)
+        close_client = True
+
+    # ponytail: Semaphore(5), make configurable if throughput matters
+    semaphore = asyncio.Semaphore(5)
+
+    async def _refresh_one(feed: Feed) -> None:
+        async with semaphore:
+            async with AsyncSession(bind=session.bind) as feed_session:
+                await refresh_single_feed(feed_session, feed, client=client)
+
+    try:
+        await asyncio.gather(*(_refresh_one(f) for f in feeds))
+    finally:
+        if close_client:
+            await client.aclose()
 
 
 async def refresh_single_feed(
