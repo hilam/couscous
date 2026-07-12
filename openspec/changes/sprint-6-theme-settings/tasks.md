@@ -1,14 +1,14 @@
 ## 1. Git Setup e Planejamento
 
-- [ ] 1.1 Criar branch de funcionalidade: `git checkout -b feat/sprint-6-theme-settings`
-- [ ] 1.2 Commit dos artefatos de planejamento: `git add openspec/changes/sprint-6-theme-settings/ && git commit -m "docs(planning): gera artifacts para sprint-6-theme-settings"`
+- [x] 1.1 Criar branch de funcionalidade: `git checkout -b feat/sprint-6-theme-settings`
+- [x] 1.2 Commit dos artefatos de planejamento: `git add openspec/changes/sprint-6-theme-settings/ && git commit -m "docs(planning): gera artifacts para sprint-6-theme-settings"`
 
 ## 2. Modelo e Migração
 
-- [ ] 2.1 Adicionar colunas `theme_mode` (str, nullable, default "light") e `font_scale` (float, nullable, default 1.0) ao modelo `User`
-- [ ] 2.2 Gerar migration: `make db-migrate-create name="add-theme-and-font-to-users"` e revisar o arquivo gerado
-- [ ] 2.3 Aplicar migration: `make db-migrate-up`
-- [ ] 2.4 Commit incremental: `git add -A && git commit -m "feat(models): adiciona theme_mode e font_scale ao User"`
+- [x] 2.1 Adicionar colunas `theme_mode` (str, nullable, default "light") e `font_scale` (float, nullable, default 1.0) ao modelo `User`
+- [x] 2.2 Gerar migration: `make db-migrate-create name="add-theme-and-font-to-users"` e revisar o arquivo gerado
+- [x] 2.3 Aplicar migration: `make db-migrate-up`
+- [x] 2.4 Commit incremental: `git add -A && git commit -m "feat(models): adiciona theme_mode e font_scale ao User"`
 
 ## 3. Testes do settings_service (TDD — test-first)
 
