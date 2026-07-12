@@ -1,10 +1,14 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
+import asyncio
+
 import flet as ft
 
 from app.context import PageContext
 from app.controls.nav_bar import set_navbar
+from app.services.cleanup_service import purge_older_than
+from app.services.settings_service import get_settings
 from app.state import State
 from app.views.category_list_view import category_list_view
 from app.views.entry_list_view import entry_list_view
@@ -41,6 +45,25 @@ _ROUTES: list[_Route] = [
 ]
 
 _FALLBACK_HANDLER = home_view
+
+
+async def _auto_cleanup(page: ft.Page, user_id: int) -> None:
+    """Run automatic cleanup on startup if the user has auto_cleanup_days set."""
+    async with get_db_session() as session:
+        settings = await get_settings(session, user_id)
+        days = settings.auto_cleanup_days
+        if days is None:
+            return
+        removed = await purge_older_than(session, user_id, days)
+
+    if removed > 0:
+        page.show_snack_bar(
+            ft.SnackBar(
+                content=ft.Text(f"\U0001f9f9 Limpeza autom\u00e1tica: {removed} {'artigo' if removed == 1 else 'artigos'} antigo{'s' if removed != 1 else ''} removido{'s' if removed != 1 else ''}."),
+                bgcolor=ft.Colors.GREEN_400,
+            )
+        )
+        page.update()
 
 
 def _match_route(route: str) -> _Route | None:
@@ -123,6 +146,11 @@ async def app_run(page: ft.Page):
         ):
             set_navbar(page)
         page.update()
+
+        # Start auto-cleanup once after login
+        if state.user and not state._cleanup_triggered and state.user.id:
+            state._cleanup_triggered = True
+            asyncio.create_task(_auto_cleanup(page, int(state.user.id)))
 
     page.on_route_change = on_route_change
     await page.push_route("/login")

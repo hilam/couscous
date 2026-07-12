@@ -13,3 +13,4 @@ class State:
         self.loading: bool = False
         self.theme_mode: str = "light"
         self.font_scale: float = 1.0
+        self._cleanup_triggered: bool = False
