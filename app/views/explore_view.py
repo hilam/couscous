@@ -213,8 +213,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
 
     def _update_tag_badge():
         tag_badge.value = (
-            str(len(browser_state.selected_tags))
-            if browser_state.selected_tags else ""
+            str(len(browser_state.selected_tags)) if browser_state.selected_tags else ""
         )
 
     def _refresh_drawer_content():
@@ -312,16 +311,16 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
 
     def _select_category(cat_id: int | None):
         nonlocal browser_state
+
         async def _inner():
             nonlocal browser_state
             async with ctx.open_session() as s:
-                browser_state = await select_category(
-                    s, browser_state, cat_id, user_id
-                )
+                browser_state = await select_category(s, browser_state, cat_id, user_id)
             search_field.value = ""
             render()
             _refresh_tree_panel()
             page.update()
+
         asyncio.create_task(_inner())  # noqa: RUF006
 
     async def _do_search():
@@ -335,12 +334,11 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
 
     def _toggle_tag(tag: str):
         nonlocal browser_state
+
         async def _inner():
             nonlocal browser_state
             async with ctx.open_session() as s:
-                browser_state = await toggle_tag(
-                    s, browser_state, tag, user_id
-                )
+                browser_state = await toggle_tag(s, browser_state, tag, user_id)
             render()
             _refresh_drawer_content()
             if is_mobile:
@@ -348,10 +346,12 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
                 body_row.controls = _build_body_controls()
                 page.close_bottom_sheet()
             page.update()
+
         asyncio.create_task(_inner())  # noqa: RUF006
 
     def _clear_tags():
         nonlocal browser_state
+
         async def _inner():
             nonlocal browser_state
             async with ctx.open_session() as s:
@@ -360,6 +360,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
             tag_drawer_container.visible = False
             body_row.controls = _build_body_controls()
             page.update()
+
         asyncio.create_task(_inner())  # noqa: RUF006
 
     def _toggle_tags_drawer():

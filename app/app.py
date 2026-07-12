@@ -114,9 +114,7 @@ async def app_run(page: ft.Page):
             v = await _build_and_invoke(matched, route, page, state)
         else:
             async with get_db_session() as session:
-                ctx = PageContext(
-                    page=page, state=state, session=session
-                )
+                ctx = PageContext(page=page, state=state, session=session)
                 v = await _FALLBACK_HANDLER(ctx)
 
         page.views.append(v)

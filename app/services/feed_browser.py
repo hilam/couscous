@@ -144,8 +144,7 @@ async def search(
         return await select_category(session, state, None, user_id)
 
     tag_filter = (
-        next(iter(state.selected_tags))
-        if len(state.selected_tags) == 1 else None
+        next(iter(state.selected_tags)) if len(state.selected_tags) == 1 else None
     )
     results = await search_entries(
         session,
