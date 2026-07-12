@@ -13,6 +13,7 @@ class User(SQLModel, table=True):
     oauth_id: str | None = Field(default=None, nullable=True)
     theme_mode: str | None = Field(default="light", nullable=True)
     font_scale: float | None = Field(default=1.0, nullable=True)
+    auto_cleanup_days: int | None = Field(default=None, nullable=True)
 
 
 class Feed(SQLModel, table=True):
@@ -75,12 +76,6 @@ class Entry(SQLModel, table=True):
     url_feed: Feed = Relationship(back_populates="entries")
 
 
-class FeedMetadata(SQLModel, table=True):
-    __tablename__ = "feed_metadata"
-
-    feed: str = Field(primary_key=True, foreign_key="feeds.url")
-    key: str = Field(primary_key=True)
-    value: str
 
 
 class Category(SQLModel, table=True):

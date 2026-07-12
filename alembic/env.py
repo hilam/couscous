@@ -12,7 +12,6 @@ from database.models.couscous import (
     Entry,
     EntryTag,
     Feed,
-    FeedMetadata,
     User,
 )
 from database.service.config import DB_URL
