@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import json
 
 import flet as ft
 from fletify import FletifyHTML
@@ -12,6 +13,25 @@ from app.services.tag_service import (
     get_tags_for_entry,
     remove_tag,
 )
+
+
+async def _copy_to_clipboard(page: ft.Page, url: str) -> None:
+    """Copy url to clipboard via navigator.clipboard.writeText with error feedback."""
+    js = (
+        f"navigator.clipboard.writeText({json.dumps(url)})"
+        f".then(function(){{}})"
+        f".catch(function(){{"
+        f"var b=document.createElement('div');"
+        f"b.textContent='\\u26a0\\ufe0f Erro ao copiar link \u2014 verifique as permiss\u00f5es do navegador';"
+        f"b.style.cssText='position:fixed;bottom:20px;right:20px;background:#d32f2f;"
+        f"color:white;padding:12px 20px;border-radius:8px;z-index:9999;font:14px sans-serif;';"
+        f"document.body.appendChild(b);"
+        f"setTimeout(function(){{b.remove();}},5000);"
+        f"}})"
+    )
+    page.run_javascript(js)
+    page.show_snack_bar(ft.SnackBar(content=ft.Text("Link copiado!")))
+    page.update()
 
 
 async def _open_original_url(e: ft.ControlEvent):
@@ -179,6 +199,15 @@ async def entry_view(ctx, entry_id: int) -> ft.View:  # noqa: C901, PLR0915
                 bgcolor=ft.Colors.CYAN_50,
                 actions=[
                     ft.Text(state.user.name if state.user else "", size=14),
+                    *([
+                        ft.IconButton(
+                            ft.Icons.CONTENT_COPY,
+                            tooltip="Copiar link",
+                            on_click=lambda _: asyncio.create_task(
+                                _copy_to_clipboard(page, entry.link or "")
+                            ),
+                        ),
+                    ] if entry.link and page.web else []),
                     ft.IconButton(
                         ft.Icons.STAR if entry.important else ft.Icons.STAR_BORDER,
                         on_click=handle_toggle_important,

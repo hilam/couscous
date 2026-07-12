@@ -43,6 +43,7 @@ def _build_article_card(entry, page, tags: list[str] | None = None) -> ArticleCa
     return ArticleCard(
         entry=entry,
         tags=tags,
+        page=page,
         on_click=lambda _, eid=entry.id: asyncio.create_task(
             page.push_route(f"/entry/{eid}")
         ),

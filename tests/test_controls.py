@@ -63,9 +63,15 @@ class TestFeedCard:
 
 
 class TestArticleCard:
+    @property
+    def _mock_page(self):
+        p = MagicMock()
+        p.web = False
+        return p
+
     def test_renders_title_and_metadata(self):
         entry = _make_entry()
-        card = ArticleCard(entry=entry, on_click=lambda e: None)
+        card = ArticleCard(entry=entry, page=self._mock_page, on_click=lambda e: None)
 
         assert "Test Article" in card.content.content.title.value
         subtitle_col = card.content.content.subtitle
@@ -76,14 +82,14 @@ class TestArticleCard:
 
     def test_unread_uses_bold_and_blue(self):
         entry = _make_entry(read=0)
-        card = ArticleCard(entry=entry, on_click=lambda e: None)
+        card = ArticleCard(entry=entry, page=MagicMock(), on_click=lambda e: None)
 
         assert card.content.content.title.weight == ft.FontWeight.BOLD
         assert card.content.content.leading.color == ft.Colors.BLUE_400
 
     def test_read_uses_normal_and_grey(self):
         entry = _make_entry(read=1)
-        card = ArticleCard(entry=entry, on_click=lambda e: None)
+        card = ArticleCard(entry=entry, page=MagicMock(), on_click=lambda e: None)
 
         assert card.content.content.title.weight == ft.FontWeight.NORMAL
         assert card.content.content.leading.color == ft.Colors.GREY_400
@@ -91,7 +97,7 @@ class TestArticleCard:
     def test_click_callback_wired(self):
         entry = _make_entry()
         callback = MagicMock()
-        card = ArticleCard(entry=entry, on_click=callback)
+        card = ArticleCard(entry=entry, page=MagicMock(), on_click=callback)
 
         card._click()
         callback.assert_called_once()

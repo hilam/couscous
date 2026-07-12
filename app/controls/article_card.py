@@ -1,3 +1,5 @@
+import json
+
 import flet as ft
 
 from app.controls.tag_chip import TagChip
@@ -10,10 +12,11 @@ MAX_VISIBLE_TAGS = 3
 
 
 class ArticleCard(ft.Card):
-    def __init__(self, entry: Entry, on_click, tags: list[str] | None = None):
+    def __init__(self, entry: Entry, on_click, page: ft.Page, tags: list[str] | None = None):
         super().__init__()
         self.entry = entry
         self.on_click = on_click
+        self._copy_page = page
 
         title = entry.title or "(Sem título)"
         date_str = entry.published.strftime("%d/%m/%Y") if entry.published else ""
@@ -64,6 +67,23 @@ class ArticleCard(ft.Card):
                 ),
             )
 
+        # Copy link button (web-only, only if entry has a link)
+        if entry.link and self._copy_page.web:
+            subtitle_controls.insert(
+                0,
+                ft.Row(
+                    controls=[
+                        ft.IconButton(
+                            ft.Icons.CONTENT_COPY,
+                            icon_size=16,
+                            tooltip="Copiar link",
+                            on_click=lambda e: self._copy_link(),
+                        ),
+                    ],
+                    spacing=0,
+                ),
+            )
+
         self.content = ft.Container(
             content=ft.ListTile(
                 leading=ft.Icon(
@@ -87,3 +107,23 @@ class ArticleCard(ft.Card):
     def _click(self):
         if self.on_click:
             self.on_click(None)
+
+    def _copy_link(self):
+        url = self.entry.link or ""
+        if not url:
+            return
+        js = (
+            f"navigator.clipboard.writeText({json.dumps(url)})"
+            f".then(function(){{}})"
+            f".catch(function(){{"
+            f"var b=document.createElement('div');"
+            f"b.textContent='\\u26a0\\ufe0f Erro ao copiar link \\u2014 verifique as permiss\\u00f5es do navegador';"
+            f"b.style.cssText='position:fixed;bottom:20px;right:20px;background:#d32f2f;"
+            f"color:white;padding:12px 20px;border-radius:8px;z-index:9999;font:14px sans-serif;';"
+            f"document.body.appendChild(b);"
+            f"setTimeout(function(){{b.remove();}},5000);"
+            f"}})"
+        )
+        self._copy_page.run_javascript(js)
+        self._copy_page.show_snack_bar(ft.SnackBar(content=ft.Text("Link copiado!")))
+        self._copy_page.update()
