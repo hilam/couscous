@@ -1,10 +1,6 @@
-from unittest.mock import MagicMock
-
 import flet as ft
 import pytest
 
-from app.context import PageContext
-from app.state import State
 from app.views.about_view import about_view
 
 
@@ -21,20 +17,14 @@ def _find_controls(control, control_type):
 
 
 @pytest.mark.asyncio
-async def test_about_view_route():
-    page = MagicMock()
-    state = State()
-    ctx = PageContext(page=page, state=state)
-    view = await about_view(ctx)
+async def test_about_view_route(page_context):
+    view = await about_view(page_context)
 
     assert view.route == "/about"
 
 
 @pytest.mark.asyncio
-async def test_about_view_contains_navigation_bar():
-    page = MagicMock()
-    state = State()
-    ctx = PageContext(page=page, state=state)
-    await about_view(ctx)
+async def test_about_view_contains_navigation_bar(page_context):
+    await about_view(page_context)
 
-    assert page.navigation_bar is not None
+    assert page_context.page.navigation_bar is not None

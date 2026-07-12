@@ -39,6 +39,29 @@ async def _add_search_vector_column(conn):
     """))
 
 
+from unittest.mock import AsyncMock, MagicMock
+
+
+@pytest.fixture
+def page_context():
+    """Fixture que cria um PageContext com session e _session_factory mockados."""
+    from app.context import PageContext
+    from app.state import State
+
+    page = MagicMock()
+    state = State()
+    session = AsyncMock()
+    session_factory = MagicMock()
+
+    ctx = PageContext(
+        page=page,
+        state=state,
+        session=session,
+        _session_factory=session_factory,
+    )
+    return ctx
+
+
 @pytest.fixture
 def mock_oauth_config(monkeypatch):
     import app.services.oauth_service as oauth_svc
