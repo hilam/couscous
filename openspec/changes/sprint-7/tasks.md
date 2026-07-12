@@ -1,21 +1,21 @@
 ## 1. Git Setup e Planejamento
 
-- [ ] 1.1 Criar branch de funcionalidade (`git checkout -b feat/sprint-7-limpeza-copiar-link`)
-- [ ] 1.2 Fazer commit dos artefatos de planejamento (`git add openspec/changes/sprint-7/ && git commit -m "docs(planning): gera artifacts do sprint 7 (limpeza + copy link)"`)
+- [x] 1.1 Criar branch de funcionalidade (`git checkout -b feat/sprint-7-limpeza-copiar-link`)
+- [x] 1.2 Fazer commit dos artefatos de planejamento (`git add openspec/changes/sprint-7/ && git commit -m "docs(planning): gera artifacts do sprint 7 (limpeza + copy link)"`)
 
 ## 2. Database Migration
 
-- [ ] 2.1 Adicionar coluna `auto_cleanup_days: int | None = None` ao modelo `User` em `database/models/couscous.py`
-- [ ] 2.2 Remover classe `FeedMetadata` de `database/models/couscous.py`
-- [ ] 2.3 Gerar migration Alembic (`make db-migrate-create name="adiciona-auto-cleanup-days-remove-feed-metadata"`)
-- [ ] 2.4 Revisar migration gerada (confirmar `DROP TABLE IF EXISTS feed_metadata` e `ADD COLUMN auto_cleanup_days`)
-- [ ] 2.5 Aplicar migration (`make db-migrate-up`)
-- [ ] 2.6 Commit da migration (`git add . && git commit -m "feat(db): adiciona auto_cleanup_days ao User e remove FeedMetadata"`)
+- [x] 2.1 Adicionar coluna `auto_cleanup_days: int | None = None` ao modelo `User` em `database/models/couscous.py`
+- [x] 2.2 Remover classe `FeedMetadata` de `database/models/couscous.py`
+- [x] 2.3 Gerar migration Alembic (`make db-migrate-create name="adiciona-auto-cleanup-days-remove-feed-metadata"`)
+- [x] 2.4 Revisar migration gerada (confirmar `DROP TABLE IF EXISTS feed_metadata` e `ADD COLUMN auto_cleanup_days`)
+- [x] 2.5 Aplicar migration (`make db-migrate-up`)
+- [x] 2.6 Commit da migration (`git add . && git commit -m "feat(db): adiciona auto_cleanup_days ao User e remove FeedMetadata"`) (`git add . && git commit -m "feat(db): adiciona auto_cleanup_days ao User e remove FeedMetadata"`)
 
 ## 3. Serviço de Limpeza
 
-- [ ] 3.1 Criar `app/services/cleanup_service.py` com `count_entries_older_than(session, user_id, days) -> int`
-- [ ] 3.2 Implementar `purge_older_than(session, user_id, days) -> int` com filtro `user_id`, `important=0` e condição `first_updated_epoch < cutoff OR first_updated_epoch IS NULL`
+- [x] 3.1 Criar `app/services/cleanup_service.py` com `count_entries_older_than(session, user_id, days) -> int`
+- [x] 3.2 Implementar `purge_older_than(session, user_id, days) -> int` com filtro `user_id`, `important=0` e condição `first_updated_epoch < cutoff`
 - [ ] 3.3 Commit do serviço (`git add app/services/cleanup_service.py && git commit -m "feat(cleanup): implementa count e purge de entries antigas"`)
 
 ## 4. Diálogo de Limpeza

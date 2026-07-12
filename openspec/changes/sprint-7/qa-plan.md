@@ -124,13 +124,6 @@
 - **THEN** a operação conclui em tempo razoável (< 5 segundos)
 - **AND** a UI permanece responsiva durante a execução
 
-### Test: EDGE — Entry com first_updated_epoch nulo
-**Traces**: `specs/database-cleanup/spec.md` → (edge case)
-- **GIVEN** uma entry com `first_updated_epoch = NULL` e `important = 0`
-- **WHEN** a limpeza é executada com qualquer período
-- **THEN** a entry é removida (NULL é tratado como data antiga)
-- **AND** entries com `first_updated_epoch = NULL` e `important = 1` são preservadas
-
 ### Test: EDGE — Entry importante com tags não são removidas
 **Traces**: `specs/database-cleanup/spec.md` → (edge case)
 - **GIVEN** uma entry com `important=1` e 3 `EntryTag` associadas, com mais de 365 dias
@@ -216,8 +209,7 @@
 | # | Caso | Risco |
 |---|------|-------|
 | EC1 | `auto_cleanup_days` com valor inválido no banco (ex: 0, -1, "abc") | Configuração corrompida manualmente |
-| EC2 | Limpeza com `first_updated_epoch = NULL` em alguma entry | Query pode ignorar ou falhar |
-| EC3 | Usuário fecha o diálogo de limpeza enquanto a contagem está carregando | Task assíncrona pendente |
+| EC2 | Usuário fecha o diálogo de limpeza enquanto a contagem está carregando | Task assíncrona pendente |
 | EC4 | Dois diálogos de limpeza abertos simultaneamente (abrir, fechar, abrir rápido) | Referências stale |
 | EC5 | `page.run_javascript` chamado quando `page` é `None` ou `page.web` é `False` | App desktop, não web |
 

@@ -54,15 +54,12 @@ A remoção em cascata das `EntryTag` é automática — o modelo já tem `ondel
 cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(days=days)
 stmt = delete(Entry).where(
     Entry.user_id == user_id,
+    Entry.first_updated_epoch < cutoff,
     Entry.important == 0,
-    or_(
-        Entry.first_updated_epoch < cutoff,
-        Entry.first_updated_epoch == None,
-    ),
 )
 ```
 
-**Alternativa considerada:** `published` (pode ser `None` ou antiga demais), `last_updated` (muda a cada refresh) — rejeitadas. `first_updated_epoch` é a data real de chegada ao sistema. Entries com `first_updated_epoch = NULL` são tratadas como antigas (dado corrompido ou ingestão anterior à existência do campo).
+**Alternativa considerada:** `published` (pode ser `None` ou antiga demais), `last_updated` (muda a cada refresh) — rejeitadas. `first_updated_epoch` é a data real de chegada ao sistema. A coluna é NOT NULL, sem risco de valores nulos.
 
 ### 4. Diálogo de limpeza: `AlertDialog` com `Dropdown`
 

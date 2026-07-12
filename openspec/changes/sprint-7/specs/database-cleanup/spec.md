@@ -12,7 +12,7 @@ O sistema DEVE permitir que o usuário remova entries antigas através de um di�
 #### Scenario: Limpeza manual com período de 30 dias
 
 - **WHEN** o usuário abre o diálogo de limpeza, seleciona "30 dias" e confirma
-- **THEN** o sistema remove todas as entries do usuário com `first_updated_epoch` anterior a 30 dias atrás (ou `NULL`) e `important=0`
+- **THEN** o sistema remove todas as entries do usuário com `first_updated_epoch` anterior a 30 dias atrás e `important=0`
 - **AND** as `EntryTag` associadas às entries removidas são excluídas em cascata
 - **AND** entries com `important=1` são preservadas independentemente da idade
 
@@ -20,12 +20,6 @@ O sistema DEVE permitir que o usuário remova entries antigas através de um di�
 
 - **WHEN** o usuário seleciona um período e não há entries que atendam aos critérios
 - **THEN** o sistema informa "Nenhum artigo para remover" e não executa remoção
-
-#### Scenario: Entry com data nula é considerada antiga
-
-- **WHEN** a limpeza é executada e há entries com `first_updated_epoch = None` e `important = 0`
-- **THEN** essas entries são removidas (NULL é tratado como data antiga)
-- **AND** entries com `first_updated_epoch = None` e `important = 1` são preservadas
 
 ### Requirement: Diálogo de limpeza mostra contagem antes da confirmação
 
