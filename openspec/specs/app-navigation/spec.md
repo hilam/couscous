@@ -31,3 +31,15 @@ All page navigation SHALL use `page.push_route(route)` instead of the deprecated
 #### Scenario: Navigate via button click
 - **WHEN** user clicks "Ver meus feeds" button on the home view
 - **THEN** `page.push_route("/feeds")` is called
+
+### Requirement: NavigationBar with 4 destinations
+
+The NavigationBar SHALL display four destinations: Início (HOME icon), Feeds (RSS_FEED icon), Categorias (FOLDER icon), Config (SETTINGS icon). Selecting a destination SHALL navigate to the corresponding route.
+
+#### Scenario: Config destination navigates to settings
+- **WHEN** user taps "Config" on the NavigationBar
+- **THEN** `page.push_route("/about")` is called and the settings view is displayed
+
+#### Scenario: Config destination is highlighted on settings page
+- **WHEN** user is on `/about` (settings) route
+- **THEN** the "Config" destination is highlighted in the NavigationBar

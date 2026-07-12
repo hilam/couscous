@@ -59,9 +59,9 @@
 
 ## 7. Validação e Qualidade
 
-- [ ] 7.1 Verificar typecheck: `make typecheck` — esperado "Success: no issues found"
-- [ ] 7.2 Verificar lint: `make lint` — esperado "All checks passed!"
-- [ ] 7.3 Executar testes do settings_service: `uv run pytest tests/test_settings_service.py -v`
-- [ ] 7.4 Verificar testes existentes: `make test` — sem regressão
-- [ ] 7.5 Executar formatação: `ruff check --fix . && ruff format .`
-- [ ] 7.6 Commit final de formatação se houver: `git commit -m "style: aplica ruff e formata arquivos"`
+- [x] 7.1 Verificar typecheck: `make typecheck` — esperado "Success: no issues found"
+- [x] 7.2 Verificar lint: `make lint` — esperado "All checks passed!"
+- [x] 7.3 Executar testes do settings_service: `uv run pytest tests/test_settings_service.py -v`
+- [x] 7.4 Verificar testes existentes: `make test` — sem regressão
+- [x] 7.5 Executar formatação: `ruff check --fix . && ruff format .`
+- [x] 7.6 Commit final de formatação se houver: `git commit -m "style: aplica ruff e formata arquivos"`
