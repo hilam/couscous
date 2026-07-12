@@ -68,7 +68,7 @@ async def test_route_dispatch_login(mock_page):
         patch("app.app.entry_list_view"),
         patch("app.app.entry_view"),
         patch("app.app.register_view"),
-        patch("app.app.about_view"),
+        patch("app.app.settings_view"),
         patch("app.app.home_view"),
         patch("app.app.get_db_session"),
     ):
@@ -196,7 +196,7 @@ async def test_unauthenticated_redirects_to_login(mock_page):
         patch("app.app.entry_list_view"),
         patch("app.app.entry_view"),
         patch("app.app.register_view"),
-        patch("app.app.about_view"),
+        patch("app.app.settings_view"),
         patch("app.app.home_view"),
         patch("app.app.get_db_session"),
     ):
@@ -212,7 +212,6 @@ async def test_public_routes_allowed_without_auth(mock_page):
     mock_page.theme = MagicMock()
 
     for public_route, _ in [
-        ("/about", "about_view"),
         ("/register", "register_view"),
     ]:
         page = MagicMock()

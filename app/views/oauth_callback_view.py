@@ -30,6 +30,8 @@ async def oauth_callback_view(ctx) -> ft.View:
         name=user_info["name"],
     )
     ctx.state.user = user
+    if user.id is None:
+        return await _error_view(page, "Erro interno: usuário sem ID")
     settings = await get_settings(ctx.session, user.id)
     ctx.state.theme_mode = settings.theme_mode
     ctx.state.font_scale = settings.font_scale

@@ -74,14 +74,14 @@ async def settings_view(ctx) -> ft.View:
                 spacing=8,
                 tight=True,
             ),
-            actions=[ft.TextButton("Fechar", on_click=lambda e: _close_dlg(dlg))],
+            actions=[ft.TextButton("Fechar", on_click=lambda _: _close_dialog(page))],
         )
-        page.dialog = dlg
+        page.dialog = dlg  # type: ignore[attr-defined]
         dlg.open = True
         page.update()
 
-    async def _close_dlg(dlg):
-        dlg.open = False
+    async def _close_dialog(page: ft.Page):
+        page.dialog.open = False  # type: ignore[attr-defined]
         page.update()
 
     def _update_preview():

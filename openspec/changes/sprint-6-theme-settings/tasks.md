@@ -18,44 +18,44 @@
 - `save_settings(session, user_id, theme_mode=None, font_scale=None)` — `None` = não altera
 - Sem validação de mode nem clamp de scale (YAGNI — UI já emite valores válidos)
 
-- [ ] 3.1 **RED**: criar `tests/test_settings_service.py` com:
+- [x] 3.1 **RED**: criar `tests/test_settings_service.py` com:
       - `test_get_settings_returns_defaults` — usuário sem settings → `UserSettings("light", 1.0)`
       - `test_get_settings_returns_saved_values` — salva e lê de volta
       - `test_save_settings_updates_theme_only` — `save_settings(s, uid, theme_mode="dark")` → só theme muda
       - `test_save_settings_updates_font_only` — `save_settings(s, uid, font_scale=1.3)` → só font muda
       - `test_save_settings_updates_both` — altera os dois de uma vez
       - Executar: `uv run pytest tests/test_settings_service.py -v` — 5/5 falham (RED)
-- [ ] 3.2 **GREEN**: criar `app/services/settings_service.py` com:
+- [x] 3.2 **GREEN**: criar `app/services/settings_service.py` com:
       - `UserSettings` dataclass
       - `get_settings()` — `SELECT + scalars().first()`, retorna `UserSettings()` se None
       - `save_settings()` — `UPDATE` no banco só para kwargs não-None
       - Executar: `uv run pytest tests/test_settings_service.py -v` — 5/5 passam (GREEN)
-- [ ] 3.3 Commit incremental: `git add -A && git commit -m "feat(services): adiciona settings_service (TDD)"`
+- [x] 3.3 Commit incremental: `git add -A && git commit -m "feat(services): adiciona settings_service (TDD)"`
 
 ## 4. State + App bootstrap — carregar settings no login
 
-- [ ] 4.1 Adicionar campos `theme_mode: str = "light"` e `font_scale: float = 1.0` ao `State`
-- [ ] 4.2 No login/registro: chamar `get_settings()`, popular State, aplicar:
+- [x] 4.1 Adicionar campos `theme_mode: str = "light"` e `font_scale: float = 1.0` ao `State`
+- [x] 4.2 No login/registro: chamar `get_settings()`, popular State, aplicar:
       - `page.theme_mode = getattr(ft.ThemeMode, state.theme_mode.upper())`
       - Mutar `page.theme.text_theme` com font_scale (preservando `color_scheme`)
-- [ ] 4.3 Commit incremental: `git commit -m "feat(state): carrega theme_mode e font_scale no login"`
+- [x] 4.3 Commit incremental: `git commit -m "feat(state): carrega theme_mode e font_scale no login"`
 
 ## 5. NavBar — substituir "Sobre" por "Config"
 
-- [ ] 5.1 Em `app/controls/nav_bar.py`: alterar o 4º destino de `INFO`/`Sobre` para `SETTINGS`/`Config`; ajustar `_ROUTE_INDICES` e `_INDEX_ROUTES`
-- [ ] 5.2 Commit incremental: `git commit -m "refactor(nav): substitui Sobre por Config na NavBar"`
+- [x] 5.1 Em `app/controls/nav_bar.py`: alterar o 4º destino de `INFO`/`Sobre` para `SETTINGS`/`Config`; ajustar `_ROUTE_INDICES` e `_INDEX_ROUTES`
+- [x] 5.2 Commit incremental: `git commit -m "refactor(nav): substitui Sobre por Config na NavBar"`
 
 ## 6. Settings View + About popup
 
-- [ ] 6.1 Criar `app/views/settings_view.py` com:
+- [x] 6.1 Criar `app/views/settings_view.py` com:
       - Dropdown/segmented control de tema (Light / Dark / System) — aplica `page.theme_mode` imediatamente ao trocar
       - Slider de tamanho de texto (0.8–1.5, step 0.1) com preview "Aa" que escala em tempo real **(efeito local, não global)**
       - Botão "Salvar" que: persiste no banco (`save_settings`), atualiza State, aplica font_scale via `page.theme` (mutando, não substituindo)
       - Botão "Salvar" desabilitado quando nenhuma mudança pendente
       - Botão "Sobre" que abre `ft.AlertDialog` com conteúdo do antigo `about_view` (copiado inline)
-- [ ] 6.2 Atualizar `app/app.py`: importar `settings_view` em vez de `about_view`; rota `/about` aponta para `settings_view`
-- [ ] 6.3 Remover arquivo `app/views/about_view.py`
-- [ ] 6.4 Commit incremental: `git commit -m "feat(views): cria settings_view com tema, fonte e about popup"`
+- [x] 6.2 Atualizar `app/app.py`: importar `settings_view` em vez de `about_view`; rota `/about` aponta para `settings_view`
+- [x] 6.3 Remover arquivo `app/views/about_view.py`
+- [x] 6.4 Commit incremental: `git commit -m "feat(views): cria settings_view com tema, fonte e about popup"`
 
 ## 7. Validação e Qualidade
 

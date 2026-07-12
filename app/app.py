@@ -6,7 +6,6 @@ import flet as ft
 from app.context import PageContext
 from app.controls.nav_bar import set_navbar
 from app.state import State
-from app.views.settings_view import settings_view
 from app.views.category_list_view import category_list_view
 from app.views.entry_list_view import entry_list_view
 from app.views.entry_view import entry_view
@@ -16,6 +15,7 @@ from app.views.home_view import home_view
 from app.views.login_view import login_view
 from app.views.oauth_callback_view import oauth_callback_view
 from app.views.register_view import register_view
+from app.views.settings_view import settings_view
 from database.service.database import get_db_session, init_async_db
 
 

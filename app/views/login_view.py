@@ -31,10 +31,14 @@ async def login_view(ctx) -> ft.View:
 
                 if user:
                     state.user = user
+                    if user.id is None:
+                        return
                     settings = await get_settings(session, user.id)
                     state.theme_mode = settings.theme_mode
                     state.font_scale = settings.font_scale
-                    apply_settings_to_page(page, settings.theme_mode, settings.font_scale)
+                    apply_settings_to_page(
+                        page, settings.theme_mode, settings.font_scale
+                    )
                     await page.push_route("/")
                 else:
                     error_text.value = "Usu\u00e1rio n\u00e3o encontrado"
