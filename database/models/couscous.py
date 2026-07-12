@@ -11,6 +11,8 @@ class User(SQLModel, table=True):
     password: str | None
     oauth_provider: str | None = Field(default=None, nullable=True)
     oauth_id: str | None = Field(default=None, nullable=True)
+    theme_mode: str | None = Field(default="light", nullable=True)
+    font_scale: float | None = Field(default=1.0, nullable=True)
 
 
 class Feed(SQLModel, table=True):
