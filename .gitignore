@@ -69,5 +69,8 @@ media/
 # Artefatos do projeto
 .ai-jail
 .opencode/
+.pi/
 graphify-out/
 reports/
+architecture-review-*.html
+plans/
