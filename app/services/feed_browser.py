@@ -6,7 +6,10 @@ from typing import TYPE_CHECKING
 
 from sqlmodel import select
 
-from app.services.category_service import get_categories_with_counts
+from app.services.category_service import (
+    build_category_tree,
+    get_categories_with_counts,
+)
 from app.services.entry_service import list_recent
 from app.services.search_service import search_entries
 from app.services.tag_service import get_distinct_tags_with_counts
@@ -32,7 +35,7 @@ async def load(session: AsyncSession, user_id: int) -> ExploreState:
     cats, feed_counts, unread_counts = await get_categories_with_counts(
         session, user_id
     )
-    tree = _build_tree(cats, feed_counts, unread_counts)
+    tree = build_category_tree(cats, feed_counts, unread_counts)
     tag_counts = await get_distinct_tags_with_counts(session, user_id)
     entries = await list_recent(session, user_id, limit=50)
     tag_map = await _load_entry_tags(session, entries)
@@ -196,41 +199,4 @@ def _find_node(nodes: list[dict], target_id: int) -> dict | None:
     return None
 
 
-def _build_tree(
-    cats: list, feed_counts: dict[int, int], unread_counts: dict[int, int]
-) -> list[dict]:
-    cat_map: dict[int, dict] = {}
-    for c in cats:
-        cat_map[c.id] = {
-            "id": c.id,
-            "name": c.name,
-            "parent_id": c.parent_id,
-            "children": [],
-            "feed_count": feed_counts.get(c.id, 0),
-            "total_feed_count": 0,
-            "unread_count": 0,
-        }
 
-    tree: list[dict] = []
-    for c in cats:
-        node = cat_map[c.id]
-        if c.parent_id and c.parent_id in cat_map:
-            cat_map[c.parent_id]["children"].append(node)
-        else:
-            tree.append(node)
-
-    def _rollup(node: dict) -> tuple[int, int]:
-        fc = node["feed_count"]
-        ur = unread_counts.get(node["id"], 0)
-        for child in node["children"]:
-            child_fc, child_ur = _rollup(child)
-            fc += child_fc
-            ur += child_ur
-        node["total_feed_count"] = fc
-        node["unread_count"] = ur
-        return fc, ur
-
-    for root in tree:
-        _rollup(root)
-
-    return tree
