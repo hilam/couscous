@@ -51,10 +51,10 @@ async def search_entries(  # noqa: PLR0913
         "FROM entries e "
         "LEFT JOIN feeds f ON e.feed = f.url, "
         "plainto_tsquery('simple', :query) AS q "
-        "WHERE " + where_clause + " "
+        "WHERE " + where_clause + " "  # nosec B608
         "ORDER BY rank DESC "
         "LIMIT :limit"
-    )  # nosec B608
+    )
 
     result = await session.execute(sql, params)
     rows = result.fetchall()
