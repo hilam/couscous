@@ -2,13 +2,12 @@ import asyncio
 
 import flet as ft
 
+from app.controls.category_dialogs import CreateCategoryDialog, RenameCategoryDialog
 from app.controls.confirm_dialog import ConfirmDialog
 from app.services.category_service import (
     build_category_tree,
-    create_category,
     delete_category,
     get_categories_with_counts,
-    rename_category,
 )
 
 
@@ -93,7 +92,7 @@ async def category_list_view(ctx) -> ft.View:
         page.update()
 
     async def _open_rename_dialog(node):
-        dlg = _build_rename_dialog(node, page, refresh_tree, ctx)
+        dlg = RenameCategoryDialog(node, page, refresh_tree, ctx)
         page.show_dialog(dlg)
         page.update()
 
@@ -116,9 +115,10 @@ async def category_list_view(ctx) -> ft.View:
         await refresh_tree()
 
     async def open_new_dialog(e):
-        create_dlg = _build_create_dialog(page, refresh_tree, ctx)
+        create_dlg = CreateCategoryDialog(page, refresh_tree, ctx)
         page.overlay.append(create_dlg)
         create_dlg.open = True
+        await create_dlg.load_parents()
         page.update()
 
     cats, feed_counts, unread_counts = await get_categories_with_counts(
@@ -175,123 +175,7 @@ async def category_list_view(ctx) -> ft.View:
     )
 
 
-def _build_create_dialog(page, refresh_cb, ctx):  # noqa: C901
-    name_field = ft.TextField(label="Nome da categoria", autofocus=True, expand=True)
-    parent_dropdown = ft.Dropdown(label="Categoria pai", expand=True)
 
-    async def _load_parent_dropdown():
-        async with ctx.open_session() as s:
-            cats, _, _ = await get_categories_with_counts(s, ctx.state.user.id)
-        options = [ft.dropdown.Option("0", "Nenhuma (raiz)")]
-        _flatten_tree_for_dropdown(
-            build_category_tree(cats, {}, {}) if cats else [], options, 0
-        )
-        parent_dropdown.options = options
-        parent_dropdown.value = "0"
-        page.update()
-
-    _task_ref = asyncio.create_task(_load_parent_dropdown())  # noqa: RUF006 - keep task alive
-
-    async def _do_create():
-        name = name_field.value.strip()
-        if not name:
-            return False
-        raw = parent_dropdown.value
-        parent_id = int(raw) if raw and raw != "0" else None
-        async with ctx.open_session() as s:
-            try:
-                await create_category(s, ctx.state.user.id, name, parent_id)
-            except ValueError:
-                snack = ft.SnackBar(
-                    content=ft.Text("Categoria j\u00e1 existe neste n\u00edvel")
-                )
-                page.overlay.append(snack)
-                snack.open = True
-                page.update()
-                return False
-            else:
-                return True
-
-    async def _submit_and_close(e):
-        dlg.open = False
-        dlg.update()
-        if await _do_create():
-            await refresh_cb()
-
-    async def _submit_and_continue(e):
-        if not await _do_create():
-            return
-        name_field.value = ""
-        name_field.update()
-        await _load_parent_dropdown()
-        await refresh_cb()
-        await name_field.focus()
-
-    name_field.on_submit = lambda e: asyncio.create_task(parent_dropdown.focus())
-
-    def _cancel(e):
-        dlg.open = False
-        dlg.update()
-
-    dlg = ft.AlertDialog(
-        title=ft.Text("Nova Categoria"),
-        content=ft.Column(
-            controls=[name_field, parent_dropdown],
-            width=350,
-            tight=True,
-        ),
-        actions=[
-            ft.TextButton("Cancelar", on_click=_cancel),
-            ft.FilledButton("Criar outro", on_click=_submit_and_continue),
-            ft.FilledButton("Criar", on_click=_submit_and_close),
-        ],
-        actions_alignment=ft.MainAxisAlignment.END,
-    )
-    return dlg
-
-
-def _build_rename_dialog(node, page, refresh_cb, ctx):
-    name_field = ft.TextField(
-        label="Novo nome", value=node["name"], autofocus=True, expand=True
-    )
-
-    async def _submit(e):
-        new_name = name_field.value.strip()
-        if not new_name:
-            return
-        dlg.open = False
-        dlg.update()
-        async with ctx.open_session() as s:
-            try:
-                await rename_category(s, ctx.state.user.id, node["id"], new_name)
-            except ValueError:
-                snack = ft.SnackBar(
-                    content=ft.Text("Categoria j\u00e1 existe neste n\u00edvel")
-                )
-                page.overlay.append(snack)
-                snack.open = True
-                page.update()
-                return
-        await refresh_cb()
-
-    def _cancel(e):
-        dlg.open = False
-        dlg.update()
-
-    dlg = ft.AlertDialog(
-        title=ft.Text("Renomear Categoria"),
-        content=ft.Column(
-            controls=[name_field],
-            width=300,
-            tight=True,
-        ),
-        actions=[
-            ft.TextButton("Cancelar", on_click=_cancel),
-            ft.FilledButton("Renomear", on_click=_submit),
-        ],
-        actions_alignment=ft.MainAxisAlignment.END,
-    )
-    return dlg
 
 
 def _flatten_tree_for_dropdown(tree, options, level):
