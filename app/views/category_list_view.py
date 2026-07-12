@@ -294,9 +294,6 @@ def _build_rename_dialog(node, page, refresh_cb, ctx):
     return dlg
 
 
-
-
-
 def _flatten_tree_for_dropdown(tree, options, level):
     for node in tree:
         prefix = "  " * level + "\u2514 " if level > 0 else ""

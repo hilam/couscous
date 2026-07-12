@@ -197,6 +197,3 @@ def _find_node(nodes: list[dict], target_id: int) -> dict | None:
             if found:
                 return found
     return None
-
-
-
