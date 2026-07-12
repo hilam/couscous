@@ -2,16 +2,8 @@ import asyncio
 
 import flet as ft
 
-from app.services.category_service import get_category_tree
+from app.services.category_service import get_categories_with_counts
 from database.service.database import get_db_session
-
-
-def _flatten_tree_for_dropdown(tree, options, level):
-    for node in tree:
-        prefix = "  " * level + "└ " if level > 0 else ""
-        options.append(ft.dropdown.Option(str(node["id"]), f"{prefix}{node['name']}"))
-        if node["children"]:
-            _flatten_tree_for_dropdown(node["children"], options, level + 1)
 
 
 class AddFeedDialog(ft.AlertDialog):
@@ -53,9 +45,10 @@ class AddFeedDialog(ft.AlertDialog):
 
     async def load_categories(self):
         async with get_db_session() as session:
-            tree = await get_category_tree(session, self.user_id)
-        options = [ft.dropdown.Option("", "Sem categoria")]
-        _flatten_tree_for_dropdown(tree, options, 0)
+            cats, _, _ = await get_categories_with_counts(session, self.user_id)
+        options = [ft.dropdown.Option("", "Sem categoria")] + [
+            ft.dropdown.Option(str(c.id), c.name) for c in cats
+        ]
         self.category_dropdown.options = options
         self.category_dropdown.value = ""
         self.update()

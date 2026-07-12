@@ -6,7 +6,7 @@ from app.controls.confirm_dialog import ConfirmDialog
 from app.services.category_service import (
     create_category,
     delete_category,
-    get_category_tree,
+    get_categories_with_counts,
     rename_category,
 )
 
@@ -54,8 +54,11 @@ async def category_list_view(ctx) -> ft.View:
 
     async def refresh_tree():
         tree_view.controls.clear()
-        async with ctx.new_session() as s:
-            tree = await get_category_tree(s, user_id)
+        async with ctx.open_session() as s:
+            cats, feed_counts, unread_counts = await get_categories_with_counts(
+                s, user_id
+            )
+            tree = _build_tree(cats, feed_counts, unread_counts)
         if not tree:
             tree_view.controls.append(
                 ft.Container(
@@ -107,7 +110,7 @@ async def category_list_view(ctx) -> ft.View:
         page.update()
 
     async def _delete_confirmed(node):
-        async with ctx.new_session() as s:
+        async with ctx.open_session() as s:
             await delete_category(s, user_id, node["id"])
         await refresh_tree()
 
@@ -117,7 +120,10 @@ async def category_list_view(ctx) -> ft.View:
         create_dlg.open = True
         page.update()
 
-    initial_tree = await get_category_tree(session, user_id)
+    cats, feed_counts, unread_counts = await get_categories_with_counts(
+        session, user_id
+    )
+    initial_tree = _build_tree(cats, feed_counts, unread_counts) if cats else []
     if not initial_tree:
         tree_view.controls.append(
             ft.Container(
@@ -173,10 +179,12 @@ def _build_create_dialog(page, refresh_cb, ctx):  # noqa: C901
     parent_dropdown = ft.Dropdown(label="Categoria pai", expand=True)
 
     async def _load_parent_dropdown():
-        async with ctx.new_session() as s:
-            tree = await get_category_tree(s, ctx.state.user.id)
+        async with ctx.open_session() as s:
+            cats, _, _ = await get_categories_with_counts(s, ctx.state.user.id)
         options = [ft.dropdown.Option("0", "Nenhuma (raiz)")]
-        _flatten_tree_for_dropdown(tree, options, 0)
+        _flatten_tree_for_dropdown(
+            _build_tree(cats, {}, {}) if cats else [], options, 0
+        )
         parent_dropdown.options = options
         parent_dropdown.value = "0"
         page.update()
@@ -189,7 +197,7 @@ def _build_create_dialog(page, refresh_cb, ctx):  # noqa: C901
             return False
         raw = parent_dropdown.value
         parent_id = int(raw) if raw and raw != "0" else None
-        async with ctx.new_session() as s:
+        async with ctx.open_session() as s:
             try:
                 await create_category(s, ctx.state.user.id, name, parent_id)
             except ValueError:
@@ -252,7 +260,7 @@ def _build_rename_dialog(node, page, refresh_cb, ctx):
             return
         dlg.open = False
         dlg.update()
-        async with ctx.new_session() as s:
+        async with ctx.open_session() as s:
             try:
                 await rename_category(s, ctx.state.user.id, node["id"], new_name)
             except ValueError:
@@ -283,6 +291,46 @@ def _build_rename_dialog(node, page, refresh_cb, ctx):
         actions_alignment=ft.MainAxisAlignment.END,
     )
     return dlg
+
+
+def _build_tree(
+    cats: list, feed_counts: dict[int, int], unread_counts: dict[int, int]
+) -> list[dict]:
+    cat_map: dict[int, dict] = {}
+    for c in cats:
+        cat_map[c.id] = {
+            "id": c.id,
+            "name": c.name,
+            "parent_id": c.parent_id,
+            "children": [],
+            "feed_count": feed_counts.get(c.id, 0),
+            "total_feed_count": 0,
+            "unread_count": 0,
+        }
+
+    tree: list[dict] = []
+    for c in cats:
+        node = cat_map[c.id]
+        if c.parent_id and c.parent_id in cat_map:
+            cat_map[c.parent_id]["children"].append(node)
+        else:
+            tree.append(node)
+
+    def _rollup(node: dict) -> tuple[int, int]:
+        fc = node["feed_count"]
+        ur = unread_counts.get(node["id"], 0)
+        for child in node["children"]:
+            child_fc, child_ur = _rollup(child)
+            fc += child_fc
+            ur += child_ur
+        node["total_feed_count"] = fc
+        node["unread_count"] = ur
+        return fc, ur
+
+    for root in tree:
+        _rollup(root)
+
+    return tree
 
 
 def _flatten_tree_for_dropdown(tree, options, level):

@@ -24,7 +24,7 @@ async def login_view(ctx) -> ft.View:
             page.update()
             return
 
-        async with ctx.new_session() as session:
+        async with ctx.open_session() as session:
             try:
                 user = await login(session, name, password)
 

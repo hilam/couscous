@@ -45,3 +45,26 @@ todos os feeds do usuário (em paralelo, com limite de concorrência).
 **Purge**:
 Limpeza automática de entries antigas e lidas, configurável por período
 (dias/semanas/meses). Entries importantes não são afetadas.
+
+## Architectural
+
+**PageContext**:
+Dataclass que carrega `page`, `state`, `session` e `open_session()` para
+cada rota. `session` nunca é None (ADR-0003).
+
+**ExploreState**:
+Dataclass imutável que carrega o estado completo da explore view:
+filtros ativos (categoria, tags, busca) + dados carregados (entries,
+tag_map, tree, tag_counts). Cada operação retorna uma nova instância
+(ADR-0004).
+
+**FeedBrowser**:
+Módulo de domínio em `app/services/feed_browser.py` com funções puras que
+recebem sessão + ExploreState e retornam ExploreState novo. Contém a lógica
+de toggle de expansão, filtro por categoria/tag e busca.
+
+**get_categories_with_counts**:
+Função em `category_service.py` que retorna dados planos de categorias
+(lista de Category + feed_counts + unread_counts). Cada consumidor constrói
+a árvore inline se precisar de hierarquia — não há função de árvore
+compartilhada (ADR-0006).

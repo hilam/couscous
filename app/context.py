@@ -18,13 +18,13 @@ if TYPE_CHECKING:
 class PageContext:
     page: ft.Page
     state: State
-    session: AsyncSession | None = None
+    session: AsyncSession
     _session_factory: Callable[[], AbstractAsyncContextManager[AsyncSession]] | None = (
         None
     )
 
     @asynccontextmanager
-    async def new_session(self) -> AsyncGenerator[AsyncSession]:
+    async def open_session(self) -> AsyncGenerator[AsyncSession]:
         _msg = "No session factory configured"
         if self._session_factory is None:
             raise RuntimeError(_msg)

@@ -109,7 +109,7 @@ async def _handle_feed_added(  # noqa: PLR0913
     feed_list: ft.ListView,
     confirm_delete_cb,
 ) -> None:
-    async with ctx.new_session() as s:
+    async with ctx.open_session() as s:
         try:
             feed = await add_feed(s, user_id, url, category_id)
         except ValueError:
@@ -143,7 +143,7 @@ async def _handle_feed_add_another(  # noqa: PLR0913
     confirm_delete_cb,
     state,
 ) -> bool:
-    async with ctx.new_session() as s:
+    async with ctx.open_session() as s:
         try:
             feed = await add_feed(s, user_id, url, category_id)
         except ValueError:
@@ -185,7 +185,7 @@ async def feed_list_view(ctx) -> ft.View:
         state.loading = True
         page.update()
 
-        async with ctx.new_session() as s:
+        async with ctx.open_session() as s:
             await refresh_all_feeds(s, user_id)
             await _rebuild_feed_list(feed_list, confirm_delete, s, page, user_id)
 
@@ -214,7 +214,7 @@ async def feed_list_view(ctx) -> ft.View:
     async def delete_feed(feed_url: str, dlg: ft.AlertDialog):
         dlg.open = False
         page.update()
-        async with ctx.new_session() as s:
+        async with ctx.open_session() as s:
             await remove_feed(s, user_id, feed_url)
             await _rebuild_feed_list(feed_list, confirm_delete, s, page, user_id)
         page.update()

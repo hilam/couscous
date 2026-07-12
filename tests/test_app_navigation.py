@@ -41,17 +41,6 @@ class TestRouteTable:
         assert route is not None
         assert route.handler is login_view
 
-    def test_root_requires_session(self):
-        route = _match_route("/")
-        assert route is not None
-        assert route.requires_session is True
-
-    def test_feeds_requires_session(self):
-        route = _match_route("/feeds")
-        assert route is not None
-        assert route.requires_session is True
-
-
 class TestNavBar:
     def test_index_zero_is_root(self):
         assert _INDEX_ROUTES[0] == "/"

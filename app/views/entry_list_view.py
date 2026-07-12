@@ -122,7 +122,7 @@ async def entry_list_view(ctx) -> ft.View:
 
     async def load_entries():
         nonlocal show_unread, show_important, active_tag
-        async with ctx.new_session() as s:
+        async with ctx.open_session() as s:
             return await list_entries(
                 s,
                 feed_url,
@@ -134,7 +134,7 @@ async def entry_list_view(ctx) -> ft.View:
 
     async def refresh(e):
         entries = await load_entries()
-        async with ctx.new_session() as s:
+        async with ctx.open_session() as s:
             tag_map = await _load_entry_tags(s, entries)
         _populate_entry_list(entry_list, entries, page, tag_map)
         page.update()

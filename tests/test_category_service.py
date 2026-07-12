@@ -3,7 +3,7 @@ import pytest
 from app.services.category_service import (
     create_category,
     delete_category,
-    get_category_tree,
+    get_categories_with_counts,
     list_categories,
     rename_category,
 )
@@ -51,28 +51,35 @@ async def test_list_categories(db_session):
 
 
 @pytest.mark.asyncio
-async def test_get_category_tree_flat(db_session):
+async def test_get_categories_with_counts_flat(db_session):
     user = await register(db_session, "testuser", "pass")
     assert user.id is not None
     await create_category(db_session, user.id, "Tech")
     await create_category(db_session, user.id, "News")
-    tree = await get_category_tree(db_session, user.id)
-    assert len(tree) == 2
-    assert tree[0]["name"] == "News"
-    assert tree[1]["name"] == "Tech"
+    cats, feed_counts, unread_counts = await get_categories_with_counts(
+        db_session, user.id
+    )
+    assert len(cats) == 2
+    assert cats[0].name == "News"
+    assert cats[1].name == "Tech"
+    assert feed_counts == {}
+    assert unread_counts == {}
 
 
 @pytest.mark.asyncio
-async def test_get_category_tree_nested(db_session):
+async def test_get_categories_with_counts_nested(db_session):
     user = await register(db_session, "testuser", "pass")
     assert user.id is not None
     parent = await create_category(db_session, user.id, "Tech")
     await create_category(db_session, user.id, "Python", parent_id=parent.id)
-    tree = await get_category_tree(db_session, user.id)
-    assert len(tree) == 1
-    assert tree[0]["name"] == "Tech"
-    assert len(tree[0]["children"]) == 1
-    assert tree[0]["children"][0]["name"] == "Python"
+    cats, feed_counts, unread_counts = await get_categories_with_counts(
+        db_session, user.id
+    )
+    assert len(cats) == 2
+    names = {c.name for c in cats}
+    assert names == {"Tech", "Python"}
+    assert feed_counts == {}
+    assert unread_counts == {}
 
 
 @pytest.mark.asyncio

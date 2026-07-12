@@ -78,7 +78,7 @@ async def entry_view(ctx, entry_id: int) -> ft.View:  # noqa: C901, PLR0915
     build_tag_chips()
 
     async def handle_toggle_important(e):
-        async with ctx.new_session() as s:
+        async with ctx.open_session() as s:
             entry_data = await get_entry(s, entry_id)
             if entry_data:
                 new_val = not entry_data.important
@@ -87,7 +87,7 @@ async def entry_view(ctx, entry_id: int) -> ft.View:  # noqa: C901, PLR0915
                 e.control.update()
 
     async def handle_remove_tag(tag: str):
-        async with ctx.new_session() as s:
+        async with ctx.open_session() as s:
             await remove_tag(s, entry_id, tag, user_id)
         tag_list[:] = [t for t in tag_list if t != tag]
         build_tag_chips()
@@ -100,7 +100,7 @@ async def entry_view(ctx, entry_id: int) -> ft.View:  # noqa: C901, PLR0915
             new_tag = (tag_field.value or "").strip()
             if not new_tag:
                 return
-            async with ctx.new_session() as s:
+            async with ctx.open_session() as s:
                 await assign_tag(s, entry_id, new_tag, user_id)
             if new_tag not in tag_list:
                 tag_list.append(new_tag)
@@ -122,7 +122,7 @@ async def entry_view(ctx, entry_id: int) -> ft.View:  # noqa: C901, PLR0915
         existing_col = ft.Column(spacing=2)
 
         async def submit_existing_tag(tag: str):
-            async with ctx.new_session() as s:
+            async with ctx.open_session() as s:
                 await assign_tag(s, entry_id, tag, user_id)
             if tag not in tag_list:
                 tag_list.append(tag)
