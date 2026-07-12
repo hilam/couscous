@@ -6,7 +6,7 @@ import flet as ft
 from app.context import PageContext
 from app.controls.nav_bar import set_navbar
 from app.state import State
-from app.views.about_view import about_view
+from app.views.settings_view import settings_view
 from app.views.category_list_view import category_list_view
 from app.views.entry_list_view import entry_list_view
 from app.views.entry_view import entry_view
@@ -32,7 +32,7 @@ _ROUTES: list[_Route] = [
     _Route("/login", login_view, is_public=True),
     _Route("/register", register_view, is_public=True),
     _Route("/oauth/callback", oauth_callback_view, is_public=True),
-    _Route("/about", about_view, is_public=True),
+    _Route("/about", settings_view),
     _Route("/feeds", feed_list_view),
     _Route("/feed/", entry_list_view),
     _Route("/entry/", entry_view),
