@@ -54,7 +54,7 @@ async def search_entries(  # noqa: PLR0913
         "WHERE " + where_clause + " "
         "ORDER BY rank DESC "
         "LIMIT :limit"
-    )  # noseq B608
+    )  # nosec B608
 
     result = await session.execute(sql, params)
     rows = result.fetchall()

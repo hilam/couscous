@@ -31,7 +31,7 @@ def _provider_config(provider: str) -> dict[str, Any] | None:
             "scope": "openid email profile",
             "userinfo_name_key": "name",
             "userinfo_id_key": "sub",
-        }  # noseq B105
+        }  # nosec B105
     if provider == "github":
         if not GITHUB_CLIENT_ID or not GITHUB_CLIENT_SECRET:
             return None
@@ -44,7 +44,7 @@ def _provider_config(provider: str) -> dict[str, Any] | None:
             "scope": "read:user",
             "userinfo_name_key": "login",
             "userinfo_id_key": "id",
-        }  # noseq B105
+        }  # nosec B105
     return None
 
 
