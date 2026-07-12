@@ -1,5 +1,6 @@
 import flet as ft
 
+from app.controls.cleanup_dialog import show_cleanup_dialog
 from app.services.settings_service import (
     apply_settings_to_page,
     get_settings,
@@ -11,6 +12,16 @@ _THEME_OPTIONS = [
     ("Escuro", "dark"),
     ("Sistema", "system"),
 ]
+
+_CLEANUP_OPTIONS = [
+    ("Desligado", None),
+    ("7 dias", 7),
+    ("30 dias", 30),
+    ("90 dias", 90),
+    ("365 dias", 365),
+]
+
+_DROPDOWN_VALUES = {str(d) if d else "none": d for _, d in _CLEANUP_OPTIONS}
 
 
 async def settings_view(ctx) -> ft.View:
@@ -79,6 +90,19 @@ async def settings_view(ctx) -> ft.View:
         page.dialog = dlg  # type: ignore[attr-defined]
         dlg.open = True
         page.update()
+
+    async def _on_cleanup_dropdown_change(e):
+        nonlocal pending_cleanup_days
+        key = e.control.value
+        pending_cleanup_days = _DROPDOWN_VALUES.get(key)
+        await save_settings(ctx.session, state.user.id, auto_cleanup_days=pending_cleanup_days)
+        page.show_snack_bar(
+            ft.SnackBar(content=ft.Text("Configura\u00e7\u00e3o de limpeza salva."))
+        )
+        page.update()
+
+    async def _on_cleanup_click(e):
+        await show_cleanup_dialog(ctx)
 
     async def _close_dialog(page: ft.Page):
         page.dialog.open = False  # type: ignore[attr-defined]
@@ -151,6 +175,27 @@ async def settings_view(ctx) -> ft.View:
         on_click=_on_about,
     )
 
+    # Map current value to dropdown key
+    current_cleanup_key = str(settings.auto_cleanup_days) if settings.auto_cleanup_days is not None else "none"
+    pending_cleanup_days = settings.auto_cleanup_days
+
+    cleanup_dropdown = ft.Dropdown(
+        label="Limpeza autom\u00e1tica",
+        value=current_cleanup_key,
+        options=[
+            ft.dropdown.Option(key, label)
+            for label, val in _CLEANUP_OPTIONS
+            for key, v in [("none" if val is None else str(val), val)]
+        ],
+        on_text_change=_on_cleanup_dropdown_change,
+    )
+
+    cleanup_btn = ft.FilledButton(
+        "Limpar artigos antigos",
+        icon=ft.Icons.DELETE_SWEEP,
+        on_click=_on_cleanup_click,
+    )
+
     return ft.View(
         route="/about",
         controls=[
@@ -186,6 +231,16 @@ async def settings_view(ctx) -> ft.View:
                         ft.Row(
                             controls=[save_btn, about_btn],
                             spacing=16,
+                            alignment=ft.MainAxisAlignment.CENTER,
+                        ),
+                        ft.Divider(),
+                        ft.Text(
+                            "Limpeza de artigos",
+                            theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
+                        ),
+                        cleanup_dropdown,
+                        ft.Row(
+                            controls=[cleanup_btn],
                             alignment=ft.MainAxisAlignment.CENTER,
                         ),
                     ],

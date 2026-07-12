@@ -11,6 +11,7 @@ from database.models.couscous import User
 class UserSettings:
     theme_mode: str = "light"
     font_scale: float = 1.0
+    auto_cleanup_days: int | None = None
 
 
 async def get_settings(session, user_id: int) -> UserSettings:
@@ -21,7 +22,11 @@ async def get_settings(session, user_id: int) -> UserSettings:
     return UserSettings(
         theme_mode=user.theme_mode or "light",
         font_scale=user.font_scale or 1.0,
+        auto_cleanup_days=user.auto_cleanup_days,
     )
+
+
+_UNSET = object()  # sentinel to distinguish "not provided" from None
 
 
 async def save_settings(
@@ -29,12 +34,15 @@ async def save_settings(
     user_id: int,
     theme_mode: str | None = None,
     font_scale: float | None = None,
+    auto_cleanup_days: int | None | object = _UNSET,
 ) -> None:
     values: dict = {}
     if theme_mode is not None:
         values["theme_mode"] = theme_mode
     if font_scale is not None:
         values["font_scale"] = font_scale
+    if auto_cleanup_days is not _UNSET:
+        values["auto_cleanup_days"] = auto_cleanup_days
     if values:
         stmt = sqlmodel_update(User).where(User.id == user_id).values(**values)  # type: ignore[arg-type]
         await session.execute(stmt)

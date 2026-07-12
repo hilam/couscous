@@ -48,3 +48,37 @@ async def test_save_settings_updates_both(db_session):
     await save_settings(db_session, user.id, theme_mode="dark", font_scale=1.3)
     settings = await get_settings(db_session, user.id)
     assert settings == UserSettings("dark", 1.3)
+
+
+@pytest.mark.asyncio
+async def test_settings_default_auto_cleanup_is_none(db_session):
+    user = await register(db_session, "testuser", "pass")
+    settings = await get_settings(db_session, user.id)
+    assert settings.auto_cleanup_days is None
+
+
+@pytest.mark.asyncio
+async def test_save_auto_cleanup_days(db_session):
+    user = await register(db_session, "testuser", "pass")
+    await save_settings(db_session, user.id, auto_cleanup_days=30)
+    settings = await get_settings(db_session, user.id)
+    assert settings.auto_cleanup_days == 30
+
+
+@pytest.mark.asyncio
+async def test_save_auto_cleanup_days_none_disables_cleanup(db_session):
+    user = await register(db_session, "testuser", "pass")
+    await save_settings(db_session, user.id, auto_cleanup_days=30)
+    await save_settings(db_session, user.id, auto_cleanup_days=None)
+    settings = await get_settings(db_session, user.id)
+    assert settings.auto_cleanup_days is None
+
+
+@pytest.mark.asyncio
+async def test_save_auto_cleanup_preserves_other_settings(db_session):
+    user = await register(db_session, "testuser", "pass")
+    await save_settings(db_session, user.id, theme_mode="dark", auto_cleanup_days=90)
+    settings = await get_settings(db_session, user.id)
+    assert settings.theme_mode == "dark"
+    assert settings.font_scale == 1.0
+    assert settings.auto_cleanup_days == 90
