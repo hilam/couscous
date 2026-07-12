@@ -76,8 +76,6 @@ class Entry(SQLModel, table=True):
     url_feed: Feed = Relationship(back_populates="entries")
 
 
-
-
 class Category(SQLModel, table=True):
     __tablename__ = "categories"
 

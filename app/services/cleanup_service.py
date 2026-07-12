@@ -1,19 +1,22 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select, delete, func  # type: ignore[attr-defined]
+from sqlmodel import delete, func, select  # type: ignore[attr-defined]
 
 from database.models.couscous import Entry
 
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
-async def count_entries_older_than(
+
+async def count_entries_older_than(  # type: ignore[override]
     session: AsyncSession, user_id: int, days: int
 ) -> int:
     """Count entries older than `days` for a user, excluding important ones."""
     cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(days=days)
-    stmt = select(func.count(Entry.id)).where(
+    stmt = select(func.count(Entry.id)).where(  # type: ignore[arg-type]
         Entry.user_id == user_id,
         Entry.important == 0,
         Entry.first_updated_epoch < cutoff,
@@ -22,9 +25,7 @@ async def count_entries_older_than(
     return result.scalar_one()
 
 
-async def purge_older_than(
-    session: AsyncSession, user_id: int, days: int
-) -> int:
+async def purge_older_than(session: AsyncSession, user_id: int, days: int) -> int:
     """Remove entries older than `days` for a user, excluding important ones.
 
     Returns the number of entries removed.
@@ -37,10 +38,10 @@ async def purge_older_than(
     if count == 0:
         return 0
 
-    stmt = delete(Entry).where(
-        Entry.user_id == user_id,
-        Entry.important == 0,
-        Entry.first_updated_epoch < cutoff,
+    stmt = delete(Entry).where(  # type: ignore[misc]
+        Entry.user_id == user_id,  # type: ignore[arg-type]
+        Entry.important == 0,  # type: ignore[arg-type]
+        Entry.first_updated_epoch < cutoff,  # type: ignore[arg-type]
     )
     await session.execute(stmt)
     await session.commit()

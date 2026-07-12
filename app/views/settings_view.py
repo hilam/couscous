@@ -24,13 +24,14 @@ _CLEANUP_OPTIONS = [
 _DROPDOWN_VALUES = {str(d) if d else "none": d for _, d in _CLEANUP_OPTIONS}
 
 
-async def settings_view(ctx) -> ft.View:
+async def settings_view(ctx) -> ft.View:  # noqa: C901, PLR0915
     page = ctx.page
     state = ctx.state
 
     settings = await get_settings(ctx.session, state.user.id)
     pending_theme = settings.theme_mode
     pending_font = settings.font_scale
+    pending_cleanup_days = settings.auto_cleanup_days
 
     def _is_dirty():
         return pending_theme != state.theme_mode or pending_font != state.font_scale
@@ -95,8 +96,10 @@ async def settings_view(ctx) -> ft.View:
         nonlocal pending_cleanup_days
         key = e.control.value
         pending_cleanup_days = _DROPDOWN_VALUES.get(key)
-        await save_settings(ctx.session, state.user.id, auto_cleanup_days=pending_cleanup_days)
-        page.show_snack_bar(
+        await save_settings(
+            ctx.session, state.user.id, auto_cleanup_days=pending_cleanup_days
+        )
+        page.show_snack_bar(  # type: ignore[attr-defined]
             ft.SnackBar(content=ft.Text("Configura\u00e7\u00e3o de limpeza salva."))
         )
         page.update()
@@ -176,8 +179,12 @@ async def settings_view(ctx) -> ft.View:
     )
 
     # Map current value to dropdown key
-    current_cleanup_key = str(settings.auto_cleanup_days) if settings.auto_cleanup_days is not None else "none"
-    pending_cleanup_days = settings.auto_cleanup_days
+    current_cleanup_key = (
+        str(settings.auto_cleanup_days)
+        if settings.auto_cleanup_days is not None
+        else "none"
+    )
+    # pending_cleanup_days already initialized above
 
     cleanup_dropdown = ft.Dropdown(
         label="Limpeza autom\u00e1tica",

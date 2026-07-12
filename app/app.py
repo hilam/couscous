@@ -1,7 +1,6 @@
+import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-
-import asyncio
 
 import flet as ft
 
@@ -57,9 +56,13 @@ async def _auto_cleanup(page: ft.Page, user_id: int) -> None:
         removed = await purge_older_than(session, user_id, days)
 
     if removed > 0:
-        page.show_snack_bar(
+        label = "artigo" if removed == 1 else "artigos"
+        msg = (
+            f"\U0001f9f9 Limpeza autom\u00e1tica: {removed} {label} antigos removidos."
+        )
+        page.show_snack_bar(  # type: ignore[attr-defined]
             ft.SnackBar(
-                content=ft.Text(f"\U0001f9f9 Limpeza autom\u00e1tica: {removed} {'artigo' if removed == 1 else 'artigos'} antigo{'s' if removed != 1 else ''} removido{'s' if removed != 1 else ''}."),
+                content=ft.Text(msg),
                 bgcolor=ft.Colors.GREEN_400,
             )
         )
@@ -148,9 +151,9 @@ async def app_run(page: ft.Page):
         page.update()
 
         # Start auto-cleanup once after login
-        if state.user and not state._cleanup_triggered and state.user.id:
-            state._cleanup_triggered = True
-            asyncio.create_task(_auto_cleanup(page, int(state.user.id)))
+        if state.user and not state._cleanup_triggered and state.user.id:  # noqa: SLF001
+            state._cleanup_triggered = True  # noqa: SLF001
+            _task = asyncio.create_task(_auto_cleanup(page, int(state.user.id)))  # noqa: RUF006
 
     page.on_route_change = on_route_change
     await page.push_route("/login")

@@ -12,22 +12,27 @@ _PERIODS = [7, 30, 90, 365]
 
 
 async def show_cleanup_dialog(ctx: PageContext) -> None:
-    """Open the cleanup dialog with period selection, count preview, and async execution."""
+    """Open cleanup dialog with period select, count, and async exec."""
     page = ctx.page
     user_id: int = (ctx.state.user.id or 0) if ctx.state.user else 0
 
-    count_text = ft.Text("Selecione um período para ver quantos artigos serão removidos.")
+    limpar_btn: ft.FilledButton  # forward declaration
+    dialog: ft.AlertDialog  # forward declaration
+
+    count_text = ft.Text(
+        "Selecione um período para ver quantos artigos serão removidos."
+    )
     dropdown = ft.Dropdown(
         label="Remover artigos com mais de",
         options=[ft.dropdown.Option(f"{d} dias") for d in _PERIODS],
-        on_change=lambda e: asyncio.create_task(
+        on_change=lambda e: asyncio.create_task(  # type: ignore[call-arg, has-type]
             _on_period_change(e, ctx, user_id, count_text, limpar_btn)
         ),
     )
     limpar_btn = ft.FilledButton(
         "Limpar",
         disabled=True,
-        on_click=lambda e: asyncio.create_task(
+        on_click=lambda e: asyncio.create_task(  # type: ignore[has-type]
             _on_cleanup(e, page, ctx, user_id, dropdown, dialog)
         ),
     )
@@ -40,7 +45,7 @@ async def show_cleanup_dialog(ctx: PageContext) -> None:
             width=350,
         ),
         actions=[
-            ft.TextButton("Cancelar", on_click=lambda e: _close(e, dialog)),
+            ft.TextButton("Cancelar", on_click=lambda e: _close(e, dialog)),  # type: ignore[has-type]
             limpar_btn,
         ],
         actions_alignment=ft.MainAxisAlignment.END,
@@ -78,8 +83,13 @@ async def _on_period_change(
     limpar_btn.update()
 
 
-async def _on_cleanup(
-    e, page: ft.Page, ctx: PageContext, user_id: int, dropdown: ft.Dropdown, dialog: ft.AlertDialog
+async def _on_cleanup(  # noqa: PLR0913
+    e,
+    page: ft.Page,
+    ctx: PageContext,
+    user_id: int,
+    dropdown: ft.Dropdown,
+    dialog: ft.AlertDialog,
 ) -> None:
     value = dropdown.value
     if not value:
@@ -93,9 +103,14 @@ async def _on_cleanup(
         removed = await purge_older_than(s, user_id, days)
 
     if removed > 0:
-        msg = f"🧹 {removed} {'artigo' if removed == 1 else 'artigos'} antigo{'s' if removed != 1 else ''} removido{'s' if removed != 1 else ''}."
-        page.show_snack_bar(ft.SnackBar(content=ft.Text(msg), bgcolor=ft.Colors.GREEN_400))
+        label = "artigo" if removed == 1 else "artigos"
+        msg = f"\U0001f9f9 {removed} {label} antigo removido."
+        page.show_snack_bar(  # type: ignore[attr-defined]
+            ft.SnackBar(content=ft.Text(msg), bgcolor=ft.Colors.GREEN_400)
+        )
     else:
-        page.show_snack_bar(ft.SnackBar(content=ft.Text("Nenhum artigo para remover.")))
+        page.show_snack_bar(  # type: ignore[attr-defined]
+            ft.SnackBar(content=ft.Text("Nenhum artigo para remover."))
+        )
 
     page.update()
