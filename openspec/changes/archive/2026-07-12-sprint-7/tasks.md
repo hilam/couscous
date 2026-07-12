@@ -60,8 +60,8 @@
 
 ## 9. Qualidade e Validação
 
-- [ ] 9.1 Executar Ruff lint e format (`make lint && make format`)
-- [ ] 9.2 Executar typecheck (`make typecheck`)
-- [ ] 9.3 Executar testes existentes (`make test`) — garantir zero regressões
-- [ ] 9.4 Executar security scan (`make security`)
-- [ ] 9.5 Commit de ajustes de qualidade (`git commit -am "style: aplica ruff e ajustes de lint/typecheck"`)
+- [x] 9.1 Executar Ruff lint e format (`make lint && make format`)
+- [x] 9.2 Executar typecheck (`make typecheck`)
+- [x] 9.3 Executar testes existentes (`make test`) — 168/168 passaram
+- [x] 9.4 Executar security scan (`make security`)
+- [x] 9.5 Commit de ajustes de qualidade (`git commit -am "style: aplica ruff e ajustes de lint/typecheck"`)
