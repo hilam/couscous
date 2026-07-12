@@ -1,7 +1,7 @@
 schema: meu-fluxo-qa
 
 context: |
-    Você está trabalhando em um Portal de leitura de notícias.
+    Você está trabalhando em um aplicativo de leitura de notícias.
     Tecnologias principais:
     - Python Flet (wrapper Flutter)
     - Banco de Dados: PostgreSQL, SQLModel (Async), Alembic para migrations.
@@ -10,15 +10,18 @@ context: |
     Diretriz crítica:
     - Todas as comunicações e documentação interna devem ser feitas em Português do Brasil (PT-BR).
 
-    Regras Rígidas de Git Workflow (OBRIGATÓRIO):
-    0. IDIOMA DOS COMMITS: Todos os commits devem ser feitos em Português do Brasil (PT-BR).
-    1. PROTEÇÃO DA MAIN: Você está estritamente proibido de codificar ou gerar planos na branch `main`.
-    2. BRANCHING: Ao iniciar uma nova mudança, use o terminal para criar uma branch usando o padrão `feat/<nome-da-mudanca>`, `fix/<nome-da-mudanca>` ou `chore/<nome-da-mudanca>`.
-    3. COMMITS DE ARTEFATOS: Após terminar de gerar QUALQUER arquivo de planejamento do OpenSpec (proposal.md, specs/, design.md, qa-plan.md, tasks.md), você DEVE abrir o terminal e "comitar" o arquivo gerado usando Conventional Commits. Exemplo: `git add <arquivo> && git commit -m "docs(planning): generate <nome-do-artefato>"`.
-    4. COMMITS DE CÓDIGO: Durante a implementação, todo código escrito deve ser "comitado" usando os prefixos corretos (feat:, fix:, test:, refactor:, chore:).
-
 rules:
-    design:
-        - DEVE usar a skill domain-modeling
-    tasks:
-        - DEVE incluir etapas de execução de QA
+  proposal:
+    - "Após gerar proposal.md, execute a skill grill-me para refinar o artefato."
+
+  design:
+    - "Após gerar design.md, execute a skill grill-me para refinar o artefato."
+
+  specs:
+    - "Após gerar specs/, execute a skill grill-me para refinar os artefatos."
+
+  qa-plan:
+    - "Após gerar qa-plan.md, execute a skill grill-me para refinar o artefato."
+
+  tasks:
+    - "Após gerar tasks.md, execute a skill grill-me para refinar o checklist."
