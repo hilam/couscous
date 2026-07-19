@@ -38,12 +38,10 @@ async def settings_view(ctx) -> ft.View:  # noqa: C901, PLR0915
 
     async def _on_theme_change(e):
         nonlocal pending_theme
-        selected = e.control.selected
-        if selected:
-            pending_theme = e.control.data
-            page.theme_mode = getattr(ft.ThemeMode, pending_theme.upper())
-            _update_save_btn()
-            page.update()
+        pending_theme = e.control.data
+        page.theme_mode = getattr(ft.ThemeMode, pending_theme.upper())
+        _update_save_btn()
+        page.update()
 
     async def _on_slider_change(e):
         nonlocal pending_font
