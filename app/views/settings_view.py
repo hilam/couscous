@@ -84,11 +84,9 @@ async def settings_view(ctx) -> ft.View:  # noqa: C901, PLR0915
                 spacing=8,
                 tight=True,
             ),
-            actions=[ft.TextButton("Fechar", on_click=lambda _: _close_dialog(page))],
+            actions=[ft.TextButton("Fechar", on_click=lambda _: page.close_dialog())],
         )
-        page.dialog = dlg  # type: ignore[attr-defined]
-        dlg.open = True
-        page.update()
+        page.show_dialog(dlg)
 
     async def _on_cleanup_dropdown_change(e):
         nonlocal pending_cleanup_days
@@ -101,10 +99,6 @@ async def settings_view(ctx) -> ft.View:  # noqa: C901, PLR0915
 
     async def _on_cleanup_click(e):
         await show_cleanup_dialog(ctx)
-
-    async def _close_dialog(page: ft.Page):
-        page.dialog.open = False  # type: ignore[attr-defined]
-        page.update()
 
     def _update_preview():
         preview_text.size = 16 * pending_font
