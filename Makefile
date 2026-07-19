@@ -1,10 +1,7 @@
-.PHONY: install run run-web test lint format format-check typecheck check-all security db-up db-down db-shell db-clean db-migrate-create db-migrate-up db-migrate-down db-migrate-status clean
+.PHONY: install run-web test lint format format-check typecheck check-all security db-up db-down db-shell db-clean db-migrate-create db-migrate-up db-migrate-down db-migrate-status clean
 
 install:
 	uv sync
-
-run:
-	uv run python main.py
 
 run-web: db-up db-migrate-up
 	uv run flet run -w -p 8550
@@ -31,6 +28,7 @@ security:
 
 db-up:
 	docker compose up -d
+	sleep 2
 
 db-down:
 	docker compose down --remove-orphans
