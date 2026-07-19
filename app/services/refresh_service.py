@@ -7,7 +7,7 @@ from time import mktime
 
 import feedparser
 import httpx
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlmodel import select
 
 from database.models.couscous import Entry, Feed
@@ -55,9 +55,12 @@ async def refresh_all_feeds(
 
     # ponytail: Semaphore(5), make configurable if throughput matters
     semaphore = asyncio.Semaphore(5)
+    session_factory = async_sessionmaker(
+        bind=session.bind, class_=AsyncSession, expire_on_commit=False
+    )
 
     async def _refresh_one(feed: Feed) -> None:
-        async with semaphore, AsyncSession(bind=session.bind) as feed_session:
+        async with semaphore, session_factory() as feed_session:
             local_feed = (
                 await feed_session.execute(
                     select(Feed).where(
