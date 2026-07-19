@@ -233,12 +233,6 @@ async def settings_view(ctx) -> ft.View:  # noqa: C901, PLR0915
                             vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         ft.Divider(),
-                        ft.Row(
-                            controls=[save_btn, about_btn],
-                            spacing=16,
-                            alignment=ft.MainAxisAlignment.CENTER,
-                        ),
-                        ft.Divider(),
                         ft.Text(
                             "Limpeza de artigos",
                             theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
@@ -246,6 +240,12 @@ async def settings_view(ctx) -> ft.View:  # noqa: C901, PLR0915
                         cleanup_dropdown,
                         ft.Row(
                             controls=[cleanup_btn],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                        ),
+                        ft.Divider(),
+                        ft.Row(
+                            controls=[save_btn, about_btn],
+                            spacing=16,
                             alignment=ft.MainAxisAlignment.CENTER,
                         ),
                     ],
