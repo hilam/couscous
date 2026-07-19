@@ -130,7 +130,7 @@ class ArticleCard(ft.Card):
             f"}})"
         )
         self._copy_page.run_javascript(js)  # type: ignore[attr-defined]
-        self._copy_page.show_snack_bar(  # type: ignore[attr-defined]
+        self._copy_page.show_dialog(
             ft.SnackBar(content=ft.Text("Link copiado!"))
         )
         self._copy_page.update()

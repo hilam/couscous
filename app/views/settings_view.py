@@ -99,7 +99,7 @@ async def settings_view(ctx) -> ft.View:  # noqa: C901, PLR0915
         await save_settings(
             ctx.session, state.user.id, auto_cleanup_days=pending_cleanup_days
         )
-        page.show_snack_bar(  # type: ignore[attr-defined]
+        page.show_dialog(
             ft.SnackBar(content=ft.Text("Configura\u00e7\u00e3o de limpeza salva."))
         )
         page.update()

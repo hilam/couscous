@@ -60,7 +60,7 @@ async def _auto_cleanup(page: ft.Page, user_id: int) -> None:
         msg = (
             f"\U0001f9f9 Limpeza autom\u00e1tica: {removed} {label} antigos removidos."
         )
-        page.show_snack_bar(  # type: ignore[attr-defined]
+        page.show_dialog(
             ft.SnackBar(
                 content=ft.Text(msg),
                 bgcolor=ft.Colors.GREEN_400,

@@ -105,11 +105,11 @@ async def _on_cleanup(  # noqa: PLR0913
     if removed > 0:
         label = "artigo" if removed == 1 else "artigos"
         msg = f"\U0001f9f9 {removed} {label} antigo removido."
-        page.show_snack_bar(  # type: ignore[attr-defined]
+        page.show_dialog(
             ft.SnackBar(content=ft.Text(msg), bgcolor=ft.Colors.GREEN_400)
         )
     else:
-        page.show_snack_bar(  # type: ignore[attr-defined]
+        page.show_dialog(
             ft.SnackBar(content=ft.Text("Nenhum artigo para remover."))
         )
 

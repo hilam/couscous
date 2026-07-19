@@ -33,7 +33,7 @@ async def _copy_to_clipboard(page: ft.Page, url: str) -> None:
         f"}})"
     )
     page.run_javascript(js)  # type: ignore[attr-defined]
-    page.show_snack_bar(  # type: ignore[attr-defined]
+    page.show_dialog(
         ft.SnackBar(content=ft.Text("Link copiado!"))
     )
     page.update()
