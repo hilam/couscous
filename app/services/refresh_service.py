@@ -58,7 +58,16 @@ async def refresh_all_feeds(
 
     async def _refresh_one(feed: Feed) -> None:
         async with semaphore, AsyncSession(bind=session.bind) as feed_session:
-            await refresh_single_feed(feed_session, feed, client=client)
+            local_feed = (
+                await feed_session.execute(
+                    select(Feed).where(
+                        Feed.url == feed.url, Feed.user_id == feed.user_id
+                    )
+                )
+            ).scalar_one_or_none()
+            if local_feed is None:
+                return
+            await refresh_single_feed(feed_session, local_feed, client=client)
 
     try:
         await asyncio.gather(*(_refresh_one(f) for f in feeds))
