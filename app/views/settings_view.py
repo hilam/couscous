@@ -208,29 +208,49 @@ async def settings_view(ctx) -> ft.View:  # noqa: C901, PLR0915
             ft.SafeArea(
                 content=ft.ListView(
                     controls=[
-                        ft.Text("Tema", theme_style=ft.TextThemeStyle.TITLE_MEDIUM),
-                        theme_group,
-                        ft.Divider(),
-                        ft.Text(
-                            "Tamanho do texto",
-                            theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
-                        ),
                         ft.Row(
                             controls=[
-                                ft.Text("A", size=12),
                                 ft.Column(
                                     controls=[
-                                        font_slider,
+                                        ft.Text(
+                                            "Tema",
+                                            theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
+                                        ),
+                                        theme_group,
+                                    ],
+                                    spacing=8,
+                                ),
+                                ft.VerticalDivider(),
+                                ft.Column(
+                                    controls=[
+                                        ft.Text(
+                                            "Tamanho do texto",
+                                            theme_style=ft.TextThemeStyle.TITLE_MEDIUM,
+                                        ),
                                         ft.Row(
-                                            controls=[preview_text],
-                                            alignment=ft.MainAxisAlignment.CENTER,
+                                            controls=[
+                                                ft.Text("A", size=12),
+                                                ft.Column(
+                                                    controls=[
+                                                        font_slider,
+                                                        ft.Row(
+                                                            controls=[preview_text],
+                                                            alignment=ft.MainAxisAlignment.CENTER,
+                                                        ),
+                                                    ],
+                                                    expand=True,
+                                                ),
+                                                ft.Text("A", size=24),
+                                            ],
+                                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                                            expand=True,
                                         ),
                                     ],
+                                    spacing=8,
                                     expand=True,
                                 ),
-                                ft.Text("A", size=24),
                             ],
-                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                            spacing=12,
                         ),
                         ft.Divider(),
                         ft.Text(
