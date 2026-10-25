@@ -1,5 +1,6 @@
 import datetime as _dt
 
+from sqlalchemy import Index, desc
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -18,6 +19,7 @@ class User(SQLModel, table=True):
 
 class Feed(SQLModel, table=True):
     __tablename__ = "feeds"
+    __table_args__ = (Index("idx_feeds_user_id", "user_id"),)
 
     url: str = Field(primary_key=True)
     user_id: int = Field(foreign_key="users.id", nullable=False)
@@ -48,6 +50,12 @@ class Feed(SQLModel, table=True):
 
 class Entry(SQLModel, table=True):
     __tablename__ = "entries"
+    __table_args__ = (
+        Index("idx_entries_feed_user_published", "feed", "user_id", desc("published")),
+        Index("idx_entries_user_published", "user_id", desc("published")),
+        Index("idx_entries_user_read", "user_id", "read"),
+        Index("idx_entries_link_user", "link", "user_id"),
+    )
 
     id: int | None = Field(primary_key=True, default=None)
     feed: str = Field(foreign_key="feeds.url")
@@ -78,6 +86,7 @@ class Entry(SQLModel, table=True):
 
 class Category(SQLModel, table=True):
     __tablename__ = "categories"
+    __table_args__ = (Index("idx_categories_user_id", "user_id"),)
 
     id: int | None = Field(primary_key=True, default=None)
     user_id: int = Field(foreign_key="users.id", nullable=False)
