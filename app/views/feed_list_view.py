@@ -114,8 +114,7 @@ async def _handle_feed_added(  # noqa: PLR0913
             feed = await add_feed(s, user_id, url, category_id)
         except ValueError:
             snack = ft.SnackBar(content=ft.Text("Feed j\u00e1 cadastrado"))
-            page.overlay.append(snack)
-            snack.open = True
+            page.show_dialog(snack)
             page.update()
             return
 
@@ -123,8 +122,7 @@ async def _handle_feed_added(  # noqa: PLR0913
 
         if feed.last_exception:
             snack = ft.SnackBar(content=ft.Text(f"Erro: {feed.last_exception}"))
-            page.overlay.append(snack)
-            snack.open = True
+            page.show_dialog(snack)
             page.update()
             await _rebuild_feed_list(feed_list, confirm_delete_cb, s, page, user_id)
             page.update()
@@ -148,8 +146,7 @@ async def _handle_feed_add_another(  # noqa: PLR0913
             feed = await add_feed(s, user_id, url, category_id)
         except ValueError:
             snack = ft.SnackBar(content=ft.Text("Feed j\u00e1 cadastrado"))
-            page.overlay.append(snack)
-            snack.open = True
+            page.show_dialog(snack)
             page.update()
             return False
 
@@ -160,8 +157,7 @@ async def _handle_feed_add_another(  # noqa: PLR0913
 
         if feed.last_exception:
             snack = ft.SnackBar(content=ft.Text(f"Erro: {feed.last_exception}"))
-            page.overlay.append(snack)
-            snack.open = True
+            page.show_dialog(snack)
 
         await _rebuild_feed_list(feed_list, confirm_delete_cb, s, page, user_id)
 
