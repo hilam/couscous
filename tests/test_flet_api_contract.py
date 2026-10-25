@@ -5,11 +5,13 @@ page.run_javascript, page.close_bottom_sheet) que quebravam em runtime na
 era 0.x, e afirma a presença das APIs 1.x nas quais convergimos
 (page.show_dialog, page.pop_dialog, ft.Clipboard + shared_service).
 
-Nota: page.views continua sendo API válida no 1.x, porém como campo de
-dataclass acessível na INSTÂNCIA (dir()/hasattr na classe não o listam),
-usado internamente por render_views/pop_views_until. Por isso a asserção
-"views" abaixo é feita na classe e não conflita com o uso em app/app.py.
+Nota: o app usa page.views (app/app.py) como campo de dataclass acessível
+na INSTÂNCIA. A asserção "views" abaixo trava o contrato real: views deve
+permanecer campo dataclass de ft.Page — se o Flet remover a API, o teste
+falha antes da regressão chegar a app/app.py.
 """
+
+import dataclasses
 
 import flet as ft
 
@@ -26,8 +28,15 @@ def test_removed_zero_x_apis_are_absent():
     assert not hasattr(ft.Page, "close_dialog")
 
 
-def test_page_views_absent_at_class_level():
-    assert not hasattr(ft.Page, "views")
+def test_page_views_is_dataclass_field():
+    """Garante que page.views continua disponível como campo dataclass de ft.Page.
+
+    O app depende de page.views.clear()/append() para a navegação multi-view
+    (app/app.py). Um teste com hasattr(ft.Page, "views") seria vazio: False na
+    classe por artefato do default_factory mesmo com a API existindo. Esta
+    trava afirma o contrato real e falha se o Flet remover o campo.
+    """
+    assert "views" in {f.name for f in dataclasses.fields(ft.Page)}
 
 
 def test_native_clipboard_available():
