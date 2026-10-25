@@ -116,8 +116,7 @@ async def category_list_view(ctx) -> ft.View:
 
     async def open_new_dialog(e):
         create_dlg = CreateCategoryDialog(page, refresh_tree, ctx)
-        page.overlay.append(create_dlg)
-        create_dlg.open = True
+        page.show_dialog(create_dlg)
         await create_dlg.load_parents()
         page.update()
 
