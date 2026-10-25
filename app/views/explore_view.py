@@ -308,7 +308,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
             render()
             page.update()
         except Exception as exc:
-            page.open(ft.SnackBar(content=ft.Text(f"Erro: {exc}")))
+            page.show_dialog(ft.SnackBar(content=ft.Text(f"Erro: {exc}")))
 
     def _select_category(cat_id: int | None):
         nonlocal browser_state
@@ -345,7 +345,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
             if is_mobile:
                 tag_drawer_container.visible = False
                 body_row.controls = _build_body_controls()
-                page.close_bottom_sheet()
+                page.pop_dialog()
             page.update()
 
         asyncio.create_task(_inner())  # noqa: RUF006
@@ -395,9 +395,8 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
                 ),
                 padding=ft.Padding.all(16),
             ),
-            open=True,
         )
-        page.open(sheet)
+        page.show_dialog(sheet)
 
     search_field.on_submit = lambda e: asyncio.create_task(_do_search())
     tag_button.on_click = lambda _: _toggle_tags_drawer()
