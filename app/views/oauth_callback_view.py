@@ -1,6 +1,10 @@
+import asyncio
+import logging
 from urllib.parse import parse_qs, urlparse
 
 import flet as ft
+import httpx
+from authlib.oauth2 import OAuth2Error
 
 from app.services import oauth_service, user_service
 from app.services.settings_service import apply_settings_to_page, get_settings
@@ -22,6 +26,11 @@ async def oauth_callback_view(ctx) -> ft.View:
         user_info = await oauth_service.handle_callback(page, code, state_param)
     except ValueError as ex:
         return await _error_view(page, str(ex))
+    except (httpx.HTTPError, OAuth2Error, KeyError):
+        logging.getLogger(__name__).exception("callback OAuth falhou")
+        return await _error_view(
+            page, "Falha ao concluir o login com o provedor"
+        )
 
     user = await user_service.get_or_create_oauth_user(
         ctx.session,
@@ -41,6 +50,7 @@ async def oauth_callback_view(ctx) -> ft.View:
 
 
 async def _error_view(page: ft.Page, message: str) -> ft.View:
+    _task_refs: list = []
     return ft.View(
         route="/oauth/callback",
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -58,7 +68,9 @@ async def _error_view(page: ft.Page, message: str) -> ft.View:
                     ft.Text(message, text_align=ft.TextAlign.CENTER),
                     ft.FilledButton(
                         "Voltar ao login",
-                        on_click=lambda _: page.push_route("/login"),
+                        on_click=lambda _: _task_refs.append(
+                            asyncio.create_task(page.push_route("/login"))
+                        ),
                     ),
                 ],
                 spacing=16,
