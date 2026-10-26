@@ -84,7 +84,7 @@ async def settings_view(ctx) -> ft.View:  # noqa: C901, PLR0915
                 spacing=8,
                 tight=True,
             ),
-            actions=[ft.TextButton("Fechar", on_click=lambda _: page.close_dialog())],
+            actions=[ft.TextButton("Fechar", on_click=lambda _: page.pop_dialog())],
         )
         page.show_dialog(dlg)
 
