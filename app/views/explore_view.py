@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 import flet as ft
 
@@ -307,8 +308,13 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
                 )
             render()
             page.update()
-        except Exception as exc:
-            page.show_dialog(ft.SnackBar(content=ft.Text(f"Erro: {exc}")))
+        except Exception:
+            logging.getLogger(__name__).exception("erro ao carregar entradas")
+            page.show_dialog(
+                ft.SnackBar(
+                    content=ft.Text("Erro ao carregar entradas — tente novamente")
+                )
+            )
 
     def _select_category(cat_id: int | None):
         nonlocal browser_state
