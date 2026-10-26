@@ -81,12 +81,11 @@ async def list_entries(  # noqa: PLR0913
 
 
 async def get_entry(session, entry_id: int, user_id: int):
-    entry = (
+    return (
         await session.execute(
             select(Entry).where(Entry.id == entry_id, Entry.user_id == user_id)
         )
     ).scalar_one_or_none()
-    return entry
 
 
 async def mark_read(session, entry_id: int, user_id: int, *, read: bool = True):

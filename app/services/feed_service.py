@@ -9,12 +9,11 @@ async def list_feeds(session, user_id: int):
 
 
 async def get_feed(session, url: str, user_id: int) -> Feed | None:
-    feed = (
+    return (
         await session.execute(
             select(Feed).where(Feed.url == url, Feed.user_id == user_id)
         )
     ).scalar_one_or_none()
-    return feed
 
 
 async def add_feed(session, user_id: int, url: str, category_id: int | None = None):
