@@ -1,7 +1,13 @@
 import pytest
 
 from app.services.category_service import create_category
-from app.services.feed_service import add_feed, list_feeds, remove_feed, update_feed_category
+from app.services.feed_service import (
+    add_feed,
+    get_feed,
+    list_feeds,
+    remove_feed,
+    update_feed_category,
+)
 from app.services.user_service import register
 
 
@@ -101,3 +107,29 @@ async def test_update_feed_category_remove(db_session):
     assert feed.category_id == cat.id
     updated = await update_feed_category(db_session, user.id, feed.url, None)
     assert updated.category_id is None
+
+
+@pytest.mark.asyncio
+async def test_get_feed(db_session):
+    user = await register(db_session, "testuser", "pass")
+    assert user.id is not None
+    await add_feed(db_session, user.id, "https://example.com/rss")
+    feed = await get_feed(db_session, "https://example.com/rss", user.id)
+    assert feed is not None
+    assert feed.url == "https://example.com/rss"
+
+
+@pytest.mark.asyncio
+async def test_get_feed_scoped_by_user(db_session):
+    user1 = await register(db_session, "user1", "pass1")
+    user2 = await register(db_session, "user2", "pass2")
+    await add_feed(db_session, user1.id, "https://example.com/rss")
+    leaked = await get_feed(db_session, "https://example.com/rss", user2.id)
+    assert leaked is None
+
+
+@pytest.mark.asyncio
+async def test_get_feed_missing(db_session):
+    user = await register(db_session, "testuser", "pass")
+    feed = await get_feed(db_session, "https://nonexistent.example/rss", user.id)
+    assert feed is None

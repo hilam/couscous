@@ -1,7 +1,28 @@
+from collections import defaultdict
+
 from sqlalchemy import func
 from sqlmodel import select
 
 from database.models.couscous import Entry, EntryTag
+
+
+async def get_tags_for_entries(
+    session, entry_ids: list[int], user_id: int
+) -> dict[int, list[str]]:
+    if not entry_ids:
+        return {}
+    result = await session.execute(
+        select(EntryTag)
+        .where(
+            EntryTag.entry_id.in_(entry_ids),  # type: ignore[attr-defined]
+            EntryTag.user_id == user_id,
+        )
+        .order_by(EntryTag.tag)
+    )
+    tag_map: dict[int, list[str]] = defaultdict(list)
+    for et in result.scalars().all():
+        tag_map[et.entry_id].append(et.tag)
+    return dict(tag_map)
 
 
 async def get_tags_for_entry(session, entry_id: int, user_id: int) -> list[str]:

@@ -7,6 +7,7 @@ from app.services.tag_service import (
     get_distinct_tags,
     get_distinct_tags_for_feed,
     get_distinct_tags_with_counts,
+    get_tags_for_entries,
     get_tags_for_entry,
     remove_tag,
 )
@@ -260,3 +261,47 @@ async def session_execute_all_tags(session, entry_id: int) -> list[str]:
         select(EntryTag.tag).where(EntryTag.entry_id == entry_id)
     )
     return list(result.scalars().all())
+
+
+@pytest.mark.asyncio
+async def test_get_tags_for_entries_batch(db_session):
+    user = await make_user(db_session, "usera", "passa")
+    _, entry1 = await create_feed_and_entry(db_session, user.id)
+    _, entry2 = await create_feed_and_entry(
+        db_session, user.id, url="https://example.com/rss2"
+    )
+
+    await assign_tag(db_session, entry1.id, "python", user.id)
+    await assign_tag(db_session, entry1.id, "django", user.id)
+    await assign_tag(db_session, entry2.id, "rust", user.id)
+
+    tag_map = await get_tags_for_entries(
+        db_session, [entry1.id, entry2.id], user.id
+    )
+    assert tag_map == {entry1.id: ["django", "python"], entry2.id: ["rust"]}
+
+
+@pytest.mark.asyncio
+async def test_get_tags_for_entries_batch_scoped_by_user(db_session):
+    user_a = await make_user(db_session, "usera", "passa")
+    user_b = await make_user(db_session, "userb", "passb")
+    _, entry_a = await create_feed_and_entry(db_session, user_a.id)
+    _, entry_b = await create_feed_and_entry(
+        db_session, user_b.id, url="https://example.com/rss2"
+    )
+
+    await assign_tag(db_session, entry_a.id, "python", user_a.id)
+    await assign_tag(db_session, entry_b.id, "rust", user_b.id)
+
+    tag_map = await get_tags_for_entries(
+        db_session, [entry_a.id, entry_b.id], user_a.id
+    )
+    assert tag_map == {entry_a.id: ["python"]}
+    assert entry_b.id not in tag_map
+
+
+@pytest.mark.asyncio
+async def test_get_tags_for_entries_empty(db_session):
+    user = await make_user(db_session)
+    tag_map = await get_tags_for_entries(db_session, [], user.id)
+    assert tag_map == {}

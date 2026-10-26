@@ -1,13 +1,11 @@
 import asyncio
-from collections import defaultdict
 
 import flet as ft
-from sqlmodel import select
 
 from app.controls.article_card import ArticleCard
 from app.services.entry_service import list_entries
-from app.services.tag_service import get_distinct_tags_for_feed
-from database.models.couscous import EntryTag, Feed
+from app.services.feed_service import get_feed
+from app.services.tag_service import get_distinct_tags_for_feed, get_tags_for_entries
 
 
 def _empty_state() -> ft.Container:
@@ -50,21 +48,6 @@ def _build_article_card(entry, page, tags: list[str] | None = None) -> ArticleCa
     )
 
 
-async def _load_entry_tags(session, entries: list) -> dict[int, list[str]]:
-    if not entries:
-        return {}
-    entry_ids = [e.id for e in entries if e.id is not None]
-    if not entry_ids:
-        return {}
-    result = await session.execute(
-        select(EntryTag).where(EntryTag.entry_id.in_(entry_ids))  # type: ignore[attr-defined]
-    )
-    tag_map: dict[int, list[str]] = defaultdict(list)
-    for et in result.scalars().all():
-        tag_map[et.entry_id].append(et.tag)
-    return tag_map
-
-
 def _populate_entry_list(
     entry_list: ft.ListView,
     entries: list,
@@ -86,8 +69,7 @@ async def entry_list_view(ctx) -> ft.View:
     feed_url = state.active_feed_url or ""
     user_id: int = (state.user.id or 0) if state.user else 0
 
-    result = await session.execute(select(Feed).where(Feed.url == feed_url))
-    feed = result.scalar_one_or_none()
+    feed = await get_feed(session, feed_url, user_id)
     feed_title = feed.title if feed and feed.title else feed_url
 
     entries = await list_entries(session, feed_url, user_id=user_id)
@@ -136,7 +118,9 @@ async def entry_list_view(ctx) -> ft.View:
     async def refresh(e):
         entries = await load_entries()
         async with ctx.open_session() as s:
-            tag_map = await _load_entry_tags(s, entries)
+            tag_map = await get_tags_for_entries(
+                s, [entry.id for entry in entries if entry.id is not None], user_id
+            )
         _populate_entry_list(entry_list, entries, page, tag_map)
         page.update()
 
@@ -150,7 +134,9 @@ async def entry_list_view(ctx) -> ft.View:
         show_important = not show_important
         await refresh(e)
 
-    tag_map = await _load_entry_tags(session, entries)
+    tag_map = await get_tags_for_entries(
+        session, [entry.id for entry in entries if entry.id is not None], user_id
+    )
     _populate_entry_list(entry_list, entries, page, tag_map)
 
     return ft.View(
