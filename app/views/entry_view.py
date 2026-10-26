@@ -13,6 +13,7 @@ from app.services.tag_service import (
     get_tags_for_entry,
     remove_tag,
 )
+from app.services.url_guard import is_safe_launch_url
 
 
 async def _copy_to_clipboard(page: ft.Page, url: str) -> None:
@@ -25,7 +26,11 @@ async def _copy_to_clipboard(page: ft.Page, url: str) -> None:
 
 
 async def _open_original_url(e: ft.ControlEvent):
-    await ft.UrlLauncher().launch_url(e.control.data)
+    url = e.control.data
+    if not is_safe_launch_url(url):
+        e.page.show_dialog(ft.SnackBar(content=ft.Text("Link inválido")))
+        return
+    await ft.UrlLauncher().launch_url(url)
 
 
 def _get_content_renderer(content: str) -> ft.Control:

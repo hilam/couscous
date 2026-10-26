@@ -38,6 +38,16 @@ async def test_add_duplicate_feed_raises(db_session):
 
 
 @pytest.mark.asyncio
+async def test_add_feed_rejects_javascript_scheme(db_session):
+    user = await register(db_session, "testuser", "pass")
+    assert user.id is not None
+    with pytest.raises(ValueError, match="URL de feed inválida"):
+        await add_feed(db_session, user.id, "javascript:alert(1)")
+    feeds = await list_feeds(db_session, user.id)
+    assert feeds == []
+
+
+@pytest.mark.asyncio
 async def test_list_feeds_after_add(db_session):
     user = await register(db_session, "testuser", "pass")
     assert user.id is not None

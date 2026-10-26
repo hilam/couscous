@@ -1,5 +1,8 @@
+from urllib.parse import urlparse
+
 from sqlmodel import select
 
+from app.services.url_guard import is_safe_launch_url
 from database.models.couscous import Feed
 
 
@@ -17,6 +20,13 @@ async def get_feed(session, url: str, user_id: int) -> Feed | None:
 
 
 async def add_feed(session, user_id: int, url: str, category_id: int | None = None):
+    if not is_safe_launch_url(url) or urlparse(url).scheme.lower() not in (
+        "http",
+        "https",
+    ):
+        msg = "URL de feed inválida"
+        raise ValueError(msg)
+
     existing = (
         await session.execute(
             select(Feed).where(Feed.url == url, Feed.user_id == user_id)
