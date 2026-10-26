@@ -39,9 +39,24 @@ async def test_get_entry(db_session):
     _, entry = await create_feed_and_entry(db_session, user.id)
 
     assert entry.id is not None
-    found = await get_entry(db_session, entry.id)
+    found = await get_entry(db_session, entry.id, user.id)
     assert found is not None
     assert found.title == "Test Article"
+
+
+@pytest.mark.asyncio
+async def test_get_entry_scoped_by_user(db_session):
+    user_a = await make_user(db_session, "usera", "passa")
+    user_b = await make_user(db_session, "userb", "passb")
+    _, entry_a = await create_feed_and_entry(db_session, user_a.id)
+
+    assert entry_a.id is not None
+    found = await get_entry(db_session, entry_a.id, user_a.id)
+    assert found is not None
+    assert found.title == "Test Article"
+
+    leaked = await get_entry(db_session, entry_a.id, user_b.id)
+    assert leaked is None
 
 
 @pytest.mark.asyncio

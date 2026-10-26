@@ -80,9 +80,13 @@ async def list_entries(  # noqa: PLR0913
     return result.scalars().all()
 
 
-async def get_entry(session, entry_id: int):
-    result = await session.execute(select(Entry).where(Entry.id == entry_id))
-    return result.scalar_one_or_none()
+async def get_entry(session, entry_id: int, user_id: int):
+    entry = (
+        await session.execute(
+            select(Entry).where(Entry.id == entry_id, Entry.user_id == user_id)
+        )
+    ).scalar_one_or_none()
+    return entry
 
 
 async def mark_read(session, entry_id: int, user_id: int, *, read: bool = True):

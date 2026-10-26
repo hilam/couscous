@@ -49,7 +49,7 @@ async def entry_view(ctx, entry_id: int) -> ft.View:  # noqa: C901, PLR0915
     session = ctx.session
     user_id: int = (state.user.id or 0) if state.user else 0
 
-    entry = await get_entry(session, entry_id)
+    entry = await get_entry(session, entry_id, user_id)
 
     if not entry:
         return ft.View(
@@ -89,7 +89,7 @@ async def entry_view(ctx, entry_id: int) -> ft.View:  # noqa: C901, PLR0915
 
     async def handle_toggle_important(e):
         async with ctx.open_session() as s:
-            entry_data = await get_entry(s, entry_id)
+            entry_data = await get_entry(s, entry_id, user_id)
             if entry_data:
                 new_val = not entry_data.important
                 await mark_important(s, entry_id, user_id, important=new_val)
