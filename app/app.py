@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
@@ -67,6 +68,15 @@ async def _auto_cleanup(page: ft.Page, user_id: int) -> None:
             )
         )
         page.update()
+
+
+def _log_task_exception(task: asyncio.Task) -> None:
+    """Loga exceção de task de background concluída (evita falha silenciosa)."""
+    if task.cancelled():
+        return
+    exc = task.exception()
+    if exc is not None:
+        logging.getLogger(__name__).error("auto-cleanup falhou", exc_info=exc)
 
 
 def _match_route(route: str) -> _Route | None:
@@ -160,6 +170,10 @@ async def app_run(page: ft.Page):
     state = State()
     page.session.store.set("state", state)
 
+    # Tasks de background com escopo de página: a lista vive enquanto o
+    # handler da página vive, mantendo referência forte (evita GC da task).
+    _bg_tasks: list = []
+
     async def on_route_change(e: ft.RouteChangeEvent):
         page.views.clear()
         route = e.route
@@ -194,7 +208,9 @@ async def app_run(page: ft.Page):
         # Start auto-cleanup once after login
         if state.user and not state._cleanup_triggered and state.user.id:  # noqa: SLF001
             state._cleanup_triggered = True  # noqa: SLF001
-            _task = asyncio.create_task(_auto_cleanup(page, int(state.user.id)))  # noqa: RUF006
+            _cleanup_task = asyncio.create_task(_auto_cleanup(page, int(state.user.id)))
+            _cleanup_task.add_done_callback(_log_task_exception)
+            _bg_tasks.append(_cleanup_task)
 
     page.on_route_change = on_route_change
     await page.push_route("/login")
