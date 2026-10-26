@@ -79,13 +79,54 @@ def _match_route(route: str) -> _Route | None:
     return None
 
 
+def _invalid_route_view(page: ft.Page) -> ft.View:
+    """View exibida quando um parâmetro de rota não pode ser parseado.
+
+    Evita tela branca quando a URL chega malformed (ex.: /entry/abc).
+    """
+    _task_refs: list = []
+
+    def _go_to_feeds(_) -> None:
+        _task_refs.append(asyncio.create_task(page.push_route("/feeds")))
+
+    return ft.View(
+        route="/",
+        appbar=ft.AppBar(title=ft.Text("CousCous")),
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        vertical_alignment=ft.MainAxisAlignment.CENTER,
+        controls=[
+            ft.Container(
+                content=ft.Column(
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.Icon(
+                            ft.Icons.ERROR_OUTLINE, size=64, color=ft.Colors.RED_400
+                        ),
+                        ft.Text(
+                            "Rota inválida",
+                            theme_style=ft.TextThemeStyle.HEADLINE_SMALL,
+                        ),
+                        ft.Text("O endereço acessado não é válido."),
+                        ft.FilledButton("Ir para feeds", on_click=_go_to_feeds),
+                    ],
+                    spacing=16,
+                ),
+            )
+        ],
+    )
+
+
 async def _invoke_handler(route_def: _Route, route: str, ctx: PageContext) -> ft.View:
     handler = route_def.handler
     if route_def.prefix == "/feed/":
         ctx.state.active_feed_url = route[len("/feed/") :]
         return await handler(ctx)
     if route_def.prefix == "/entry/":
-        entry_id = int(route[len("/entry/") :])
+        try:
+            entry_id = int(route[len("/entry/") :])
+        except ValueError:
+            return _invalid_route_view(ctx.page)
         return await handler(ctx, entry_id)  # type: ignore[call-arg]
     return await handler(ctx)
 

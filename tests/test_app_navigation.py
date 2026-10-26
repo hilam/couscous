@@ -1,6 +1,7 @@
+import flet as ft
 import pytest
 
-from app.app import _ROUTES, _match_route
+from app.app import _ROUTES, _invoke_handler, _match_route
 from app.views.category_list_view import category_list_view
 from app.views.entry_list_view import entry_list_view
 from app.views.entry_view import entry_view
@@ -49,3 +50,23 @@ class TestRouteOrder:
         root_index = route_prefixes.index("/")
         assert feed_index < root_index, "/feed/ must come before /"
         assert entry_index < root_index, "/entry/ must come before /"
+
+
+class TestInvalidEntryRoute:
+    @pytest.mark.asyncio
+    async def test_entry_route_with_non_integer_id_returns_error_view(
+        self, page_context
+    ):
+        """Regression: /entry/abc não pode levantar ValueError do int() —
+        deve retornar uma ft.View de erro (tela branca sem o fix)."""
+        route_def = _match_route("/entry/abc")
+        assert route_def is not None
+        view = await _invoke_handler(route_def, "/entry/abc", page_context)
+        assert isinstance(view, ft.View)
+
+    @pytest.mark.asyncio
+    async def test_entry_route_with_empty_id_returns_error_view(self, page_context):
+        route_def = _match_route("/entry/")
+        assert route_def is not None
+        view = await _invoke_handler(route_def, "/entry/", page_context)
+        assert isinstance(view, ft.View)
