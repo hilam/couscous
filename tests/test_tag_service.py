@@ -1,4 +1,5 @@
 import pytest
+from sqlmodel import select
 
 from app.services.tag_service import (
     assign_tag,
@@ -9,6 +10,7 @@ from app.services.tag_service import (
     get_tags_for_entry,
     remove_tag,
 )
+from database.models.couscous import EntryTag
 from tests.test_factory import make_user, create_feed_and_entry
 
 
@@ -19,7 +21,7 @@ async def test_assign_tag(db_session):
 
     await assign_tag(db_session, entry.id, "python", user.id)
 
-    tags = await get_tags_for_entry(db_session, entry.id)
+    tags = await get_tags_for_entry(db_session, entry.id, user.id)
     assert tags == ["python"]
 
 
@@ -31,7 +33,7 @@ async def test_assign_tag_duplicate_ignored(db_session):
     await assign_tag(db_session, entry.id, "python", user.id)
     await assign_tag(db_session, entry.id, "python", user.id)
 
-    tags = await get_tags_for_entry(db_session, entry.id)
+    tags = await get_tags_for_entry(db_session, entry.id, user.id)
     assert tags == ["python"]
 
 
@@ -42,7 +44,7 @@ async def test_assign_tag_trims_and_lowercases(db_session):
 
     await assign_tag(db_session, entry.id, "  Python  ", user.id)
 
-    tags = await get_tags_for_entry(db_session, entry.id)
+    tags = await get_tags_for_entry(db_session, entry.id, user.id)
     assert tags == ["python"]
 
 
@@ -53,7 +55,7 @@ async def test_assign_tag_empty_ignored(db_session):
 
     await assign_tag(db_session, entry.id, "   ", user.id)
 
-    tags = await get_tags_for_entry(db_session, entry.id)
+    tags = await get_tags_for_entry(db_session, entry.id, user.id)
     assert tags == []
 
 
@@ -65,7 +67,7 @@ async def test_remove_tag(db_session):
     await assign_tag(db_session, entry.id, "python", user.id)
     await remove_tag(db_session, entry.id, "python", user.id)
 
-    tags = await get_tags_for_entry(db_session, entry.id)
+    tags = await get_tags_for_entry(db_session, entry.id, user.id)
     assert tags == []
 
 
@@ -76,7 +78,7 @@ async def test_remove_nonexistent_tag_no_error(db_session):
 
     await remove_tag(db_session, entry.id, "python", user.id)
 
-    tags = await get_tags_for_entry(db_session, entry.id)
+    tags = await get_tags_for_entry(db_session, entry.id, user.id)
     assert tags == []
 
 
@@ -89,7 +91,7 @@ async def test_get_tags_for_entry_multiple(db_session):
     await assign_tag(db_session, entry.id, "django", user.id)
     await assign_tag(db_session, entry.id, "asgi", user.id)
 
-    tags = await get_tags_for_entry(db_session, entry.id)
+    tags = await get_tags_for_entry(db_session, entry.id, user.id)
     assert tags == ["asgi", "django", "python"]
 
 
@@ -98,7 +100,7 @@ async def test_get_tags_for_entry_empty(db_session):
     user = await make_user(db_session)
     _, entry = await create_feed_and_entry(db_session, user.id)
 
-    tags = await get_tags_for_entry(db_session, entry.id)
+    tags = await get_tags_for_entry(db_session, entry.id, user.id)
     assert tags == []
 
 
@@ -139,8 +141,8 @@ async def test_delete_tag(db_session):
 
     await delete_tag(db_session, "python", user.id)
 
-    tags1 = await get_tags_for_entry(db_session, entry1.id)
-    tags2 = await get_tags_for_entry(db_session, entry2.id)
+    tags1 = await get_tags_for_entry(db_session, entry1.id, user.id)
+    tags2 = await get_tags_for_entry(db_session, entry2.id, user.id)
     assert tags1 == []
     assert tags2 == []
 
@@ -223,3 +225,38 @@ async def test_get_distinct_tags_with_counts_empty(db_session):
 
     counts = await get_distinct_tags_with_counts(db_session, user.id)
     assert counts == []
+
+
+@pytest.mark.asyncio
+async def test_get_tags_for_entry_scoped_by_user(db_session):
+    user_a = await make_user(db_session, "usera", "passa")
+    user_b = await make_user(db_session, "userb", "passb")
+    _, entry_a = await create_feed_and_entry(db_session, user_a.id)
+
+    await assign_tag(db_session, entry_a.id, "python", user_a.id)
+
+    tags_a = await get_tags_for_entry(db_session, entry_a.id, user_a.id)
+    assert tags_a == ["python"]
+
+    tags_b = await get_tags_for_entry(db_session, entry_a.id, user_b.id)
+    assert tags_b == []
+
+
+@pytest.mark.asyncio
+async def test_assign_tag_foreign_entry_raises(db_session):
+    user_a = await make_user(db_session, "usera", "passa")
+    user_b = await make_user(db_session, "userb", "passb")
+    _, entry_a = await create_feed_and_entry(db_session, user_a.id)
+
+    with pytest.raises(ValueError):
+        await assign_tag(db_session, entry_a.id, "x", user_b.id)
+
+    rows = await session_execute_all_tags(db_session, entry_a.id)
+    assert rows == []
+
+
+async def session_execute_all_tags(session, entry_id: int) -> list[str]:
+    result = await session.execute(
+        select(EntryTag.tag).where(EntryTag.entry_id == entry_id)
+    )
+    return list(result.scalars().all())

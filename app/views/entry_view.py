@@ -68,7 +68,7 @@ async def entry_view(ctx, entry_id: int) -> ft.View:  # noqa: C901, PLR0915
 
     content = entry.content or entry.summary or "Sem conte\u00fado dispon\u00edvel."
 
-    tag_list = await get_tags_for_entry(session, entry_id)
+    tag_list = await get_tags_for_entry(session, entry_id, user_id)
     tags_row = ft.Row(
         controls=[],
         spacing=4,

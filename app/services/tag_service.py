@@ -4,9 +4,11 @@ from sqlmodel import select
 from database.models.couscous import Entry, EntryTag
 
 
-async def get_tags_for_entry(session, entry_id: int) -> list[str]:
+async def get_tags_for_entry(session, entry_id: int, user_id: int) -> list[str]:
     result = await session.execute(
-        select(EntryTag.tag).where(EntryTag.entry_id == entry_id).order_by(EntryTag.tag)
+        select(EntryTag.tag)
+        .where(EntryTag.entry_id == entry_id, EntryTag.user_id == user_id)
+        .order_by(EntryTag.tag)
     )
     return list(result.scalars().all())
 
@@ -41,6 +43,14 @@ async def assign_tag(session, entry_id: int, tag: str, user_id: int) -> None:
     tag = tag.strip().lower()
     if not tag:
         return
+    entry = (
+        await session.execute(
+            select(Entry.id).where(Entry.id == entry_id, Entry.user_id == user_id)
+        )
+    ).scalar_one_or_none()
+    if entry is None:
+        msg = "Entry não encontrada"
+        raise ValueError(msg)
     existing = await session.execute(
         select(EntryTag).where(EntryTag.entry_id == entry_id, EntryTag.tag == tag)
     )
