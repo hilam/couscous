@@ -60,12 +60,12 @@ async def login(session, name: str, password: str) -> User | None:
     result = await session.execute(select(User).where(User.name == name))
     user = result.scalar_one_or_none()
 
-    if not user:
-        msg = "Usuário não encontrado"
+    if user is None or user.password is None:
+        msg = "Usuário ou senha inválidos"
         raise ValueError(msg)
 
     if not bcrypt.checkpw(password.encode("utf-8"), user.password.encode("utf-8")):
-        msg = "Senha incorreta"
+        msg = "Usuário ou senha inválidos"
         raise ValueError(msg)
 
     return user

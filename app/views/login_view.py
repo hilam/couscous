@@ -41,7 +41,7 @@ async def login_view(ctx) -> ft.View:
                     )
                     await page.push_route("/")
                 else:
-                    error_text.value = "Usu\u00e1rio n\u00e3o encontrado"
+                    error_text.value = "Usuário ou senha inválidos"
                     error_text.visible = True
                     page.update()
             except ValueError as ex:
