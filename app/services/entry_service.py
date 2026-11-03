@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, func, or_
 from sqlmodel import desc, select
 
 from app.services.category_service import _collect_descendant_ids
@@ -171,7 +171,11 @@ async def mark_important(
 
 
 async def get_unread_count(session, user_id: int) -> int:
-    result = await session.execute(
-        select(Entry).where(Entry.user_id == user_id, Entry.read == 0)
-    )
-    return len(result.scalars().all())
+    count = (
+        await session.execute(
+            select(func.count(Entry.id)).where(  # type: ignore[arg-type]
+                Entry.user_id == user_id, Entry.read == 0
+            )
+        )
+    ).scalar_one()
+    return int(count)
