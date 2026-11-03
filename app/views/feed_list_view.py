@@ -178,6 +178,7 @@ async def feed_list_view(ctx) -> ft.View:
     feed_list = ft.ListView(spacing=10, padding=10, expand=True)
 
     async def refresh(e):
+        if state.loading: return  # guarda de reentrância: bloqueia duplo disparo
         state.loading = True
         page.update()
 
@@ -238,7 +239,9 @@ async def feed_list_view(ctx) -> ft.View:
                 bgcolor=ft.Colors.CYAN_50,
                 actions=[
                     ft.Text(state.user.name if state.user else "", size=14),
-                    ft.IconButton(ft.Icons.REFRESH, on_click=refresh),
+                    ft.IconButton(
+                        ft.Icons.REFRESH, on_click=refresh, disabled=state.loading
+                    ),
                     ft.IconButton(ft.Icons.ADD, on_click=open_add_dialog),
                 ],
             ),
