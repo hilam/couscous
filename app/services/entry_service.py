@@ -15,14 +15,29 @@ async def list_recent(  # noqa: PLR0913
     tags: list[str] | None = None,
     limit: int = 50,
     include_subcategories: bool = False,
+    before: datetime | None = None,
+    before_id: int | None = None,
 ):
     """List recent entries across all feeds for a user.
 
     Supports optional category and tag filters.
     When include_subcategories is True, entries from descendant categories
     are also included.
+
+    Returns projected rows (id, title, link, summary, published, read,
+    author) — `content` is NOT loaded. Supports keyset pagination via
+    (before, before_id); entries with published IS NULL are excluded once
+    a cursor is applied.
     """
-    query = select(Entry).where(Entry.user_id == user_id)
+    query = select(  # type: ignore[call-overload,misc]
+        Entry.id,
+        Entry.title,
+        Entry.link,
+        Entry.summary,
+        Entry.published,
+        Entry.read,
+        Entry.author,
+    ).where(Entry.user_id == user_id)
 
     if category_id is not None:
         if include_subcategories:
@@ -48,9 +63,20 @@ async def list_recent(  # noqa: PLR0913
                 )
             )
 
-    query = query.order_by(desc(Entry.published)).limit(limit)
+    if before is not None:
+        query = query.where(
+            or_(
+                Entry.published < before,  # type: ignore[operator,arg-type]
+                and_(  # type: ignore[arg-type]
+                    Entry.published == before,  # type: ignore[arg-type]
+                    Entry.id < before_id,  # type: ignore[operator,arg-type]
+                ),
+            )
+        )
+
+    query = query.order_by(desc(Entry.published), desc(Entry.id)).limit(limit)
     result = await session.execute(query)
-    return result.scalars().all()
+    return result.all()
 
 
 async def list_entries(  # noqa: PLR0913

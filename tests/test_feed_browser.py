@@ -1,4 +1,6 @@
 """Testes para feed_browser.py — operações do ExploreState."""
+from datetime import datetime, timedelta
+
 import pytest
 
 from app.services.category_service import create_category
@@ -6,12 +8,14 @@ from app.services.feed_browser import (
     ExploreState,
     clear_tags,
     load,
+    load_more,
     search,
     select_category,
     toggle_tag,
 )
 from app.services.feed_service import update_feed_category
 from app.services.tag_service import assign_tag
+from database.models.couscous import EntryTag
 from tests.test_factory import make_user, create_feed_and_entry
 
 
@@ -202,3 +206,122 @@ async def test_search_empty_query_clears(db_session):
 
     state = await search(db_session, state, "", user.id)
     assert state.is_searching is False
+
+
+# ── paginação keyset (load_more) ─────────────────────────────────────────────
+
+
+async def _make_60_recent(db_session, user_id, base=None):
+    base = base or datetime(2024, 1, 1)
+    created = []
+    for i in range(60):
+        _, entry = await create_feed_and_entry(
+            db_session,
+            user_id,
+            url=f"https://example.com/f{i}",
+            link=f"https://example.com/a{i}",
+            title=f"Article {i}",
+            published=base + timedelta(minutes=i),
+        )
+        created.append(entry)
+    return created
+
+
+@pytest.mark.asyncio
+async def test_load_accumulates_cursor_and_has_more(db_session):
+    user = await make_user(db_session)
+    await _make_60_recent(db_session, user.id)
+
+    state = await load(db_session, user.id)
+    assert len(state.entries) == 50
+    assert state.has_more is True
+    assert state.cursor == (state.entries[-1].published, state.entries[-1].id)
+
+
+@pytest.mark.asyncio
+async def test_load_more_accumulates_without_overlap(db_session):
+    user = await make_user(db_session)
+    entries = await _make_60_recent(db_session, user.id)
+    await assign_tag(db_session, entries[59].id, "top", user.id)
+    await assign_tag(db_session, entries[5].id, "old", user.id)
+
+    state = await load(db_session, user.id)
+    page1_ids = {e.id for e in state.entries}
+
+    state2 = await load_more(db_session, state, user.id)
+    new_ids = {e.id for e in state2.entries[50:]}
+
+    assert len(state2.entries) == 60
+    assert page1_ids.isdisjoint(new_ids)
+    assert len(page1_ids | new_ids) == 60
+    assert state2.has_more is False
+    assert state2.cursor is not None
+    # tag_map é merge: tags da página 1 e da página 2 presentes
+    assert state2.tag_map.get(entries[59].id) == ["top"]
+    assert state2.tag_map.get(entries[5].id) == ["old"]
+
+
+@pytest.mark.asyncio
+async def test_select_category_resets_cursor(db_session):
+    user = await make_user(db_session)
+    base = datetime(2024, 1, 1)
+    cat = await create_category(db_session, user.id, "Cat")
+    for i in range(3):
+        feed, _ = await create_feed_and_entry(
+            db_session,
+            user.id,
+            url=f"https://example.com/c{i}",
+            link=f"https://example.com/c{i}",
+            published=base + timedelta(minutes=i),
+        )
+        await update_feed_category(db_session, user.id, feed.url, cat.id)
+
+    state = await load(db_session, user.id)
+    state = await select_category(db_session, state, cat.id, user.id)
+    assert len(state.entries) == 3
+    assert state.has_more is False
+    assert state.cursor == (state.entries[-1].published, state.entries[-1].id)
+
+    # estado "gasto" com cursor antigo é resetado pela seleção de categoria
+    stale = ExploreState(
+        cursor=(datetime(2030, 1, 1), 99999),
+        has_more=True,
+        tree=state.tree,
+    )
+    state2 = await select_category(db_session, stale, cat.id, user.id)
+    assert len(state2.entries) == 3
+    assert state2.has_more is False
+    assert state2.cursor == (state.entries[-1].published, state.entries[-1].id)
+
+
+@pytest.mark.asyncio
+async def test_search_has_more_false(db_session):
+    user = await make_user(db_session)
+    await create_feed_and_entry(
+        db_session,
+        user.id,
+        url="https://example.com/ml",
+        title="Machine learning basics",
+        link="https://example.com/ml",
+    )
+
+    state = await load(db_session, user.id)
+    state = await search(db_session, state, "machine", user.id)
+    assert state.is_searching is True
+    assert state.has_more is False
+    assert state.cursor is None
+
+
+@pytest.mark.asyncio
+async def test_load_entry_tags_scoped_by_user(db_session):
+    user_a = await make_user(db_session, "usera", "passa")
+    user_b = await make_user(db_session, "userb", "passb")
+    _, entry_a = await create_feed_and_entry(db_session, user_a.id)
+
+    await assign_tag(db_session, entry_a.id, "python", user_a.id)
+    # linha legada/cruzada: tag de entry_a atribuída por outro usuário
+    db_session.add(EntryTag(entry_id=entry_a.id, tag="ghost", user_id=user_b.id))
+    await db_session.commit()
+
+    state = await load(db_session, user_a.id)
+    assert state.tag_map.get(entry_a.id) == ["python"]

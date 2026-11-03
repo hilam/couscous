@@ -29,6 +29,17 @@ class ExploreState:
     tag_map: dict[int, list[str]] = field(default_factory=dict)
     tree: list[dict] = field(default_factory=list)
     tag_counts: list[tuple[str, int]] = field(default_factory=list)
+    cursor: tuple | None = None
+    has_more: bool = True
+
+
+PAGE_SIZE = 50
+
+
+def _next_cursor(entries: list) -> tuple | None:
+    if not entries:
+        return None
+    return (entries[-1].published, entries[-1].id)
 
 
 async def load(session: AsyncSession, user_id: int) -> ExploreState:
@@ -37,10 +48,15 @@ async def load(session: AsyncSession, user_id: int) -> ExploreState:
     )
     tree = build_category_tree(cats, feed_counts, unread_counts)
     tag_counts = await get_distinct_tags_with_counts(session, user_id)
-    entries = await list_recent(session, user_id, limit=50)
-    tag_map = await _load_entry_tags(session, entries)
+    entries = await list_recent(session, user_id, limit=PAGE_SIZE)
+    tag_map = await _load_entry_tags(session, entries, user_id)
     return ExploreState(
-        entries=entries, tag_map=tag_map, tree=tree, tag_counts=tag_counts
+        entries=entries,
+        tag_map=tag_map,
+        tree=tree,
+        tag_counts=tag_counts,
+        cursor=_next_cursor(entries),
+        has_more=len(entries) == PAGE_SIZE,
     )
 
 
@@ -69,10 +85,10 @@ async def select_category(
         user_id,
         category_id=selected_category_id,
         tags=tags,
-        limit=50,
+        limit=PAGE_SIZE,
         include_subcategories=True,
     )
-    tag_map = await _load_entry_tags(session, entries)
+    tag_map = await _load_entry_tags(session, entries, user_id)
 
     return ExploreState(
         selected_category_id=selected_category_id,
@@ -82,6 +98,8 @@ async def select_category(
         tag_counts=state.tag_counts,
         entries=entries,
         tag_map=tag_map,
+        cursor=_next_cursor(entries),
+        has_more=len(entries) == PAGE_SIZE,
     )
 
 
@@ -100,10 +118,10 @@ async def toggle_tag(
         user_id,
         category_id=state.selected_category_id,
         tags=tags,
-        limit=50,
+        limit=PAGE_SIZE,
         include_subcategories=True,
     )
-    tag_map = await _load_entry_tags(session, entries)
+    tag_map = await _load_entry_tags(session, entries, user_id)
 
     return ExploreState(
         selected_category_id=state.selected_category_id,
@@ -114,6 +132,8 @@ async def toggle_tag(
         entries=entries,
         tag_map=tag_map,
         is_searching=state.is_searching,
+        cursor=_next_cursor(entries),
+        has_more=len(entries) == PAGE_SIZE,
     )
 
 
@@ -124,10 +144,10 @@ async def clear_tags(
         session,
         user_id,
         category_id=state.selected_category_id,
-        limit=50,
+        limit=PAGE_SIZE,
         include_subcategories=True,
     )
-    tag_map = await _load_entry_tags(session, entries)
+    tag_map = await _load_entry_tags(session, entries, user_id)
 
     return ExploreState(
         selected_category_id=state.selected_category_id,
@@ -136,6 +156,40 @@ async def clear_tags(
         tag_counts=state.tag_counts,
         entries=entries,
         tag_map=tag_map,
+        cursor=_next_cursor(entries),
+        has_more=len(entries) == PAGE_SIZE,
+    )
+
+
+async def load_more(
+    session: AsyncSession, state: ExploreState, user_id: int
+) -> ExploreState:
+    """Fetch the next keyset page and append it to the current state."""
+    before, before_id = state.cursor if state.cursor is not None else (None, None)
+    tags = list(state.selected_tags) if state.selected_tags else None
+    new_entries = await list_recent(
+        session,
+        user_id,
+        category_id=state.selected_category_id,
+        tags=tags,
+        limit=PAGE_SIZE,
+        include_subcategories=True,
+        before=before,
+        before_id=before_id,
+    )
+    new_tag_map = await _load_entry_tags(session, new_entries, user_id)
+
+    return ExploreState(
+        selected_category_id=state.selected_category_id,
+        expanded_ids=state.expanded_ids,
+        selected_tags=state.selected_tags,
+        tree=state.tree,
+        tag_counts=state.tag_counts,
+        entries=[*state.entries, *new_entries],
+        tag_map={**state.tag_map, **new_tag_map},
+        is_searching=state.is_searching,
+        cursor=_next_cursor(new_entries) or state.cursor,
+        has_more=len(new_entries) == PAGE_SIZE,
     )
 
 
@@ -155,9 +209,9 @@ async def search(
         user_id,
         category_id=state.selected_category_id,
         tag=tag_filter,
-        limit=50,
+        limit=PAGE_SIZE,
     )
-    tag_map = await _load_entry_tags(session, results)
+    tag_map = await _load_entry_tags(session, results, user_id)
 
     return ExploreState(
         selected_category_id=state.selected_category_id,
@@ -168,11 +222,13 @@ async def search(
         entries=results,
         tag_map=tag_map,
         is_searching=True,
+        cursor=None,
+        has_more=False,
     )
 
 
 async def _load_entry_tags(
-    session: AsyncSession, entries: list[Entry]
+    session: AsyncSession, entries: list[Entry], user_id: int
 ) -> dict[int, list[str]]:
     if not entries:
         return {}
@@ -180,7 +236,10 @@ async def _load_entry_tags(
     if not entry_ids:
         return {}
     result = await session.execute(
-        select(EntryTag).where(EntryTag.entry_id.in_(entry_ids))  # type: ignore[attr-defined]
+        select(EntryTag).where(
+            EntryTag.entry_id.in_(entry_ids),  # type: ignore[attr-defined]
+            EntryTag.user_id == user_id,
+        )
     )
     tag_map: dict[int, list[str]] = defaultdict(list)
     for et in result.scalars().all():

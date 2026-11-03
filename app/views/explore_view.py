@@ -8,6 +8,7 @@ from app.services.feed_browser import (
     ExploreState,
     clear_tags,
     load,
+    load_more,
     search,
     select_category,
     toggle_tag,
@@ -161,6 +162,7 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
     is_mobile = (page.width or 9999) < MOBILE_BREAKPOINT
 
     entry_list = ft.ListView(spacing=8, padding=10, expand=True)
+    loading_more = False
 
     search_field = ft.TextField(
         hint_text="Pesquisar...",
@@ -315,6 +317,32 @@ async def explore_view(ctx) -> ft.View:  # noqa: C901, PLR0915
                     content=ft.Text("Erro ao carregar entradas — tente novamente")
                 )
             )
+
+    async def _do_load_more():
+        nonlocal browser_state, loading_more
+        if loading_more or not browser_state.has_more:
+            return
+        loading_more = True
+        try:
+            async with ctx.open_session() as s:
+                browser_state = await load_more(s, browser_state, user_id)
+            render()
+            page.update()
+        except Exception:
+            logging.getLogger(__name__).exception("erro ao carregar mais entradas")
+            page.show_dialog(
+                ft.SnackBar(
+                    content=ft.Text("Erro ao carregar entradas — tente novamente")
+                )
+            )
+        finally:
+            loading_more = False
+
+    def _on_scroll(e):
+        if e.event_type == ft.ScrollType.END and browser_state.has_more:
+            asyncio.create_task(_do_load_more())  # noqa: RUF006
+
+    entry_list.on_scroll = _on_scroll
 
     def _select_category(cat_id: int | None):
         nonlocal browser_state

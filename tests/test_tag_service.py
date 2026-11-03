@@ -305,3 +305,22 @@ async def test_get_tags_for_entries_empty(db_session):
     user = await make_user(db_session)
     tag_map = await get_tags_for_entries(db_session, [], user.id)
     assert tag_map == {}
+
+
+@pytest.mark.asyncio
+async def test_assign_tag_cross_user_same_tag_not_suppressed(db_session):
+    user_a = await make_user(db_session, "usera", "passa")
+    user_b = await make_user(db_session, "userb", "passb")
+    _, entry_a = await create_feed_and_entry(db_session, user_a.id)
+    _, entry_b = await create_feed_and_entry(
+        db_session, user_b.id, url="https://example.com/rss2"
+    )
+
+    await assign_tag(db_session, entry_a.id, "python", user_a.id)
+    # a tag de user_a não pode suprimir a atribuição de user_b na própria entry
+    await assign_tag(db_session, entry_b.id, "python", user_b.id)
+
+    tags_a = await get_tags_for_entry(db_session, entry_a.id, user_a.id)
+    tags_b = await get_tags_for_entry(db_session, entry_b.id, user_b.id)
+    assert tags_a == ["python"]
+    assert tags_b == ["python"]

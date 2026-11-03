@@ -73,7 +73,11 @@ async def assign_tag(session, entry_id: int, tag: str, user_id: int) -> None:
         msg = "Entry não encontrada"
         raise ValueError(msg)
     existing = await session.execute(
-        select(EntryTag).where(EntryTag.entry_id == entry_id, EntryTag.tag == tag)
+        select(EntryTag).where(
+            EntryTag.entry_id == entry_id,
+            EntryTag.tag == tag,
+            EntryTag.user_id == user_id,
+        )
     )
     if existing.scalar_one_or_none():
         return
