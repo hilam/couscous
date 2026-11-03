@@ -7,6 +7,8 @@ from app.services.entry_service import list_entries
 from app.services.feed_service import get_feed
 from app.services.tag_service import get_distinct_tags_for_feed, get_tags_for_entries
 
+PAGE_SIZE = 50
+
 
 def _empty_state() -> ft.Container:
     return ft.Container(
@@ -62,7 +64,7 @@ def _populate_entry_list(
         entry_list.controls.append(_empty_state())
 
 
-async def entry_list_view(ctx) -> ft.View:
+async def entry_list_view(ctx) -> ft.View:  # noqa: C901, PLR0915
     page = ctx.page
     state = ctx.state
     session = ctx.session
@@ -72,12 +74,24 @@ async def entry_list_view(ctx) -> ft.View:
     feed = await get_feed(session, feed_url, user_id)
     feed_title = feed.title if feed and feed.title else feed_url
 
-    entries = await list_entries(session, feed_url, user_id=user_id)
+    entries = await list_entries(
+        session,
+        feed_url,
+        user_id=user_id,
+        before=None,
+        before_id=None,
+        limit=PAGE_SIZE,
+    )
 
     entry_list = ft.ListView(spacing=8, padding=10, expand=True)
     show_unread = False
     show_important = False
     active_tag: str | None = None
+    cursor: tuple | None = (
+        (entries[-1].published, entries[-1].id) if entries else None
+    )
+    has_more = len(entries) == PAGE_SIZE
+    loading_more = False
 
     feed_tags = await get_distinct_tags_for_feed(session, feed_url, user_id)
 
@@ -104,7 +118,7 @@ async def entry_list_view(ctx) -> ft.View:
     build_tag_filter_row()
 
     async def load_entries():
-        nonlocal show_unread, show_important, active_tag
+        before, before_id = cursor if cursor is not None else (None, None)
         async with ctx.open_session() as s:
             return await list_entries(
                 s,
@@ -113,16 +127,57 @@ async def entry_list_view(ctx) -> ft.View:
                 unread_only=show_unread,
                 important_only=show_important,
                 tag=active_tag,
+                before=before,
+                before_id=before_id,
+                limit=PAGE_SIZE,
             )
 
+    def _advance_cursor(new_entries):
+        nonlocal cursor, has_more
+        has_more = len(new_entries) == PAGE_SIZE
+        if new_entries:
+            cursor = (new_entries[-1].published, new_entries[-1].id)
+
     async def refresh(e):
+        nonlocal cursor, has_more, loading_more
+        cursor = None
+        has_more = True
+        loading_more = False
         entries = await load_entries()
+        _advance_cursor(entries)
         async with ctx.open_session() as s:
             tag_map = await get_tags_for_entries(
                 s, [entry.id for entry in entries if entry.id is not None], user_id
             )
         _populate_entry_list(entry_list, entries, page, tag_map)
         page.update()
+
+    async def load_more():
+        nonlocal loading_more
+        if loading_more or not has_more:
+            return
+        loading_more = True
+        try:
+            entries = await load_entries()
+            _advance_cursor(entries)
+            async with ctx.open_session() as s:
+                tag_map = await get_tags_for_entries(
+                    s,
+                    [entry.id for entry in entries if entry.id is not None],
+                    user_id,
+                )
+            for entry in entries:
+                tags = tag_map.get(entry.id, []) if entry.id else None
+                entry_list.controls.append(_build_article_card(entry, page, tags))
+            page.update()
+        finally:
+            loading_more = False
+
+    def on_scroll(e):
+        if e.event_type == ft.ScrollType.END and has_more:
+            asyncio.create_task(load_more())  # noqa: RUF006
+
+    entry_list.on_scroll = on_scroll
 
     async def toggle_unread(e):
         nonlocal show_unread
