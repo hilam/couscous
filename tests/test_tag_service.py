@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from app.services.tag_service import (
@@ -324,3 +325,27 @@ async def test_assign_tag_cross_user_same_tag_not_suppressed(db_session):
     tags_b = await get_tags_for_entry(db_session, entry_b.id, user_b.id)
     assert tags_a == ["python"]
     assert tags_b == ["python"]
+
+
+@pytest.mark.asyncio
+async def test_assign_tag_ghost_row_not_silently_suppressed(db_session):
+    """Ghost row (entry de user_a taggeada por user_b) não suprime em silêncio.
+
+    Sem o filtro por user_id na checagem de duplicata, assign_tag do dono
+    retornava cedo e a tag do próprio nunca era gravada. Com o filtro
+    (plano 006/3c), o check é escopado corretamente e o INSERT colide com
+    a PK composta atual (entry_id, tag) — falha explícita em vez de
+    supressão silenciosa. Atribuição cross-user do MESMO tag na MESMA
+    entry só será possível com a PK composta por usuário (plano 008).
+    """
+    user_a = await make_user(db_session, "usera", "passa")
+    user_b = await make_user(db_session, "userb", "passb")
+    _, entry_a = await create_feed_and_entry(db_session, user_a.id)
+
+    # ghost row: tag "python" da entry de user_a pertencente a outro usuário
+    db_session.add(EntryTag(entry_id=entry_a.id, tag="python", user_id=user_b.id))
+    await db_session.commit()
+
+    with pytest.raises(IntegrityError):
+        await assign_tag(db_session, entry_a.id, "python", user_a.id)
+    await db_session.rollback()
