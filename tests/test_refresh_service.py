@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
@@ -233,3 +234,77 @@ async def test_refresh_dedupe_batched_100_entries(db_session):
 
     result = await db_session.execute(select(Entry).where(Entry.feed == feed.url))
     assert len(result.scalars().all()) == 100
+
+
+def _no_link_entries(*ids):
+    from app.services.refresh_service import FeedFetchResult, ParsedEntry
+
+    return FeedFetchResult(
+        title="No Link Feed",
+        entries=[ParsedEntry(id=i, link=None, title=f"No Link {i}") for i in ids],
+    )
+
+
+def _patched_fetch(result):
+    return patch(
+        "app.services.refresh_service._fetch_feed",
+        AsyncMock(return_value=result),
+    )
+
+
+@pytest.mark.asyncio
+async def test_refresh_entries_without_links_are_not_lost(db_session):
+    """(a) entries com link=None e ids externos distintos entram todas."""
+    from sqlmodel import select
+
+    user = await make_user(db_session)
+    feed = await make_feed(db_session, user_id=user.id)
+
+    with _patched_fetch(_no_link_entries("urn:example:post1", "urn:example:post2")):
+        await refresh_single_feed(db_session, feed)
+
+    result = await db_session.execute(select(Entry).where(Entry.feed == feed.url))
+    entries = result.scalars().all()
+    assert len(entries) == 2
+    assert {e.link for e in entries} == {None}
+    assert {e.external_id for e in entries} == {"urn:example:post1", "urn:example:post2"}
+
+
+@pytest.mark.asyncio
+async def test_refresh_dedupe_by_external_id_on_reprocess(db_session):
+    """(b) re-refresh com mesmo external_id não insere nada novo."""
+    from sqlmodel import select
+
+    user = await make_user(db_session)
+    feed = await make_feed(db_session, user_id=user.id)
+
+    with _patched_fetch(_no_link_entries("urn:example:post1", "urn:example:post2")):
+        await refresh_single_feed(db_session, feed)
+        await refresh_single_feed(db_session, feed)
+
+    result = await db_session.execute(select(Entry).where(Entry.feed == feed.url))
+    assert len(result.scalars().all()) == 2
+
+
+@pytest.mark.asyncio
+async def test_refresh_skips_entry_matching_persisted_external_id(db_session):
+    """(c) entry já persistida com external_id é pulada pelo dedupe (sem IntegrityError)."""
+    from sqlmodel import select
+
+    user = await make_user(db_session)
+    feed = await make_feed(db_session, user_id=user.id)
+    await make_entry(
+        db_session,
+        feed_url=feed.url,
+        user_id=user.id,
+        link=None,
+        external_id="urn:example:post1",
+    )
+
+    with _patched_fetch(_no_link_entries("urn:example:post1", "urn:example:post2")):
+        await refresh_single_feed(db_session, feed)
+
+    result = await db_session.execute(select(Entry).where(Entry.feed == feed.url))
+    entries = result.scalars().all()
+    assert len(entries) == 2
+    assert sum(1 for e in entries if e.external_id == "urn:example:post1") == 1
