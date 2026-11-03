@@ -38,6 +38,20 @@ async def test_add_duplicate_feed_raises(db_session):
 
 
 @pytest.mark.asyncio
+async def test_add_feed_segundo_usuario_mesmo_feed(db_session):
+    user1 = await register(db_session, "alice", "pass")
+    user2 = await register(db_session, "bob", "pass")
+    assert user1.id is not None
+    assert user2.id is not None
+    feed1 = await add_feed(db_session, user1.id, "https://example.com/rss")
+    feed2 = await add_feed(db_session, user2.id, "https://example.com/rss")
+    assert feed1.user_id == user1.id
+    assert feed2.user_id == user2.id
+    with pytest.raises(ValueError, match="Feed já cadastrado"):
+        await add_feed(db_session, user2.id, "https://example.com/rss")
+
+
+@pytest.mark.asyncio
 async def test_add_feed_rejects_javascript_scheme(db_session):
     user = await register(db_session, "testuser", "pass")
     assert user.id is not None
