@@ -82,6 +82,27 @@ async def test_search_with_category_filter(db_session):
 
 
 @pytest.mark.asyncio
+async def test_search_shared_url_two_users_no_duplicate_rows(db_session):
+    user1 = await make_user(db_session, "alice")
+    user2 = await make_user(db_session, "bob")
+    url = "https://example.com/shared.rss"
+    await make_feed(db_session, url=url, user_id=user1.id)
+    await make_feed(db_session, url=url, user_id=user2.id)
+    await make_entry(
+        db_session, url, user1.id,
+        title="Python basics", summary="Learn Python", published=_now(),
+    )
+    await make_entry(
+        db_session, url, user2.id,
+        title="Python for bob", summary="Learn Python", published=_now(),
+    )
+
+    results = await search_entries(db_session, "python", user1.id)
+    assert len(results) == 1
+    assert results[0].user_id == user1.id
+
+
+@pytest.mark.asyncio
 async def test_search_with_tag_filter(db_session):
     user = await make_user(db_session)
     feed = await make_feed(db_session, user_id=user.id)

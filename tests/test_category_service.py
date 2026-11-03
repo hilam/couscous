@@ -7,8 +7,9 @@ from app.services.category_service import (
     list_categories,
     rename_category,
 )
-from app.services.feed_service import add_feed
+from app.services.feed_service import add_feed, update_feed_category
 from app.services.user_service import register
+from tests.test_factory import make_entry, make_feed, make_user
 
 
 @pytest.mark.asyncio
@@ -80,6 +81,27 @@ async def test_get_categories_with_counts_nested(db_session):
     assert names == {"Tech", "Python"}
     assert feed_counts == {}
     assert unread_counts == {}
+
+
+@pytest.mark.asyncio
+async def test_counts_shared_url_two_users_scoped(db_session):
+    user1 = await make_user(db_session, "alice")
+    user2 = await make_user(db_session, "bob")
+    url = "https://example.com/shared.rss"
+    cat = await create_category(db_session, user1.id, "Tech")
+    await make_feed(db_session, url=url, user_id=user1.id)
+    await make_feed(db_session, url=url, user_id=user2.id)
+    await update_feed_category(db_session, user1.id, url, cat.id)
+    await make_entry(db_session, url, user1.id)
+    await make_entry(db_session, url, user1.id, title="Article 2")
+    for i in range(3):
+        await make_entry(db_session, url, user2.id, title=f"Bob article {i}")
+
+    cats, feed_counts, unread_counts = await get_categories_with_counts(
+        db_session, user1.id
+    )
+    assert feed_counts == {cat.id: 1}
+    assert unread_counts == {cat.id: 2}
 
 
 @pytest.mark.asyncio
