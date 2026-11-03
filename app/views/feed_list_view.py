@@ -100,7 +100,7 @@ async def _rebuild_feed_list(feed_list, confirm_delete, session, page, user_id: 
     return feeds
 
 
-async def _handle_feed_added(  # noqa: PLR0913
+async def _handle_feed_added(  # noqa: PLR0913, PLR0917
     url: str,
     category_id: int | None,
     ctx,
@@ -131,7 +131,7 @@ async def _handle_feed_added(  # noqa: PLR0913
     await page.push_route(f"/feed/{url}")
 
 
-async def _handle_feed_add_another(  # noqa: PLR0913
+async def _handle_feed_add_another(  # noqa: PLR0913, PLR0917
     url: str,
     category_id: int | None,
     ctx,

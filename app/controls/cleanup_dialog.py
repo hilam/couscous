@@ -83,7 +83,7 @@ async def _on_period_change(
     limpar_btn.update()
 
 
-async def _on_cleanup(  # noqa: PLR0913
+async def _on_cleanup(  # noqa: PLR0913, PLR0917
     e,
     page: ft.Page,
     ctx: PageContext,

@@ -34,7 +34,7 @@ async def save_settings(
     user_id: int,
     theme_mode: str | None = None,
     font_scale: float | None = None,
-    auto_cleanup_days: int | None | object = _UNSET,
+    auto_cleanup_days: int | object | None = _UNSET,
 ) -> None:
     values: dict = {}
     if theme_mode is not None:

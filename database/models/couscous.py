@@ -1,4 +1,4 @@
-import datetime as _dt
+import datetime as dt
 
 from sqlalchemy import Index, desc, text
 from sqlmodel import Field, SQLModel
@@ -25,7 +25,7 @@ class Feed(SQLModel, table=True):
     user_id: int = Field(foreign_key="users.id", primary_key=True, nullable=False)
     title: str | None
     link: str | None
-    updated: _dt.datetime | None
+    updated: dt.datetime | None
     author: str | None
     subtitle: str | None
     version: str | None
@@ -35,13 +35,13 @@ class Feed(SQLModel, table=True):
     data_hash: str | None
     stale: int = Field(nullable=False, default=0)
     updates_enabled: int = Field(nullable=False, default=1)
-    last_updated: _dt.datetime | None
+    last_updated: dt.datetime | None
     category_id: int | None = Field(
         foreign_key="categories.id", nullable=True, default=None
     )
-    added: _dt.datetime = Field(
+    added: dt.datetime = Field(
         nullable=False,
-        default_factory=lambda: _dt.datetime.now(_dt.UTC).replace(tzinfo=None),
+        default_factory=lambda: dt.datetime.now(dt.UTC).replace(tzinfo=None),
     )
     last_exception: str | None
 
@@ -69,9 +69,9 @@ class Entry(SQLModel, table=True):
     title: str | None
     link: str | None
     external_id: str | None = Field(default=None, nullable=True)
-    updated: _dt.datetime | None
+    updated: dt.datetime | None
     author: str | None
-    published: _dt.datetime | None
+    published: dt.datetime | None
     summary: str | None
     content: str | None
     enclosures: str | None
@@ -79,13 +79,13 @@ class Entry(SQLModel, table=True):
     data_hash: str | None
     data_hash_changed: int | None
     read: int | None = Field(default=0, nullable=False)
-    read_modified: _dt.datetime | None
+    read_modified: dt.datetime | None
     important: int | None = Field(default=0, nullable=False)
-    important_modified: _dt.datetime | None
+    important_modified: dt.datetime | None
     added_by: str
-    last_updated: _dt.datetime
-    first_updated: _dt.datetime
-    first_updated_epoch: _dt.datetime
+    last_updated: dt.datetime
+    first_updated: dt.datetime
+    first_updated_epoch: dt.datetime
     feed_order: int
 
 
