@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -13,7 +13,12 @@ from app.services.entry_service import (
 from app.services.category_service import create_category
 from app.services.feed_service import update_feed_category
 from app.services.tag_service import assign_tag
-from tests.test_factory import make_user, create_feed_and_entry
+from tests.test_factory import (
+    make_user,
+    create_feed_and_entry,
+    make_entry,
+    make_feed,
+)
 
 
 @pytest.mark.asyncio
@@ -225,6 +230,118 @@ async def test_list_entries_tag_no_match(db_session):
         db_session, "https://example.com/rss", user_id=user.id, tag="rust"
     )
     assert result == []
+
+
+async def _make_60_entries(db_session, user_id, url="https://example.com/pag"):
+    feed = await make_feed(db_session, url=url, user_id=user_id)
+    base = datetime(2024, 1, 1)
+    for i in range(60):
+        await make_entry(
+            db_session,
+            feed_url=url,
+            user_id=user_id,
+            link=f"{url}/article{i}",
+            title=f"Article {i}",
+            author=f"Author {i}",
+            published=base + timedelta(minutes=i),
+        )
+    return feed
+
+
+@pytest.mark.asyncio
+async def test_list_entries_keyset_first_page(db_session):
+    user = await make_user(db_session)
+    feed = await _make_60_entries(db_session, user.id)
+
+    page1 = await list_entries(db_session, feed.url, user_id=user.id)
+    assert len(page1) == 50
+    assert page1[0].published == datetime(2024, 1, 1) + timedelta(minutes=59)
+
+
+@pytest.mark.asyncio
+async def test_list_entries_keyset_second_page_no_overlap(db_session):
+    user = await make_user(db_session)
+    feed = await _make_60_entries(db_session, user.id)
+
+    page1 = await list_entries(db_session, feed.url, user_id=user.id)
+    last = page1[-1]
+    page2 = await list_entries(
+        db_session,
+        feed.url,
+        user_id=user.id,
+        before=last.published,
+        before_id=last.id,
+    )
+    assert len(page2) == 10
+    page1_ids = {row.id for row in page1}
+    page2_ids = {row.id for row in page2}
+    assert page1_ids.isdisjoint(page2_ids)
+    full_ids = {
+        row.id
+        for row in await list_entries(
+            db_session, feed.url, user_id=user.id, limit=100
+        )
+    }
+    assert page1_ids | page2_ids == full_ids
+
+
+@pytest.mark.asyncio
+async def test_list_entries_keyset_empty_feed_with_cursor(db_session):
+    user = await make_user(db_session)
+    await create_feed_and_entry(db_session, user.id)
+
+    result = await list_entries(
+        db_session,
+        "https://example.com/empty",
+        user_id=user.id,
+        before=datetime(2024, 1, 1),
+        before_id=1,
+    )
+    assert result == []
+
+
+@pytest.mark.asyncio
+async def test_list_entries_keyset_unread_filter_preserved(db_session):
+    user = await make_user(db_session)
+    feed = await _make_60_entries(db_session, user.id)
+
+    page1 = await list_entries(db_session, feed.url, user_id=user.id)
+    # marca os 5 mais novos como lidos
+    for row in page1[:5]:
+        await mark_read(db_session, row.id, user.id)
+
+    unread_page1 = await list_entries(
+        db_session, feed.url, user_id=user.id, unread_only=True
+    )
+    assert len(unread_page1) == 50
+    assert all(row.read == 0 for row in unread_page1)
+
+    last_unread = unread_page1[-1]
+    unread_page2 = await list_entries(
+        db_session,
+        feed.url,
+        user_id=user.id,
+        unread_only=True,
+        before=last_unread.published,
+        before_id=last_unread.id,
+    )
+    assert len(unread_page2) == 5
+    assert all(row.read == 0 for row in unread_page2)
+
+
+@pytest.mark.asyncio
+async def test_list_entries_projection_excludes_content(db_session):
+    user = await make_user(db_session)
+    await _make_60_entries(db_session, user.id)
+
+    page = await list_entries(
+        db_session, "https://example.com/pag", user_id=user.id
+    )
+    row = page[0]
+    assert not hasattr(row, "content")
+    assert not hasattr(row, "important")
+    assert row.title is not None
+    assert row.author is not None
 
 
 @pytest.mark.asyncio

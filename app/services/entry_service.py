@@ -1,3 +1,6 @@
+from datetime import datetime
+
+from sqlalchemy import and_, or_
 from sqlmodel import desc, select
 
 from app.services.category_service import _collect_descendant_ids
@@ -54,14 +57,33 @@ async def list_entries(  # noqa: PLR0913
     session,
     feed_url: str,
     *,
-    user_id: int | None = None,
+    user_id: int,
     unread_only: bool = False,
     important_only: bool = False,
     tag: str | None = None,
+    before: datetime | None = None,
+    before_id: int | None = None,
+    limit: int = 50,
 ):
-    query = select(Entry).where(Entry.feed == feed_url)
-    if user_id is not None:
-        query = query.where(Entry.user_id == user_id)
+    """Keyset-paginated list of entries for a feed, scoped to the user.
+
+    Returns projected rows (id, title, link, summary, published, read,
+    author) — `content` and `important` are NOT loaded, so full ORM
+    entities are avoided in list paths. Use get_entry for the full entity.
+
+    Cursor: pass (before, before_id) from the last row of the previous
+    page. Limitation: entries with published IS NULL are excluded once a
+    cursor is applied, since the comparison against NULL never matches.
+    """
+    query = select(  # type: ignore[call-overload,misc]
+        Entry.id,
+        Entry.title,
+        Entry.link,
+        Entry.summary,
+        Entry.published,
+        Entry.read,
+        Entry.author,
+    ).where(Entry.feed == feed_url, Entry.user_id == user_id)
     if unread_only:
         query = query.where(Entry.read == 0)
     if important_only:
@@ -75,9 +97,19 @@ async def list_entries(  # noqa: PLR0913
                 )
             )
         )
-    query = query.order_by(desc(Entry.published))
+    if before is not None:
+        query = query.where(
+            or_(
+                Entry.published < before,  # type: ignore[operator,arg-type]
+                and_(  # type: ignore[arg-type]
+                    Entry.published == before,  # type: ignore[arg-type]
+                    Entry.id < before_id,  # type: ignore[operator,arg-type]
+                ),
+            )
+        )
+    query = query.order_by(desc(Entry.published), desc(Entry.id)).limit(limit)
     result = await session.execute(query)
-    return result.scalars().all()
+    return result.all()
 
 
 async def get_entry(session, entry_id: int, user_id: int):
