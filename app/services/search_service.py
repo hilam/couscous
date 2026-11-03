@@ -49,7 +49,7 @@ async def search_entries(  # noqa: PLR0913
         "q, 'MaxWords=40, MinWords=20, StartSel=<b>, StopSel=</b>'"
         ") AS snippet "
         "FROM entries e "
-        "LEFT JOIN feeds f ON e.feed = f.url, "
+        "LEFT JOIN feeds f ON e.feed = f.url AND f.user_id = e.user_id, "
         "plainto_tsquery('simple', :query) AS q "
         "WHERE " + where_clause + " "  # nosec B608
         "ORDER BY rank DESC "

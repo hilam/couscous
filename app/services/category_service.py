@@ -55,6 +55,7 @@ async def get_categories_with_counts(
         .join(Entry, Entry.feed == Feed.url)  # type: ignore[arg-type]
         .where(
             Feed.user_id == user_id,
+            Entry.user_id == Feed.user_id,  # type: ignore[comparison-overlap]
             Entry.read == 0,
             Feed.category_id.isnot(None),  # type: ignore[union-attr]
         )
