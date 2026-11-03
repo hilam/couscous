@@ -1,6 +1,6 @@
 import datetime as _dt
 
-from sqlalchemy import Index, desc
+from sqlalchemy import Index, desc, text
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -55,6 +55,14 @@ class Entry(SQLModel, table=True):
         Index("idx_entries_user_published", "user_id", desc("published")),
         Index("idx_entries_user_read", "user_id", "read"),
         Index("idx_entries_link_user", "link", "user_id"),
+        Index(
+            "uq_entries_feed_user_external_id",
+            "feed",
+            "user_id",
+            "external_id",
+            unique=True,
+            postgresql_where=text("external_id IS NOT NULL"),
+        ),
     )
 
     id: int | None = Field(primary_key=True, default=None)
@@ -62,6 +70,7 @@ class Entry(SQLModel, table=True):
     user_id: int = Field(foreign_key="users.id", nullable=False)
     title: str | None
     link: str | None
+    external_id: str | None = Field(default=None, nullable=True)
     updated: _dt.datetime | None
     author: str | None
     published: _dt.datetime | None
