@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from app.services.url_guard import is_safe_launch_url
@@ -38,7 +39,12 @@ async def add_feed(session, user_id: int, url: str, category_id: int | None = No
 
     new_feed = Feed(url=url, user_id=user_id, category_id=category_id)
     session.add(new_feed)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        msg = "Feed já cadastrado"
+        raise ValueError(msg)
     await session.refresh(new_feed)
     return new_feed
 
