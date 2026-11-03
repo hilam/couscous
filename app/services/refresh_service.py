@@ -109,9 +109,22 @@ async def refresh_single_feed(
         .scalars()
         .all()
     )
+    existing_external_ids = set(
+        (
+            await session.execute(
+                select(Entry.external_id).where(
+                    Entry.feed == feed.url, Entry.user_id == feed.user_id
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     for entry_data in result.entries or []:
-        if entry_data.link in existing_links:
+        if entry_data.id in existing_external_ids or (
+            entry_data.link is not None and entry_data.link in existing_links
+        ):
             continue
 
         now = datetime.now(UTC).replace(tzinfo=None)
@@ -120,6 +133,7 @@ async def refresh_single_feed(
             user_id=feed.user_id,
             title=entry_data.title,
             link=entry_data.link,
+            external_id=entry_data.id or None,
             summary=entry_data.summary,
             content=entry_data.content,
             author=entry_data.author,
@@ -132,6 +146,7 @@ async def refresh_single_feed(
         )
         session.add(entry)
         existing_links.add(entry_data.link)
+        existing_external_ids.add(entry_data.id)
 
     await session.commit()
 
