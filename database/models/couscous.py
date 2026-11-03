@@ -1,7 +1,7 @@
 import datetime as _dt
 
 from sqlalchemy import Index, desc, text
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, SQLModel
 
 
 class User(SQLModel, table=True):
@@ -22,7 +22,7 @@ class Feed(SQLModel, table=True):
     __table_args__ = (Index("idx_feeds_user_id", "user_id"),)
 
     url: str = Field(primary_key=True)
-    user_id: int = Field(foreign_key="users.id", nullable=False)
+    user_id: int = Field(foreign_key="users.id", primary_key=True, nullable=False)
     title: str | None
     link: str | None
     updated: _dt.datetime | None
@@ -45,8 +45,6 @@ class Feed(SQLModel, table=True):
     )
     last_exception: str | None
 
-    entries: list["Entry"] = Relationship(back_populates="url_feed")
-
 
 class Entry(SQLModel, table=True):
     __tablename__ = "entries"
@@ -66,7 +64,7 @@ class Entry(SQLModel, table=True):
     )
 
     id: int | None = Field(primary_key=True, default=None)
-    feed: str = Field(foreign_key="feeds.url")
+    feed: str
     user_id: int = Field(foreign_key="users.id", nullable=False)
     title: str | None
     link: str | None
@@ -89,8 +87,6 @@ class Entry(SQLModel, table=True):
     first_updated: _dt.datetime
     first_updated_epoch: _dt.datetime
     feed_order: int
-
-    url_feed: Feed = Relationship(back_populates="entries")
 
 
 class Category(SQLModel, table=True):
