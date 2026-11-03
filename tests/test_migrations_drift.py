@@ -68,7 +68,11 @@ def _read_schema(connection) -> tuple[set, dict, dict]:
         table: {
             index["name"]
             for index in inspector.get_indexes(table, schema=DRIFT_SCHEMA)
-            if not index.get("unique")
+            if index["name"]
+            not in {
+                c["name"]
+                for c in inspector.get_unique_constraints(table, schema=DRIFT_SCHEMA)
+            }
         }
         for table in tables
     }
