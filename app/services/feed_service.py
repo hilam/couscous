@@ -44,7 +44,7 @@ async def add_feed(session, user_id: int, url: str, category_id: int | None = No
     except IntegrityError:
         await session.rollback()
         msg = "Feed já cadastrado"
-        raise ValueError(msg)
+        raise ValueError(msg) from None
     await session.refresh(new_feed)
     return new_feed
 
