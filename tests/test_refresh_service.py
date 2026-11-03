@@ -198,3 +198,38 @@ async def test_refresh_all_feeds(db_session):
     result = await db_session.execute(select(Entry).where(Entry.user_id == user.id))
     entries = result.scalars().all()
     assert len(entries) == 3
+
+
+def _rss_many(num_entries):
+    items = ""
+    for i in range(1, num_entries + 1):
+        day = (i % 28) + 1
+        items += f"""<item>
+    <title>Article {i}</title>
+    <link>https://example.com/big{i}</link>
+    <guid>https://example.com/big{i}</guid>
+    <description>Summary {i}</description>
+    <pubDate>Mon, {day:02d} Jan 2024 00:00:00 +0000</pubDate>
+  </item>"""
+    return (
+        '<rss version="2.0"><channel><title>Big</title>'
+        f"<link>https://example.com</link>{items}</channel></rss>"
+    )
+
+
+@pytest.mark.asyncio
+async def test_refresh_dedupe_batched_100_entries(db_session):
+    user = await make_user(db_session)
+    feed = await make_feed(db_session, user_id=user.id)
+    from sqlmodel import select
+
+    await refresh_single_feed(db_session, feed, client=_client(_rss_many(100)))
+
+    result = await db_session.execute(select(Entry).where(Entry.feed == feed.url))
+    assert len(result.scalars().all()) == 100
+
+    # re-refresh não insere nada novo (dedupe por link em lote)
+    await refresh_single_feed(db_session, feed, client=_client(_rss_many(100)))
+
+    result = await db_session.execute(select(Entry).where(Entry.feed == feed.url))
+    assert len(result.scalars().all()) == 100

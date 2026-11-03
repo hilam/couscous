@@ -98,17 +98,20 @@ async def refresh_single_feed(
     feed.updated = datetime.now(UTC).replace(tzinfo=None)
     await session.commit()
 
-    for entry_data in result.entries or []:
-        existing = (
+    existing_links = set(
+        (
             await session.execute(
-                select(Entry).where(
-                    Entry.feed == feed.url,
-                    Entry.link == entry_data.link,
+                select(Entry.link).where(
+                    Entry.feed == feed.url, Entry.user_id == feed.user_id
                 )
             )
-        ).scalar_one_or_none()
+        )
+        .scalars()
+        .all()
+    )
 
-        if existing:
+    for entry_data in result.entries or []:
+        if entry_data.link in existing_links:
             continue
 
         now = datetime.now(UTC).replace(tzinfo=None)
@@ -128,6 +131,7 @@ async def refresh_single_feed(
             feed_order=0,
         )
         session.add(entry)
+        existing_links.add(entry_data.link)
 
     await session.commit()
 
