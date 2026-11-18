@@ -54,7 +54,7 @@ docs/_build/
 
 # Project files
 .idea/
-.git/
+.vscode/
 instance/
 media/
 
