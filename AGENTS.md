@@ -23,15 +23,14 @@ make check-all                 # lint + typecheck + test + security (CI gate)
 | Target | Command |
 |--------|---------|
 | `make install` | `uv sync` |
-| `make run` | `uv run python main.py` |
-| `make run-web` | `uv run flet run -w -p 8550` |
+| `make run-web` | `db-up` + `db-migrate-up` + `uv run flet run -w -p 8550` |
 | `make test` | `uv run pytest` |
 | `make lint` | `uv run ruff check` |
 | `make lint-fix` | `uv run ruff check --fix` |
 | `make format` | `uv run ruff format` |
 | `make typecheck` | `uv run mypy` |
 | `make security` | `uv run bandit -r app/ database/` |
-| `make check-all` | lint + typecheck + test + security |
+| `make check-all` | `db-up` + lint + typecheck + test + security |
 | `make db-up` | `docker compose up -d` |
 | `make db-down` | `docker compose down --remove-orphans` |
 | `make db-clean` | `docker compose down --volumes --remove-orphans` |
@@ -47,20 +46,22 @@ make check-all                 # lint + typecheck + test + security (CI gate)
 | Directory | Purpose |
 |-----------|---------|
 | `main.py` | Entrypoint: loads `.env`, calls `ft.run(app_run)` |
-| `app/app.py` | Flet app lifecycle, route table (`_ROUTES`), `app_run` entrypoint |
-| `app/context.py` | `PageContext` dataclass — holds `page`, `state`, `session`, session factory |
-| `app/views/` | One file per route: `login_view`, `register_view`, `oauth_callback_view`, `home_view`, `about_view`, `feed_list_view`, `entry_list_view`, `entry_view`, `category_list_view` |
-| `app/controls/` | Reusable UI: `feed_card`, `article_card`, `add_feed_dialog`, `confirm_dialog`, `nav_bar`, `oauth_buttons`, `tag_chip` |
-| `app/services/` | Async service layer: `feed_service`, `entry_service`, `user_service`, `refresh_service`, `category_service`, `tag_service`, `oauth_service`, `feed_fetcher` |
+| `app/app.py` | Flet app lifecycle, route table (`_ROUTES`), `app_run` entrypoint, startup auto-cleanup |
+| `app/context.py` | `PageContext` dataclass — holds `page`, `state`, `session`, `open_session()` factory |
+| `app/views/` | Route views: `login_view`, `register_view`, `oauth_callback_view`, `explore_view`, `feed_list_view`, `entry_list_view`, `entry_view`, `category_list_view`, `settings_view`, `home_view` (fallback) |
+| `app/controls/` | Reusable UI: `feed_card`, `article_card`, `add_feed_dialog`, `category_dialogs`, `cleanup_dialog`, `confirm_dialog`, `nav_bar`, `oauth_buttons`, `tag_chip` |
+| `app/services/` | Domain/service layer: `feed_service`, `entry_service`, `user_service`, `refresh_service`, `category_service`, `tag_service`, `oauth_service`, `feed_browser`, `search_service`, `cleanup_service`, `settings_service`, `url_guard` |
 | `database/service/database.py` | `get_db_session()` — async context manager wrapping async engine; `init_async_db()` |
-| `database/models/couscous.py` | SQLModel models: `User`, `Feed`, `Entry`, `FeedMetadata`, `Category`, `EntryTag` |
-| `app/state.py` | `State` class holding `user`, `active_feed_url`, `loading` |
-| `tests/` | `pytest` + `pytest-asyncio`, one file per service/view/module |
-| `openspec/` | Structured change artifacts (specs, proposals, designs, tasks) |
+| `database/service/config.py` | Loads `.env` and defines `DB_URL` and OAuth config constants |
+| `database/models/couscous.py` | SQLModel models: `User`, `Feed`, `Entry`, `Category`, `EntryTag` |
+| `app/state.py` | `State` class holding `user`, `active_feed_url`, `loading`, `theme_mode`, `font_scale`, `_cleanup_triggered` |
+| `tests/` | `pytest` + `pytest-asyncio` (`asyncio_mode = "auto"`), tests for services, views, controls, migrations, and API contracts |
+| `docs/` | Architecture Decision Records (`docs/adr/`), `PLANO.md`, `research.md`; domain glossary in `CONTEXT.md` |
+| `openspec/` | Structured change artifacts (specs, `meu-fluxo-qa` schema, archived changes) |
 
 ## Environment variables
 
-`.env` is auto-loaded by `main.py` (via `dotenv`) and by tests via `tests/conftest.py`.
+`.env` is auto-loaded by `main.py` and `database/service/config.py` (via `python-dotenv`).
 
 | Var | Default | Purpose |
 |-----|---------|---------|
@@ -80,32 +81,32 @@ make check-all                 # lint + typecheck + test + security (CI gate)
 
 ## Route table
 
-| Prefix | Handler | Requires session | Public |
-|--------|---------|-----------------|--------|
+| Prefix | Handler | Requires auth | Public |
+|--------|---------|---------------|--------|
 | `/login` | `login_view` | No | Yes |
 | `/register` | `register_view` | No | Yes |
-| `/oauth/callback` | `oauth_callback_view` | Yes | Yes |
-| `/about` | `about_view` | No | Yes |
+| `/oauth/callback` | `oauth_callback_view` | No | Yes |
+| `/about` | `settings_view` | Yes | No |
 | `/feeds` | `feed_list_view` | Yes | No |
 | `/feed/{url}` | `entry_list_view` | Yes | No |
 | `/entry/{id}` | `entry_view` | Yes | No |
 | `/categories` | `category_list_view` | Yes | No |
-| `/` | `feed_list_view` | Yes | No |
+| `/` | `explore_view` | Yes | No |
 
-Order matters: specific prefixes (`/feed/`, `/entry/`) must appear before generic ones (`/`).
+Unmatched authenticated routes fall back to `home_view`; unauthenticated requests to non-public routes redirect to `login_view`. Order matters: specific prefixes (`/feed/`, `/entry/`) must appear before generic ones (`/`).
 
 ## Test conventions
 
-- All service tests use the `db_session` fixture (PostgreSQL via SQLModel async) from `tests/conftest.py`.
-- Every service test is `@pytest.mark.asyncio` and takes `db_session` as first arg.
+- Service tests use the `db_session` fixture (PostgreSQL via SQLModel async) from `tests/conftest.py`; view/unit tests without DB can use the `page_context` mock fixture.
+- `pytest-asyncio` runs with `asyncio_mode = "auto"` (configured in `pyproject.toml`), and DB service tests take `db_session` as first arg.
 - Ensure `make db-up` is running before executing tests.
-- Run all tests: `make test`
+- Run all tests: `make test` (includes `--cov=app`)
 - Run a single test: `uv run pytest tests/test_feed_service.py::test_add_feed`
-- Tests connect to `couscous_test` database (hardcoded in conftest), not `couscous`.
+- Tests connect to `couscous_test` database (hardcoded in `tests/conftest.py`), not `couscous`.
 
 ## Database migrations
 
-Migrations are managed with [Alembic](https://alembic.sqlalchemy.org/). They are applied manually — not auto-run on startup.
+Migrations are managed with [Alembic](https://alembic.sqlalchemy.org/). They are applied manually — not auto-run on startup (`make run-web` runs `db-migrate-up` automatically).
 
 **Fresh install**: Run `make db-migrate-up` once after `make db-up` to create all tables.
 
@@ -119,18 +120,18 @@ Migrations are managed with [Alembic](https://alembic.sqlalchemy.org/). They are
 ## Gotchas
 
 - Password is stored as bcrypt hash via `app/services/user_service.py`.
-- All service functions in `app/services/` are **async** and take `session` as first arg.
+- Database-backed service functions in `app/services/` are **async** and take `session` as first arg (UI/pure helpers such as `url_guard.is_safe_launch_url`, `category_service.build_category_tree`, `settings_service.apply_settings_to_page`, and OAuth URL helpers in `oauth_service` are synchronous).
 - `get_db_session()` in `database/service/database.py` is the single source for async sessions.
-- `ruff` linting excludes `tests/` (configured in `pyproject.toml`).
+- `ruff` linting excludes `tests/` and `alembic/` (configured in `pyproject.toml`).
 - `mypy` only checks `app/` and `database/` dirs.
 - `bandit` excludes `tests/` and `.venv/`.
 - `.env` is gitignored; `.env.sample` is the template.
-- Routes requiring a session receive a `PageContext` with an open `session`; public routes do not (they get `PageContext` with `session=None`).
+- Every route handler receives a `PageContext` with an open `session` (`session` is never `None`, per ADR-0003).
 - View handlers receive `PageContext` as first argument; `entry_view` also receives `entry_id: int` as second.
 
 ## OpenSpec
 
-Structured changes live in `openspec/`. Skills in `.opencode/skills/openspec-*` handle the workflow. Use `/opsx-propose` for new change proposals, `/opsx-apply` to implement tasks.
+Structured changes and specs live in `openspec/` (`schema: meu-fluxo-qa` in `openspec/config.yaml`, with archived changes under `openspec/changes/archive/`).
 
 ## Convenções de Commit
 
