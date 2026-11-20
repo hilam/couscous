@@ -18,7 +18,7 @@ Revisão do entendimento do projeto CousCous com grilling + domain-modeling.
 ## Decisões alinhadas
 
 | Área | Decisão |
-|------|---------|
+| ------ | --------- |
 | **Offline/sync** | Single-device. Backup via Docker volume + JSON criptografado (futuro). |
 | **Navegação** | Próximo/anterior dentro do mesmo feed. Ordem: published decrescente. Próximo = mais antigo. |
 | **Tags** | Atribuição manual primeiro. Extração automática via SLM depois (pós-MVP). |

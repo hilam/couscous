@@ -7,7 +7,7 @@ Baseado no `README.md`, 8 sprints de 1 dia (8h) cada, priorizados com dependênc
 ## Sprint 1 — Multi-usuário + correções de segurança (8h)
 
 | # | Tarefa | Tempo |
-|---|--------|-------|
+| --- | -------- | ------- |
 | 1.1 | Hash de senhas (bcrypt) no `user_service.py` | 1h |
 | 1.2 | Adicionar `user_id` (FK) ao modelo `Feed` e `Entry` | 1h |
 | 1.3 | Migration script ou recriação das tabelas | 1h |
@@ -23,7 +23,7 @@ Baseado no `README.md`, 8 sprints de 1 dia (8h) cada, priorizados com dependênc
 ## Sprint 2 — OAuth Google + GitHub (8h)
 
 | # | Tarefa | Tempo |
-|---|--------|-------|
+| --- | -------- | ------- |
 | 2.1 | Adicionar dependência (`authlib`) no `pyproject.toml` | 0.5h |
 | 2.2 | Criar `app/services/oauth_service.py` com fluxos Google e GitHub | 3h |
 | 2.3 | Configurar variáveis de ambiente (client_id, secret, redirect_uri) | 0.5h |
@@ -38,7 +38,7 @@ Baseado no `README.md`, 8 sprints de 1 dia (8h) cada, priorizados com dependênc
 ## Sprint 3 — Categorias hierárquicas (pastas) (8h)
 
 | # | Tarefa | Tempo |
-|---|--------|-------|
+| --- | -------- | ------- |
 | 3.1 | Criar modelo `Category` (id, user_id, name, parent_id FK self-referencing) | 1h |
 | 3.2 | Adicionar `category_id` (FK nullable) ao modelo `Feed` | 0.5h |
 | 3.3 | Criar `app/services/category_service.py` (CRUD + tree query) | 2h |
@@ -53,7 +53,7 @@ Baseado no `README.md`, 8 sprints de 1 dia (8h) cada, priorizados com dependênc
 ## Sprint 4 — Etiquetas para notícias (8h)
 
 | # | Tarefa | Tempo |
-|---|--------|-------|
+| --- | -------- | ------- |
 | 4.1 | Criar modelo `EntryTag` (entry_id FK, tag str, user_id FK) — substitui `FeedTag` que é dead code | 1h |
 | 4.2 | Criar `app/services/tag_service.py` (CRUD de tags + assign/remove em entries) | 2h |
 | 4.3 | Interface de etiquetas no `entry_view.py` — adicionar/remover tags inline | 2h |
@@ -68,7 +68,7 @@ Baseado no `README.md`, 8 sprints de 1 dia (8h) cada, priorizados com dependênc
 ## Sprint 5 — Visualização alternativa + Busca full-text (8h)
 
 | # | Tarefa | Tempo |
-|---|--------|-------|
+| --- | -------- | ------- |
 | 5.1 | Criar `app/views/explore_view.py` — navegação por categorias (drill-down: categoria → feeds → entries) | 3h |
 | 5.2 | Criar filtro lateral por tags no explore view | 1.5h |
 | 5.3 | Adicionar coluna `search_vector tsvector` gerada automaticamente (generated column) + índice GIN no modelo `Entry` — migration SQL manual (SQLModel não gera tsvector) | 1h |
@@ -82,7 +82,7 @@ Baseado no `README.md`, 8 sprints de 1 dia (8h) cada, priorizados com dependênc
 ## Sprint 6 — Temas claro/escuro + tamanho do texto (8h)
 
 | # | Tarefa | Tempo |
-|---|--------|-------|
+| --- | -------- | ------- |
 | 6.1 | Adicionar `theme_mode` (light/dark/system) e `font_scale` ao modelo `User` | 0.5h |
 | 6.2 | Substituir `about_view` por `settings_view` com toggle de tema + botão "Sobre" que abre popup (conteúdo legacy do about_view) — rota `/about` vira Config; NavBar: [Início] [Feeds] [Categorias] [Config] | 1.5h |
 | 6.3 | Aplicar `page.theme_mode` dinamicamente e persistir no banco | 1h |
@@ -97,7 +97,7 @@ Baseado no `README.md`, 8 sprints de 1 dia (8h) cada, priorizados com dependênc
 ## Sprint 7 — Limpeza do banco + Copiar link (8h)
 
 | # | Tarefa | Tempo |
-|---|--------|-------|
+| --- | -------- | ------- |
 | 7.1 | Criar `app/services/cleanup_service.py` — função `purge_older_than(days)` para entries e estatísticas de uso | 2h |
 | 7.2 | Criar `app/controls/cleanup_dialog.py` com seleção de período (7, 30, 90, 365 dias) e confirmação | 2h |
 | 7.3 | Adicionar opção de limpeza automática ao adicionar feed (checkbox "manter apenas X dias") | 1.5h |
@@ -112,7 +112,7 @@ Baseado no `README.md`, 8 sprints de 1 dia (8h) cada, priorizados com dependênc
 ## Sprint 8 — Backup e restauração com criptografia (8h)
 
 | # | Tarefa | Tempo |
-|---|--------|-------|
+| --- | -------- | ------- |
 | 8.1 | Criar `app/services/backup_service.py` — exportar feeds + entries do usuário como JSON | 2h |
 | 8.2 | Implementar criptografia simétrica (AES via `cryptography`) com senha fornecida pelo usuário | 2h |
 | 8.3 | Criar função de restauração — decriptar + importar feeds e entries (merge, não duplicar) | 2h |
